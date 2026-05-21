@@ -8,7 +8,10 @@ const ALLOWED_IMAGES = new Set([
   "image/png",
   "image/webp",
   "image/avif",
-  "image/gif"
+  "image/gif",
+  "image/svg+xml",
+  "image/x-icon",
+  "image/vnd.microsoft.icon",
 ]);
 const ALLOWED_AUDIO = new Set([
   "audio/webm",

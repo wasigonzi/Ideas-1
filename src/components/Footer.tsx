@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Facebook, Instagram, Mail, Phone, MapPin, MessageCircle, ArrowUpRight, ArrowUp } from "lucide-react";
+import { Facebook, Instagram, Mail, Phone, MapPin, MessageCircle, ArrowUp } from "lucide-react";
 import { Logo } from "./Logo";
 
 export function Footer({ whatsapp = "19393264007" }: { whatsapp?: string }) {
@@ -133,21 +133,38 @@ export function Footer({ whatsapp = "19393264007" }: { whatsapp?: string }) {
 
           {/* Memberships */}
           <div className="md:col-span-3 md:pt-6">
-            <div className="flex flex-wrap gap-2.5">
+            <div className="flex flex-wrap gap-3">
               {[
-                { href: "https://asociacion.hechoen.pr/quienes-somos/", label: "Hecho en PR" },
-                { href: "https://www.midapr.com/", label: "MIDA" },
-                { href: "https://www.smepr.org/", label: "SME PR" }
+                {
+                  href: "https://asociacion.hechoen.pr/quienes-somos/",
+                  label: "Hecho en PR",
+                  logo: "https://asociacion.hechoen.pr/wp-content/uploads/logo-hecho-en-pr.png",
+                },
+                {
+                  href: "https://www.midapr.com/",
+                  label: "MIDA",
+                  logo: "https://www.midapr.com/images/mida-logo-footer.png",
+                },
+                {
+                  href: "https://www.smepr.org/",
+                  label: "SME PR",
+                  logo: "https://www.smepr.org/wp-content/uploads/sme-pr-logo.png",
+                },
               ].map((m) => (
                 <a
                   key={m.label}
                   href={m.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="group relative inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-white/10 bg-white/[0.04] text-xs font-bold transition-all hover:border-[var(--color-brand-500)]/60 hover:bg-[var(--color-brand-500)]/10 hover:-translate-y-0.5 hover:text-[var(--color-brand-400)]"
+                  className="group relative inline-flex items-center justify-center px-4 py-3 rounded-lg border border-white/10 bg-white/[0.04] transition-all hover:border-[var(--color-brand-500)]/60 hover:bg-white/10 hover:-translate-y-0.5"
                 >
-                  {m.label}
-                  <ArrowUpRight size={12} className="opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={m.logo}
+                    alt={m.label}
+                    loading="lazy"
+                    className="h-8 w-auto max-w-[110px] object-contain brightness-0 invert opacity-50 transition-opacity group-hover:opacity-90"
+                  />
                 </a>
               ))}
             </div>
