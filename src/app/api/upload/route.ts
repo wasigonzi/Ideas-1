@@ -1,0 +1,85 @@
+import { NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { writeFile, mkdir } from "node:fs/promises";
+import path from "node:path";
+import crypto from "node:crypto";
+
+const ALLOWED_IMAGES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/gif"
+]);
+const ALLOWED_AUDIO = new Set([
+  "audio/webm",
+  "audio/ogg",
+  "audio/mp4",
+  "audio/mpeg",
+  "audio/wav",
+  "audio/x-wav",
+  "audio/wave"
+]);
+const ALLOWED_VIDEO = new Set([
+  "video/mp4",
+  "video/webm",
+  "video/ogg",
+  "video/quicktime",
+  "video/x-msvideo",
+  "video/x-ms-wmv",
+]);
+// Common document / archive types accepted as comment/task attachments.
+const ALLOWED_FILES = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "text/plain",
+  "text/csv",
+  "application/zip",
+  "application/x-zip-compressed",
+  "application/x-rar-compressed",
+  "application/x-7z-compressed",
+  "application/json"
+]);
+const MAX_BYTES = 16 * 1024 * 1024; // 16 MB
+const MAX_VIDEO_BYTES = 200 * 1024 * 1024; // 200 MB for video backgrounds
+
+export async function POST(req: Request) {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const form = await req.formData();
+  const file = form.get("file");
+  if (!(file instanceof File)) {
+    return NextResponse.json({ error: "no_file" }, { status: 400 });
+  }
+  const isImage = ALLOWED_IMAGES.has(file.type);
+  const isAudio = ALLOWED_AUDIO.has(file.type);
+  const isVideo = ALLOWED_VIDEO.has(file.type);
+  const isFile = ALLOWED_FILES.has(file.type);
+  if (!isImage && !isAudio && !isVideo && !isFile) {
+    return NextResponse.json({ error: "invalid_type" }, { status: 400 });
+  }
+  if (file.size > (isVideo ? MAX_VIDEO_BYTES : MAX_BYTES)) {
+    return NextResponse.json({ error: "too_large" }, { status: 400 });
+  }
+
+  const buf = Buffer.from(await file.arrayBuffer());
+  const ext = (file.name.split(".").pop() ?? "bin").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5);
+  const name = `${Date.now()}-${crypto.randomBytes(6).toString("hex")}.${ext}`;
+  const dir = path.join(process.cwd(), "public", "uploads");
+  await mkdir(dir, { recursive: true });
+  await writeFile(path.join(dir, name), buf);
+
+  return NextResponse.json({
+    url: `/uploads/${name}`,
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    kind: isImage ? "image" : isAudio ? "audio" : "file"
+  });
+}

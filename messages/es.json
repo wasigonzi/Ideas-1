@@ -1,0 +1,92 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "services": "Servicios",
+    "projects": "Proyectos",
+    "about": "Nosotros",
+    "quote": "Cotización",
+    "admin": "Admin",
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión"
+  },
+  "hero": {
+    "title": "Transformamos tus ideas en impresión y rotulación",
+    "subtitle": "Más de 8,500 pies cuadrados de espacio para ofrecer impresiones y rotulación de primera. Soluciones integrales en Puerto Rico y el extranjero.",
+    "cta": "Solicita una cotización",
+    "secondary": "Ver servicios"
+  },
+  "stats": {
+    "clients": "Clientes satisfechos",
+    "projects": "Proyectos realizados",
+    "space": "Pies cuadrados de taller",
+    "years": "Años de experiencia"
+  },
+  "servicesSection": {
+    "eyebrow": "Servicios",
+    "title": "Servicios que se adaptan a tus necesidades",
+    "subtitle": "Manufactura, instalación, rotulación e impresión digital de gran formato.",
+    "more": "Conoce más"
+  },
+  "projectsSection": {
+    "eyebrow": "Proyectos",
+    "title": "Proyectos realizados con éxito",
+    "subtitle": "Trabajamos en diversos sectores: comercial, gobierno, eventos y más.",
+    "viewAll": "Ver todos"
+  },
+  "ctaSection": {
+    "title": "¡Haz tu cotización hoy!",
+    "subtitle": "Cuéntanos tu idea y te enviaremos una propuesta personalizada.",
+    "button": "Solicita aquí"
+  },
+  "about": {
+    "title": "Sobre Ideas, LLC",
+    "lead": "Somos una empresa puertorriqueña dedicada a la impresión y rotulación de gran formato.",
+    "body": "Con más de 8,500 pies cuadrados de espacio de manufactura, ofrecemos soluciones integrales que incluyen diseño, producción e instalación. Trabajamos con clientes comerciales, gubernamentales y de eventos en todo Puerto Rico.",
+    "values": {
+      "quality": { "title": "Calidad", "desc": "Materiales premium y acabados profesionales." },
+      "speed": { "title": "Rapidez", "desc": "Tiempos de entrega ágiles sin sacrificar resultado." },
+      "service": { "title": "Servicio", "desc": "Acompañamiento desde la idea hasta la instalación." }
+    }
+  },
+  "quote": {
+    "title": "Solicita una cotización",
+    "subtitle": "Llena el formulario y nuestro equipo te responderá en menos de 24 horas.",
+    "name": "Nombre completo",
+    "email": "Correo electrónico",
+    "phone": "Teléfono",
+    "company": "Empresa (opcional)",
+    "service": "Servicio de interés",
+    "budget": "Presupuesto estimado",
+    "deadline": "Fecha límite",
+    "message": "Cuéntanos tu proyecto",
+    "submit": "Enviar solicitud",
+    "submitting": "Enviando...",
+    "success": "¡Gracias! Recibimos tu solicitud y te contactaremos pronto.",
+    "error": "Hubo un error. Inténtalo de nuevo."
+  },
+  "footer": {
+    "rights": "Todos los derechos reservados",
+    "tagline": "Impresión y rotulación de gran formato en Puerto Rico"
+  },
+  "admin": {
+    "dashboard": "Panel",
+    "quotes": "Cotizaciones",
+    "services": "Servicios",
+    "projects": "Proyectos",
+    "newQuotes": "Nuevas cotizaciones",
+    "totalServices": "Servicios activos",
+    "totalProjects": "Proyectos publicados",
+    "create": "Crear",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "status": "Estado",
+    "name": "Nombre",
+    "email": "Correo",
+    "date": "Fecha",
+    "actions": "Acciones",
+    "loginTitle": "Acceso administrativo",
+    "loginSubtitle": "Ingresa tus credenciales para continuar"
+  }
+}

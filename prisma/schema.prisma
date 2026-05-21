@@ -1,0 +1,336 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  password   String
+  name       String?
+  role       String   @default("admin") // admin | employee | client
+  phone      String?
+  company    String?
+  position   String?
+  department String?
+  avatar     String?
+  hourlyRate Float?
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  invoices       Invoice[] @relation("ClientInvoices")
+  assignedTasks  Task[]      @relation("AssignedTasks")
+  sentMessages   Message[]   @relation("SentMessages")
+  timeEntries    TimeEntry[]
+  shifts         Shift[]
+  punches        Punch[]
+  dailyNotes     DailyNote[]
+  taskViews      TaskView[]
+  chatMessages   ChatMessage[]
+  chatRooms      ChatRoomMember[]
+  workSessions   WorkSession[]
+}
+
+model Service {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  titleEs   String
+  titleEn   String
+  descEs    String   @db.Text
+  descEn    String   @db.Text
+  icon      String?
+  image     String?
+  gallery   String?  @db.Text
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  titleEs   String
+  titleEn   String
+  descEs    String   @db.Text
+  descEn    String   @db.Text
+  category  String?
+  cover     String?
+  images    String?  @db.Text
+  featured  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Quote {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  service   String?
+  budget    String?
+  deadline  String?
+  message   String   @db.Text
+  status    String   @default("new")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  assigneeId  String?
+  assignee    User?     @relation("AssignedTasks", fields: [assigneeId], references: [id], onDelete: SetNull)
+  title       String
+  description String?   @db.Text
+  status      String    @default("todo") // todo | in_progress | done | blocked
+  priority    String    @default("normal")
+  hours       Float     @default(0)
+  position    Float     @default(0) // ordering within a status column (Trello-style)
+  coverImage  String?   // URL of the card's cover image (one of the attachments)
+  attachments String?   @db.Text // JSON array of image URLs attached to the task
+  members     String?   @db.Text // JSON array of User ids tagged on the task (Trello-style members)
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  timeEntries  TimeEntry[]
+  comments     TaskComment[]
+  activities   TaskActivity[]
+  views        TaskView[]
+  workSessions WorkSession[]
+
+  @@index([status, position])
+}
+
+model TaskComment {
+  id          String   @id @default(cuid())
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId    String
+  body        String   @db.Text
+  // JSON array of attachment objects: [{ url, name, type, kind }]
+  attachments String?  @db.Text
+  // JSON array of mentioned user ids.
+  mentions    String?  @db.Text
+  editedAt    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([taskId, createdAt])
+}
+
+model TaskView {
+  id     String   @id @default(cuid())
+  taskId String
+  task   Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name   String?  // snapshot of user name
+  avatar String?  // snapshot of avatar
+  seenAt DateTime @updatedAt
+
+  @@unique([taskId, userId])
+  @@index([taskId])
+}
+
+model TaskActivity {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  actorId   String
+  // e.g. "status_changed", "priority_changed", "assigned", "members_added",
+  // "members_removed", "title_changed", "due_changed", "attachment_added",
+  // "cover_set", "created"
+  type      String
+  // Optional structured payload as JSON: { from, to, ids, ... }
+  data      String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([taskId, createdAt])
+}
+
+// Editable Trello-style columns/lists for the task board. Rows here drive the
+// column set rendered on /admin/tareas. If the table is empty the server falls
+// back to the four built-in defaults (todo / in_progress / blocked / done).
+model TaskColumn {
+  id        String   @id @default(cuid())
+  key       String   @unique // status value stored on Task.status
+  label     String
+  accent    String?  // tailwind class e.g. "bg-amber-500"
+  position  Float    @default(0)
+  archived  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([position])
+}
+
+model TimeEntry {
+  id        String   @id @default(cuid())
+  taskId    String?
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hours     Float
+  note      String?
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+}
+
+// Tracks a live work session started by an employee on a specific task.
+// endedAt = null means the session is currently active.
+model WorkSession {
+  id        String    @id @default(cuid())
+  taskId    String
+  task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+
+  @@index([taskId])
+  @@index([userId, endedAt])
+}
+
+model Invoice {
+  id            String    @id @default(cuid())
+  number        String    @unique
+  // Optional link to a registered client user
+  clientId      String?
+  client        User?     @relation("ClientInvoices", fields: [clientId], references: [id], onDelete: SetNull)
+  // Direct client info (filled when no user account)
+  clientName    String?
+  clientEmail   String?
+  clientCompany String?
+  clientPhone   String?
+  amount        Float
+  paid          Float     @default(0)
+  status        String    @default("pending") // pending | paid | overdue | cancelled
+  issuedAt      DateTime  @default(now())
+  dueDate       DateTime
+  paidAt        DateTime?
+  notes         String?   @db.Text
+  createdAt     DateTime  @default(now())
+}
+
+// ── Internal chat ──────────────────────────────────────────────────────────
+
+model ChatRoom {
+  id        String   @id @default(cuid())
+  type      String   @default("general") // general | direct
+  name      String?
+  createdAt DateTime @default(now())
+
+  members  ChatRoomMember[]
+  messages ChatMessage[]
+}
+
+model ChatRoomMember {
+  roomId     String
+  room       ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastReadAt DateTime?
+
+  @@id([roomId, userId])
+  @@index([userId])
+}
+
+model ChatMessage {
+  id          String    @id @default(cuid())
+  roomId      String
+  room        ChatRoom  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body        String?   @db.Text
+  type        String    @default("text") // text | file | voice
+  attachments String?   @db.Text // JSON: [{ url, name, type, kind, size }]
+  createdAt   DateTime  @default(now())
+  editedAt    DateTime?
+
+  @@index([roomId, createdAt])
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+
+model Message {
+  id        String   @id @default(cuid())
+  fromId    String
+  from      User     @relation("SentMessages", fields: [fromId], references: [id], onDelete: Cascade)
+  toRole    String?  // "client" | "admin" | "employee"
+  body      String   @db.Text
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// Weekly recurring schedule for an employee.
+// dayOfWeek: 0=Sun .. 6=Sat. start/end stored as "HH:mm" strings (local PR time).
+model Shift {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dayOfWeek Int      // 0..6
+  start     String   // "HH:mm"
+  end       String   // "HH:mm"
+  label     String?  // e.g. "Turno regular", "Cierre"
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, dayOfWeek])
+}
+
+// Punch in / punch out events. A punch-in row is created on clock-in and
+// updated with `out` time on clock-out.
+model Punch {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  in        DateTime     @default(now())
+  out       DateTime?
+  hours     Float?       // computed on clock-out (net of breaks)
+  note      String?
+  source    String       @default("manual") // manual | auto | admin
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  breaks    PunchBreak[]
+
+  @@index([userId, in])
+}
+
+model PunchBreak {
+  id        String    @id @default(cuid())
+  punchId   String
+  punch     Punch     @relation(fields: [punchId], references: [id], onDelete: Cascade)
+  start     DateTime  @default(now())
+  end       DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([punchId])
+}
+
+model DailyNote {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime // store as start-of-day UTC
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+// Global site settings stored as key-value pairs.
+// Keys are unique strings; values are plain text (JSON-encoded for complex types).
+model SiteSetting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+}
