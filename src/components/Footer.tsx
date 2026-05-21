@@ -1,14 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useLocale, useTranslations } from "next-intl";
 import { Facebook, Instagram, Mail, Phone, MapPin, MessageCircle, ArrowUpRight, ArrowUp } from "lucide-react";
 import { Logo } from "./Logo";
 
 export function Footer({ whatsapp = "19393264007" }: { whatsapp?: string }) {
-  const locale = useLocale();
-  const t = useTranslations("footer");
-  const nav = useTranslations("nav");
   const year = new Date().getFullYear();
 
   const scrollTop = () => {
@@ -50,7 +46,7 @@ export function Footer({ whatsapp = "19393264007" }: { whatsapp?: string }) {
             </div>
 
             <p className="mt-7 text-white/70 text-sm leading-relaxed max-w-sm">
-              {t("tagline")}. Empresa puertorriqueña dedicada a la manufactura de rótulos e
+              Impresión y rotulación de gran formato en Puerto Rico. Empresa puertorriqueña dedicada a la manufactura de rótulos e
               impresiones de alto volumen.
             </p>
 
@@ -78,11 +74,11 @@ export function Footer({ whatsapp = "19393264007" }: { whatsapp?: string }) {
           <div className="md:col-span-2 md:pt-6">
             <ul className="space-y-3 text-sm text-white/75">
               {[
-                { href: `/${locale}`, label: nav("home") },
-                { href: `/${locale}/servicios`, label: nav("services") },
-                { href: `/${locale}/proyectos`, label: nav("projects") },
-                { href: `/${locale}/nosotros`, label: nav("about") },
-                { href: `/${locale}/cotizacion`, label: nav("quote") }
+                { href: "/", label: "Inicio" },
+                { href: "/servicios", label: "Servicios" },
+                { href: "/proyectos", label: "Proyectos" },
+                { href: "/nosotros", label: "Nosotros" },
+                { href: "/cotizacion", label: "Cotización" }
               ].map((l) => (
                 <li key={l.href}>
                   <Link
@@ -165,7 +161,7 @@ export function Footer({ whatsapp = "19393264007" }: { whatsapp?: string }) {
         {/* ── Bottom bar ───────────────────────────────────────── */}
         <div className="relative border-t border-white/10">
           <div className="container-x py-6 text-xs text-white/55 flex flex-col md:flex-row items-center justify-between gap-3">
-            <span>© {year} Ideas, LLC. {t("rights")}.</span>
+            <span>© {year} Ideas, LLC. Todos los derechos reservados.</span>
             <span className="flex items-center gap-1.5">
               Hecho con{" "}
               {/* eslint-disable-next-line @next/next/no-img-element */}

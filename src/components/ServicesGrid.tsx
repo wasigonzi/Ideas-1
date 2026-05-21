@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useLocale } from "next-intl";
 import {
   ArrowUpRight, Hammer, Wrench, Megaphone, Printer, Truck, Brush, Compass, Zap
 } from "lucide-react";
@@ -19,7 +18,6 @@ const ICONS: Record<string, typeof Hammer> = {
 };
 
 export function ServicesGrid({ services, config = SITE_CONFIG_DEFAULTS }: { services: Service[]; config?: SiteConfig }) {
-  const locale = useLocale();
   const [selected, setSelected] = useState<Service | null>(null);
 
   return (
@@ -27,7 +25,6 @@ export function ServicesGrid({ services, config = SITE_CONFIG_DEFAULTS }: { serv
       {selected && (
         <ServiceModal
           service={selected}
-          locale={locale}
           onClose={() => setSelected(null)}
         />
       )}
@@ -43,7 +40,7 @@ export function ServicesGrid({ services, config = SITE_CONFIG_DEFAULTS }: { serv
             </h2>
             <p className="mt-5 text-white/70 text-lg">{config.servicesSubtitle}</p>
           </div>
-          <Link href={`/${locale}/servicios`} className="btn btn-outline self-start md:self-end">
+          <Link href="/servicios" className="btn btn-outline self-start md:self-end">
             {config.servicesMore} <ArrowUpRight size={16} />
           </Link>
         </div>
@@ -51,8 +48,8 @@ export function ServicesGrid({ services, config = SITE_CONFIG_DEFAULTS }: { serv
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((s, i) => {
             const Icon = ICONS[s.icon ?? ""] ?? Printer;
-            const title = locale === "es" ? s.titleEs : s.titleEn;
-            const desc = locale === "es" ? s.descEs : s.descEn;
+            const title = s.titleEs;
+            const desc = s.descEs;
             return (
               <motion.article
                 key={s.id}

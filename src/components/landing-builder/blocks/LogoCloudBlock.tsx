@@ -29,8 +29,8 @@ export function LogoCloudBlock(props: Record<string, unknown>) {
       {props.title && (
         <p
           data-sel-prop="title"
-          className="text-center text-xs font-semibold uppercase tracking-[.15em] mb-8"
-          style={{ color: (props.titleColor as string) || "rgba(255,255,255,0.5)" }}
+          className="text-center font-semibold uppercase tracking-[.15em] mb-8"
+          style={{ color: (props.titleColor as string) || "rgba(255,255,255,0.5)", fontSize: "22px" }}
         >
           {props.title as string}
         </p>
@@ -44,7 +44,7 @@ export function LogoCloudBlock(props: Record<string, unknown>) {
                 key={i}
                 src={logo.src}
                 alt={logo.alt}
-                className={`h-8 object-contain ${props.grayscale ? "grayscale opacity-60 hover:grayscale-0 hover:opacity-100" : ""} transition-all`}
+                className={`h-16 object-contain ${props.grayscale ? "grayscale opacity-60 hover:grayscale-0 hover:opacity-100" : ""} transition-all`}
               />
             ))}
           </div>
@@ -57,7 +57,7 @@ export function LogoCloudBlock(props: Record<string, unknown>) {
               key={i}
               src={logo.src}
               alt={logo.alt}
-              className={`h-8 object-contain ${props.grayscale ? "grayscale opacity-60 hover:grayscale-0 hover:opacity-100" : ""} transition-all`}
+              className={`h-16 object-contain ${props.grayscale ? "grayscale opacity-60 hover:grayscale-0 hover:opacity-100" : ""} transition-all`}
             />
           ))}
         </div>

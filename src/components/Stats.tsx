@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import type { SiteConfig } from "@/lib/site-config";
 import { SITE_CONFIG_DEFAULTS } from "@/lib/site-config";
@@ -47,13 +46,11 @@ function Stat({ label, value, suffix }: { label: string; value: number; suffix: 
 }
 
 export function Stats({ config = SITE_CONFIG_DEFAULTS }: { config?: SiteConfig }) {
-  const t = useTranslations("stats");
-
   const STATS = [
-    { key: "clients", value: parseInt(config.statsClients) || 350, suffix: "+" },
-    { key: "projects", value: parseInt(config.statsProjects) || 2943, suffix: "+" },
-    { key: "space", value: parseInt(config.statsSpace) || 8500, suffix: "" },
-    { key: "years", value: parseInt(config.statsYears) || 15, suffix: "+" },
+    { key: "clients", label: "Clientes satisfechos", value: parseInt(config.statsClients) || 350, suffix: "+" },
+    { key: "projects", label: "Proyectos realizados", value: parseInt(config.statsProjects) || 2943, suffix: "+" },
+    { key: "space", label: "Pies cuadrados de taller", value: parseInt(config.statsSpace) || 8500, suffix: "" },
+    { key: "years", label: "Años de experiencia", value: parseInt(config.statsYears) || 15, suffix: "+" },
   ] as const;
 
   return (
@@ -70,7 +67,7 @@ export function Stats({ config = SITE_CONFIG_DEFAULTS }: { config?: SiteConfig }
           className="grid grid-cols-2 md:grid-cols-4 gap-y-12 divide-x divide-white/10"
         >
           {STATS.map((s) => (
-            <Stat key={s.key} label={t(s.key as "clients")} value={s.value} suffix={s.suffix} />
+            <Stat key={s.key} label={s.label} value={s.value} suffix={s.suffix} />
           ))}
         </motion.div>
       </div>

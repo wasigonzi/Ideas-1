@@ -3,14 +3,12 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { useLocale } from "next-intl";
 import { ArrowUpRight } from "lucide-react";
 import type { Project } from "@prisma/client";
 import type { SiteConfig } from "@/lib/site-config";
 import { SITE_CONFIG_DEFAULTS } from "@/lib/site-config";
 
 export function ProjectsShowcase({ projects, config = SITE_CONFIG_DEFAULTS }: { projects: Project[]; config?: SiteConfig }) {
-  const locale = useLocale();
 
   return (
     <section className="section bg-[var(--color-ink-900)] relative overflow-hidden">
@@ -24,14 +22,14 @@ export function ProjectsShowcase({ projects, config = SITE_CONFIG_DEFAULTS }: { 
             <h2 className="heading-lg mt-4 text-balance">{config.projectsTitle}</h2>
             <p className="mt-5 text-white/70 text-lg">{config.projectsSubtitle}</p>
           </div>
-          <Link href={`/${locale}/proyectos`} className="btn btn-outline self-start md:self-end">
+          <Link href="/proyectos" className="btn btn-outline self-start md:self-end">
             {config.projectsViewAll} <ArrowUpRight size={16} />
           </Link>
         </div>
 
         <div className="grid md:grid-cols-6 gap-5">
           {projects.map((p, i) => {
-            const title = locale === "es" ? p.titleEs : p.titleEn;
+            const title = p.titleEs;
             const isFeatured = i === 0;
             return (
               <motion.article

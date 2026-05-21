@@ -15,18 +15,36 @@ const userSelect = {
   hourlyRate: true,
 } as const;
 
-// GET /api/horas?days=N — list time entries for the last N days (admin only)
+// GET /api/horas?from=YYYY-MM-DD&to=YYYY-MM-DD — entries in date range (admin only)
+// Fallback: ?days=N for last N days
 export async function GET(req: NextRequest) {
   const session = await auth();
   const role = (session?.user as { role?: string } | undefined)?.role;
   if (role !== "admin") return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const days = Math.min(Math.max(Number(req.nextUrl.searchParams.get("days") ?? 30), 1), 365);
-  const since = new Date();
-  since.setDate(since.getDate() - days);
+  const { searchParams } = req.nextUrl;
+  let since: Date;
+  let until: Date | undefined;
+
+  const fromParam = searchParams.get("from");
+  const toParam = searchParams.get("to");
+
+  if (fromParam) {
+    since = new Date(fromParam + "T00:00:00");
+    until = toParam ? new Date(toParam + "T23:59:59") : undefined;
+  } else {
+    const days = Math.min(Math.max(Number(searchParams.get("days") ?? 30), 1), 365);
+    since = new Date();
+    since.setDate(since.getDate() - days);
+  }
 
   const entries = await prisma.timeEntry.findMany({
-    where: { date: { gte: since } },
+    where: {
+      date: {
+        gte: since,
+        ...(until ? { lte: until } : {}),
+      },
+    },
     include: {
       user: { select: userSelect },
       task: { select: taskSelect },

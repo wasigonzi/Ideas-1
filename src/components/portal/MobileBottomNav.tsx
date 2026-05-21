@@ -16,7 +16,7 @@ function resolveIcon(name: string): LucideIcon {
   return map[name] ?? Circle;
 }
 
-export function MobileBottomNav({ items, locale }: { items: NavItem[]; locale: string }) {
+export function MobileBottomNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname() ?? "";
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -116,7 +116,7 @@ export function MobileBottomNav({ items, locale }: { items: NavItem[]; locale: s
                 <button
                   onClick={() => {
                     setMoreOpen(false);
-                    signOut({ callbackUrl: `/${locale}` });
+                    signOut({ callbackUrl: "/" });
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl bg-red-500/10 hover:bg-red-500/15 text-sm font-semibold text-red-400"
                 >

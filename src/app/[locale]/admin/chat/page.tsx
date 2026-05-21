@@ -7,8 +7,7 @@ export default async function AdminChatPage({
 }: {
   params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
-  const user = await requireRole(["admin"], locale);
+  const user = await requireRole(["admin"]);
 
   const allUsers = await prisma.user.findMany({
     where: { role: { in: ["admin", "employee"] }, active: true },

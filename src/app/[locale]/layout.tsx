@@ -1,7 +1,4 @@
 import { NextIntlClientProvider } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
-import { locales } from "@/i18n/request";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
@@ -10,28 +7,24 @@ import { PublicChrome } from "@/components/PublicChrome";
 import { prisma } from "@/lib/prisma";
 
 export function generateStaticParams() {
-  return locales.map((locale) => ({ locale }));
+  return [{ locale: "es" }];
 }
 
 export default async function LocaleLayout({
   children,
-  params
 }: {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
-  if (!(locales as readonly string[]).includes(locale)) notFound();
-  setRequestLocale(locale);
 
   const [messages, whatsappRow] = await Promise.all([
-    import(`../../../messages/${locale}.json`).then((m) => m.default),
+    import("../../../messages/es.json").then((m) => m.default),
     prisma.siteSetting.findUnique({ where: { key: "whatsapp" } }),
   ]);
   const whatsapp = whatsappRow?.value ?? "19393264007";
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <head>
         {/* Block BitDefender / similar extension-injected attributes before React hydration to avoid noisy hydration mismatch warnings. */}
         <script
@@ -41,7 +34,7 @@ export default async function LocaleLayout({
         />
       </head>
       <body suppressHydrationWarning>
-        <NextIntlClientProvider locale={locale} messages={messages}>
+        <NextIntlClientProvider locale="es" messages={messages}>
           <Providers>
             <PublicChrome><Navbar whatsapp={whatsapp} /></PublicChrome>
             <main>{children}</main>
