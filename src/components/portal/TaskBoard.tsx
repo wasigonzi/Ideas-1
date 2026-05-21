@@ -97,6 +97,16 @@ export function TaskBoard({
     <>
       {/* ── Toolbar: view toggle + filters ── */}
       <div className="flex flex-wrap items-center gap-2 mb-3">
+        {/* Nueva Tarea */}
+        {canEdit && (
+          <button
+            onClick={() => openCreate(cols[0]?.key ?? "todo")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--color-brand-500)] text-[var(--color-ink-950,#060b14)] text-xs font-bold hover:brightness-110 transition"
+          >
+            <Plus size={13} /> Nueva Tarea
+          </button>
+        )}
+
         {/* View toggle */}
         <div className="flex gap-0.5 p-0.5 bg-white/5 rounded-lg">
           <button
