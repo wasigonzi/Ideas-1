@@ -29,6 +29,9 @@ export type TaskCard = {
   coverImage?: string | null;
   attachments?: string[];
   members?: TaskMember[];
+  orderId?: string | null;
+  orderNumber?: string | null;
+  clientName?: string | null;
   /** Total seconds logged in ended WorkSessions (employee time tracking) */
   loggedSeconds?: number;
   /** Active work session, if the employee is currently clocked in */
@@ -38,6 +41,7 @@ export type TaskCard = {
 const DEFAULT_COLUMNS: BoardColumn[] = [
   { key: "todo", label: "Por hacer", accent: "bg-amber-500" },
   { key: "in_progress", label: "En progreso", accent: "bg-violet-500" },
+  { key: "review", label: "En revisión", accent: "bg-sky-500" },
   { key: "blocked", label: "Bloqueadas", accent: "bg-rose-500" },
   { key: "done", label: "Hechas", accent: "bg-emerald-500" }
 ];
@@ -48,12 +52,16 @@ export function TaskBoard({
   canEdit = true,
   columns,
   currentUserId,
+  orders,
+  defaultOrderId,
 }: {
   tasks: TaskCard[];
   users: EditorUser[];
   canEdit?: boolean;
   columns?: BoardColumn[];
   currentUserId?: string;
+  orders?: import("./TaskEditor").EditorOrder[];
+  defaultOrderId?: string;
 }) {
   const router = useRouter();
   const cols = columns && columns.length > 0 ? columns : DEFAULT_COLUMNS;
@@ -332,6 +340,8 @@ export function TaskBoard({
         users={users}
         canEdit={canEdit}
         currentUserId={currentUserId}
+        orders={orders}
+        defaultOrderId={defaultOrderId}
         onClose={() => setEditorOpen(false)}
       />
     </>

@@ -230,9 +230,9 @@ async function main() {
   });
 
   console.log("Seed listo.");
-  console.log(`Admin:    ${adminEmail} / ${adminPass}`);
-  console.log(`Empleado: empleado@printingideaspr.com / empleado123`);
-  console.log(`Cliente:  cliente@printingideaspr.com / cliente123`);
+  console.log(`Admin:    ${adminEmail} / [contraseña configurada en ADMIN_PASSWORD]`);
+  console.log(`Empleado: empleado@printingideaspr.com / [ver seed.ts]`);
+  console.log(`Cliente:  cliente@printingideaspr.com / [ver seed.ts]`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); }).finally(() => prisma.$disconnect());

@@ -23,7 +23,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  if (role !== "admin") return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const data = ServiceSchema.parse(await req.json());
   const created = await prisma.service.create({ data });
   return NextResponse.json(created);
