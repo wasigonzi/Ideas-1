@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { writeFile, mkdir } from "node:fs/promises";
-import path from "node:path";
 import crypto from "node:crypto";
+import { createAdminClient } from "@/lib/supabase-admin";
 
 const ALLOWED_IMAGES = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
   "image/avif",
-  "image/gif"
+  "image/gif",
+  "image/svg+xml",
+  "image/x-icon",
+  "image/vnd.microsoft.icon",
 ]);
 const ALLOWED_AUDIO = new Set([
   "audio/webm",
@@ -48,6 +50,8 @@ const ALLOWED_FILES = new Set([
 const MAX_BYTES = 16 * 1024 * 1024; // 16 MB
 const MAX_VIDEO_BYTES = 200 * 1024 * 1024; // 200 MB for video backgrounds
 
+const BUCKET = "uploads";
+
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -71,15 +75,25 @@ export async function POST(req: Request) {
   const buf = Buffer.from(await file.arrayBuffer());
   const ext = (file.name.split(".").pop() ?? "bin").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5);
   const name = `${Date.now()}-${crypto.randomBytes(6).toString("hex")}.${ext}`;
-  const dir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, name), buf);
+
+  const supabase = createAdminClient();
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(name, buf, { contentType: file.type, upsert: false });
+
+  if (error) {
+    console.error("[upload] Supabase Storage error:", error.message);
+    return NextResponse.json({ error: "upload_failed" }, { status: 500 });
+  }
+
+  const { data: publicData } = supabase.storage.from(BUCKET).getPublicUrl(name);
 
   return NextResponse.json({
-    url: `/uploads/${name}`,
+    url: publicData.publicUrl,
     name: file.name,
     size: file.size,
     type: file.type,
     kind: isImage ? "image" : isAudio ? "audio" : "file"
   });
 }
+

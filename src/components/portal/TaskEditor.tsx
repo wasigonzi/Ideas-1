@@ -16,11 +16,19 @@ export type EditorUser = {
   company?: string | null;
 };
 
+export type EditorOrder = {
+  id: string;
+  number: string;
+  title: string;
+  clientName: string;
+};
+
 type Mode = "create" | "edit";
 
 const STATUS_OPTIONS = [
   { value: "todo", label: "Por hacer" },
   { value: "in_progress", label: "En progreso" },
+  { value: "review", label: "En revisión" },
   { value: "blocked", label: "Bloqueada" },
   { value: "done", label: "Hecha" }
 ];
@@ -39,6 +47,8 @@ export function TaskEditor({
   users,
   currentUserId,
   canEdit = true,
+  orders,
+  defaultOrderId,
   onClose
 }: {
   open: boolean;
@@ -48,6 +58,8 @@ export function TaskEditor({
   users: EditorUser[];
   currentUserId?: string;
   canEdit?: boolean;
+  orders?: EditorOrder[];
+  defaultOrderId?: string;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -60,6 +72,7 @@ export function TaskEditor({
   const [attachments, setAttachments] = useState<string[]>([]);
   const [coverImage, setCoverImage] = useState<string>("");
   const [memberIds, setMemberIds] = useState<string[]>([]);
+  const [orderId, setOrderId] = useState<string>("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -86,6 +99,7 @@ export function TaskEditor({
         ? [primaryId, ...memberList.filter((id) => id !== primaryId)]
         : memberList;
       setMemberIds(unified);
+      setOrderId(task.orderId ?? "");
     } else {
       setTitle("");
       setDescription("");
@@ -96,6 +110,7 @@ export function TaskEditor({
       setAttachments([]);
       setCoverImage("");
       setMemberIds([]);
+      setOrderId(defaultOrderId ?? "");
     }
   }, [open, mode, task, defaultStatus]);
 
@@ -126,7 +141,8 @@ export function TaskEditor({
       assigneeId: memberIds[0] || null,
       attachments,
       coverImage: coverImage || null,
-      members: memberIds
+      members: memberIds,
+      ...(mode === "create" && orderId ? { orderId } : {})
     };
     try {
       const url = mode === "create" ? "/api/tareas" : `/api/tareas/${task!.id}`;

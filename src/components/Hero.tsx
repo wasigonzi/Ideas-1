@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { useLocale } from "next-intl";
 import { ArrowRight, PlayCircle, Sparkles } from "lucide-react";
 import type { SiteConfig } from "@/lib/site-config";
 import { SITE_CONFIG_DEFAULTS } from "@/lib/site-config";
@@ -32,7 +31,6 @@ function HighlightedTitle({ title }: { title: string }) {
 }
 
 export function Hero({ config = SITE_CONFIG_DEFAULTS }: { config?: SiteConfig }) {
-  const locale = useLocale();
 
   const bgImage = config.heroBgImage || HERO_IMG_FALLBACK;
   const cardImage = config.heroCardImage || HERO_CARD_IMG_FALLBACK;
@@ -76,10 +74,10 @@ export function Hero({ config = SITE_CONFIG_DEFAULTS }: { config?: SiteConfig })
           </p>
 
           <div className="mt-10 flex flex-wrap gap-3">
-            <Link href={`/${locale}/cotizacion`} className="btn btn-brand text-base">
+            <Link href="/cotizacion" className="btn btn-brand text-base">
               {config.heroCtaPrimary} <ArrowRight size={18} />
             </Link>
-            <Link href={`/${locale}/servicios`} className="btn btn-ghost-light text-base">
+            <Link href="/servicios" className="btn btn-ghost-light text-base">
               <PlayCircle size={18} /> {config.heroCtaSecondary}
             </Link>
           </div>

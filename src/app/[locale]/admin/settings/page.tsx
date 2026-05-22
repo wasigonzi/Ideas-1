@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, CheckCircle, Globe, Phone, Share2, Search, FileText, Palette } from "lucide-react";
+import { Save, CheckCircle, Globe, Phone, Share2, Search, FileText, Palette, Upload, X } from "lucide-react";
 
 // ─── Default values ───────────────────────────────────────────────────────────
 const DEFAULTS: Record<string, string> = {
@@ -73,6 +73,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [tab, setTab] = useState<Tab>("general");
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetch("/api/settings")
@@ -86,6 +87,44 @@ export default function SettingsPage() {
   function set(key: string, value: string) {
     setValues((prev) => ({ ...prev, [key]: value }));
   }
+
+  async function uploadImg(key: string, file: File) {
+    setUploading((prev) => ({ ...prev, [key]: true }));
+    const fd = new FormData();
+    fd.append("file", file);
+    const r = await fetch("/api/upload", { method: "POST", body: fd });
+    const j = await r.json();
+    setUploading((prev) => ({ ...prev, [key]: false }));
+    if (j.url) set(key, j.url);
+  }
+
+  const imgField = (key: string) => (
+    <div className="flex items-center gap-3">
+      {values[key] && (
+        <div className="relative group/prev shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={values[key]} alt="preview" className="h-12 w-12 rounded-lg object-contain border border-white/10 bg-white/5" />
+          <button
+            type="button"
+            onClick={() => set(key, "")}
+            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover/prev:opacity-100 transition-opacity"
+          >
+            <X size={10} />
+          </button>
+        </div>
+      )}
+      <label className={`btn btn-outline text-sm cursor-pointer flex items-center gap-2 ${uploading[key] ? "opacity-50 pointer-events-none" : ""}`}>
+        <Upload size={14} />
+        {uploading[key] ? "Subiendo..." : values[key] ? "Cambiar imagen" : "Subir imagen"}
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => e.target.files?.[0] && uploadImg(key, e.target.files[0])}
+        />
+      </label>
+    </div>
+  );
 
   async function save() {
     setSaving(true);
@@ -174,18 +213,11 @@ export default function SettingsPage() {
                   {inp("tagline_en", "Printing & Signage · Puerto Rico")}
                 </Field>
               </Row>
-              <Field label="URL del logotipo" hint="Enlace directo a la imagen del logo (CDN, S3, etc.)">
-                {inp("logo_url", "https://...")}
+              <Field label="Logotipo">
+                {imgField("logo_url")}
               </Field>
-              {values.logo_url && (
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={values.logo_url} alt="Logo preview" className="h-10 object-contain" />
-                  <span className="text-xs text-white/40">Vista previa</span>
-                </div>
-              )}
-              <Field label="URL del favicon" hint="Imagen cuadrada de al menos 32×32 px">
-                {inp("favicon_url", "https://...")}
+              <Field label="Favicon" hint="Imagen cuadrada de al menos 32×32 px">
+                {imgField("favicon_url")}
               </Field>
             </>
           )}

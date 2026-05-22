@@ -3,21 +3,20 @@ import { PortalShell } from "@/components/portal/PortalShell";
 import { requireRole } from "@/lib/auth-helpers";
 
 export default async function EmpleadoLayout({
-  children, params
+  children,
 }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
-  const { locale } = await params;
-  const user = await requireRole(["employee"], locale);
+  const user = await requireRole(["employee"]);
 
   const links = [
-    { href: `/${locale}/empleado`, label: "Panel", icon: LayoutDashboard },
-    { href: `/${locale}/empleado/ponche`, label: "Ponche", icon: Fingerprint },
-    { href: `/${locale}/empleado/tareas`, label: "Mis tareas", icon: ListChecks },
-    { href: `/${locale}/empleado/chat`, label: "Chat", icon: MessageSquareText },
-    { href: `/${locale}/empleado/horario`, label: "Horario", icon: Calendar }
+    { href: "/empleado", label: "Panel", icon: LayoutDashboard },
+    { href: "/empleado/ponche", label: "Ponche", icon: Fingerprint },
+    { href: "/empleado/tareas", label: "Mis tareas", icon: ListChecks },
+    { href: "/empleado/chat", label: "Chat", icon: MessageSquareText },
+    { href: "/empleado/horario", label: "Horario", icon: Calendar }
   ];
 
   return (
-    <PortalShell title="Portal de empleado" user={user} links={links} locale={locale}>
+    <PortalShell title="Portal de empleado" user={user} links={links}>
       {children}
     </PortalShell>
   );

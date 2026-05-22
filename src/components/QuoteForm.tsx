@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 
 type Status = "idle" | "loading" | "success" | "error";
 
 export function QuoteForm() {
-  const t = useTranslations("quote");
   const [status, setStatus] = useState<Status>("idle");
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -38,23 +36,23 @@ export function QuoteForm() {
       className="card p-8 md:p-10 grid md:grid-cols-2 gap-5"
     >
       <div className="md:col-span-2">
-        <label className="text-sm font-medium">{t("name")}*</label>
+        <label className="text-sm font-medium">Nombre completo*</label>
         <input name="name" required className="input mt-1" />
       </div>
       <div>
-        <label className="text-sm font-medium">{t("email")}*</label>
+        <label className="text-sm font-medium">Correo electrónico*</label>
         <input name="email" type="email" required className="input mt-1" />
       </div>
       <div>
-        <label className="text-sm font-medium">{t("phone")}</label>
+        <label className="text-sm font-medium">Teléfono</label>
         <input name="phone" className="input mt-1" />
       </div>
       <div>
-        <label className="text-sm font-medium">{t("company")}</label>
+        <label className="text-sm font-medium">Empresa (opcional)</label>
         <input name="company" className="input mt-1" />
       </div>
       <div>
-        <label className="text-sm font-medium">{t("service")}</label>
+        <label className="text-sm font-medium">Servicio de interés</label>
         <select name="service" className="select mt-1">
           <option value="">—</option>
           <option>Manufactura</option>
@@ -65,7 +63,7 @@ export function QuoteForm() {
         </select>
       </div>
       <div>
-        <label className="text-sm font-medium">{t("budget")}</label>
+        <label className="text-sm font-medium">Presupuesto estimado</label>
         <select name="budget" className="select mt-1">
           <option value="">—</option>
           <option>{"< $500"}</option>
@@ -75,20 +73,20 @@ export function QuoteForm() {
         </select>
       </div>
       <div>
-        <label className="text-sm font-medium">{t("deadline")}</label>
+        <label className="text-sm font-medium">Fecha límite</label>
         <input name="deadline" type="date" className="input mt-1" />
       </div>
       <div className="md:col-span-2">
-        <label className="text-sm font-medium">{t("message")}*</label>
+        <label className="text-sm font-medium">Cuéntanos tu proyecto*</label>
         <textarea name="message" required rows={5} className="textarea mt-1" />
       </div>
       <div className="md:col-span-2 flex items-center justify-between gap-4 mt-2">
         <div className="text-sm">
-          {status === "success" && <span className="text-green-400">{t("success")}</span>}
-          {status === "error" && <span className="text-red-400">{t("error")}</span>}
+          {status === "success" && <span className="text-green-400">¡Gracias! Recibimos tu solicitud y te contactaremos pronto.</span>}
+          {status === "error" && <span className="text-red-400">Hubo un error. Inténtalo de nuevo.</span>}
         </div>
         <button disabled={status === "loading"} className="btn btn-primary">
-          {status === "loading" ? t("submitting") : t("submit")}
+          {status === "loading" ? "Enviando..." : "Enviar solicitud"}
         </button>
       </div>
     </motion.form>

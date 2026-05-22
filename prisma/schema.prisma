@@ -34,6 +34,7 @@ model User {
   chatMessages   ChatMessage[]
   chatRooms      ChatRoomMember[]
   workSessions   WorkSession[]
+  orders         Order[]  @relation("ClientOrders")
 }
 
 model Service {
@@ -82,6 +83,29 @@ model Quote {
   updatedAt DateTime @updatedAt
 }
 
+model Order {
+  id          String    @id @default(cuid())
+  number      String    @unique
+  title       String
+  description String?   @db.Text
+  service     String?
+  status      String    @default("new") // new | in_progress | completed | cancelled
+  priority    String    @default("normal")
+  total       Float     @default(0)
+  paid        Float     @default(0)
+  startDate   DateTime?
+  dueDate     DateTime?
+  completedAt DateTime?
+  clientId    String
+  client      User      @relation("ClientOrders", fields: [clientId], references: [id])
+  tasks       Task[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([clientId])
+  @@index([status])
+}
+
 model Task {
   id          String    @id @default(cuid())
   assigneeId  String?
@@ -95,9 +119,12 @@ model Task {
   coverImage  String?   // URL of the card's cover image (one of the attachments)
   attachments String?   @db.Text // JSON array of image URLs attached to the task
   members     String?   @db.Text // JSON array of User ids tagged on the task (Trello-style members)
-  dueDate     DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  dueDate      DateTime?
+  completedAt  DateTime?
+  orderId      String?
+  order        Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   timeEntries  TimeEntry[]
   comments     TaskComment[]
@@ -106,6 +133,7 @@ model Task {
   workSessions WorkSession[]
 
   @@index([status, position])
+  @@index([orderId])
 }
 
 model TaskComment {

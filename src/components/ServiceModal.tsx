@@ -19,15 +19,13 @@ function parseGallery(raw?: string | null): string[] {
 
 export function ServiceModal({
   service,
-  locale,
   onClose,
 }: {
   service: ServiceModalData;
-  locale?: string;
   onClose: () => void;
 }) {
-  const title = locale === "en" ? (service.titleEn || service.titleEs) : service.titleEs;
-  const desc  = locale === "en" ? (service.descEn  || service.descEs)  : service.descEs;
+  const title = service.titleEs;
+  const desc  = service.descEs;
 
   const galleryUrls = parseGallery(service.gallery);
   const allImages = [...new Set(

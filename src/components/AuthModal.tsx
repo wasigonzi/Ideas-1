@@ -4,7 +4,6 @@ import { createContext, useContext, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
 import { X, Mail, Lock, User as UserIcon, Building2, Phone, Sparkles, ArrowRight } from "lucide-react";
 
 type Mode = "login" | "register";
@@ -38,7 +37,6 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
 function AuthModal({
   isOpen, mode, setMode, onClose
 }: { isOpen: boolean; mode: Mode; setMode: (m: Mode) => void; onClose: () => void }) {
-  const locale = useLocale();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +57,7 @@ function AuthModal({
       setError("Credenciales inválidas. Intenta de nuevo.");
     } else {
       onClose();
-      router.push(`/${locale}/portal`);
+      router.push("/portal");
       router.refresh();
     }
   }
@@ -100,7 +98,7 @@ function AuthModal({
       setMode("login");
     } else {
       onClose();
-      router.push(`/${locale}/portal`);
+      router.push("/portal");
       router.refresh();
     }
   }

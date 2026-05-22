@@ -2,13 +2,11 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useLocale } from "next-intl";
 import { ArrowRight, MessageCircle, Sparkles } from "lucide-react";
 import type { SiteConfig } from "@/lib/site-config";
 import { SITE_CONFIG_DEFAULTS } from "@/lib/site-config";
 
 export function CtaBand({ config = SITE_CONFIG_DEFAULTS }: { config?: SiteConfig }) {
-  const locale = useLocale();
   return (
     <section className="section bg-[var(--color-ink-950)]">
       <div className="container-x">
@@ -32,7 +30,7 @@ export function CtaBand({ config = SITE_CONFIG_DEFAULTS }: { config?: SiteConfig
               <p className="mt-4 text-white/70 text-lg max-w-xl">{config.ctaSubtitle}</p>
             </div>
             <div className="flex flex-col gap-3 md:items-end">
-              <Link href={`/${locale}/cotizacion`} className="btn btn-brand text-base">
+              <Link href="/cotizacion" className="btn btn-brand text-base">
                 {config.ctaButton} <ArrowRight size={18} />
               </Link>
               <a

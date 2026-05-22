@@ -36,7 +36,8 @@ export async function POST(req: NextRequest) {
       members: Array.isArray(body.members)
         ? JSON.stringify(body.members.filter((x: unknown) => typeof x === "string"))
         : (typeof body.members === "string" && body.members) || null,
-      dueDate: body.dueDate ? new Date(body.dueDate) : null
+      dueDate: body.dueDate ? new Date(body.dueDate) : null,
+      orderId: body.orderId || null
     }
   });
   return NextResponse.json(task, { status: 201 });

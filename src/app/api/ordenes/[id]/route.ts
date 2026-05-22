@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 
-const ALLOWED_FIELDS = ["status", "priority", "title", "description", "service", "total", "paid", "dueDate", "startDate"] as const;
+const ALLOWED_FIELDS = ["status", "priority", "title", "description", "service", "total", "paid", "dueDate", "startDate", "position"] as const;
 
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const session = await auth();
