@@ -13,14 +13,12 @@ export function PortalShell({
   title,
   user,
   links,
-  locale,
   children,
   badges
 }: {
   title: string;
   user: { name?: string | null; email?: string | null; role?: string };
   links: PortalLink[];
-  locale: string;
   children: React.ReactNode;
   badges?: Record<string, number>;
 }) {
@@ -41,7 +39,7 @@ export function PortalShell({
           </div>
         </div>
         <Link
-          href={`/${locale}`}
+          href="/"
           className="text-[11px] font-bold text-white/60 hover:text-white px-3 py-2 rounded-full hover:bg-white/5"
         >
           Salir al sitio
@@ -82,7 +80,7 @@ export function PortalShell({
           <form
             action={async () => {
               "use server";
-              await signOut({ redirectTo: `/${locale}` });
+              await signOut({ redirectTo: "/" });
             }}
           >
             <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-red-500/10 text-red-400 mt-4">
@@ -111,7 +109,6 @@ export function PortalShell({
             (l.icon as unknown as { name?: string }).name ??
             "Circle"
         }))}
-        locale={locale}
       />
     </div>
   );

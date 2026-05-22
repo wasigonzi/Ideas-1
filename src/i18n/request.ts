@@ -1,18 +1,12 @@
 import { getRequestConfig } from "next-intl/server";
-import { notFound } from "next/navigation";
 
-export const locales = ["es", "en"] as const;
+export const locales = ["es"] as const;
 export const defaultLocale = "es" as const;
 export type Locale = (typeof locales)[number];
 
-export default getRequestConfig(async ({ requestLocale }) => {
-  const requested = await requestLocale;
-  const locale = (locales as readonly string[]).includes(requested ?? "")
-    ? (requested as Locale)
-    : defaultLocale;
-
+export default getRequestConfig(async () => {
   return {
-    locale,
-    messages: (await import(`../../messages/${locale}.json`)).default
+    locale: "es",
+    messages: (await import("../../messages/es.json")).default
   };
 });

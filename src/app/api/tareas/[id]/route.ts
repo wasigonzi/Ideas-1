@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 
 const ALLOWED_FIELDS = [
-  "status", "priority", "title", "description", "assigneeId", "hours", "dueDate", "position", "coverImage", "attachments", "members"
+  "status", "priority", "title", "description", "assigneeId", "hours", "dueDate", "position", "coverImage", "attachments", "members", "orderId"
 ] as const;
 
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {

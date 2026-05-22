@@ -3,21 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useCallback, useState } from "react";
-import { useTranslations, useLocale } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu, X, Phone, Mail, MapPin, MessageCircle, Instagram, Facebook,
-  ArrowRight, Sparkles, Globe, LogIn, UserPlus, LayoutDashboard
+  ArrowRight, Sparkles, LogIn, UserPlus, LayoutDashboard
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { useSession, signOut } from "next-auth/react";
 import { useAuthModal } from "./AuthModal";
 
 export function Navbar({ whatsapp = "19393264007" }: { whatsapp?: string }) {
-  const t = useTranslations("nav");
-  const locale = useLocale();
   const pathname = usePathname();
-  const other = locale === "es" ? "en" : "es";
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { data: session } = useSession();
@@ -60,10 +56,10 @@ export function Navbar({ whatsapp = "19393264007" }: { whatsapp?: string }) {
   }, [open]);
 
   const links = [
-    { href: `/${locale}`, label: t("home"), exact: true },
-    { href: `/${locale}/servicios`, label: t("services") },
-    { href: `/${locale}/proyectos`, label: t("projects") },
-    { href: `/${locale}/nosotros`, label: t("about") }
+    { href: "/", label: "Inicio", exact: true },
+    { href: "/servicios", label: "Servicios" },
+    { href: "/proyectos", label: "Proyectos" },
+    { href: "/nosotros", label: "Nosotros" }
   ];
 
   const isActive = (href: string, exact?: boolean) => {
@@ -131,7 +127,7 @@ export function Navbar({ whatsapp = "19393264007" }: { whatsapp?: string }) {
         <div className={`flex items-center justify-between px-4 sm:px-6 transition-all duration-500 ${scrolled ? "h-16 container-x" : "container-x h-20"}`}>
           {/* Logo con efecto */}
           <Link
-            href={`/${locale}`}
+            href="/"
             className="flex items-center group relative"
             aria-label="Ideas, LLC"
           >
@@ -175,20 +171,8 @@ export function Navbar({ whatsapp = "19393264007" }: { whatsapp?: string }) {
 
           {/* Right side */}
           <div className="hidden lg:flex items-center gap-2">
-            {/* Language toggle estilo switch */}
-            <Link
-              href={`/${other}`}
-              className="group relative flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest px-3 py-2 rounded-full border border-white/20 text-white/85 hover:border-white hover:text-white transition-all"
-              aria-label={`Switch to ${other.toUpperCase()}`}
-            >
-              <Globe size={13} className="text-[var(--color-brand-500)] group-hover:rotate-180 transition-transform duration-500" />
-              <span>{locale.toUpperCase()}</span>
-              <span className="text-current/50">/</span>
-              <span className="opacity-50 group-hover:opacity-100 transition-opacity">{other.toUpperCase()}</span>
-            </Link>
-
             {user ? (
-              <UserMenu user={user} locale={locale} />
+              <UserMenu user={user} />
             ) : (
               <>
                 <button
@@ -208,12 +192,12 @@ export function Navbar({ whatsapp = "19393264007" }: { whatsapp?: string }) {
 
             {/* Botón cotización con efecto magnético */}
             <Link
-              href={`/${locale}/cotizacion`}
+              href="/cotizacion"
               className="group relative inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-brand-500)] text-[var(--color-ink-900)] font-black text-sm shadow-[0_10px_25px_-8px_rgba(255,174,0,0.5)] hover:shadow-[0_18px_40px_-12px_rgba(255,174,0,0.7)] hover:-translate-y-0.5 transition-all overflow-hidden"
             >
               <span className="absolute inset-0 bg-[var(--color-ink-900)] translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
               <Sparkles size={14} className="relative group-hover:text-[var(--color-brand-500)] transition-colors" />
-              <span className="relative group-hover:text-white transition-colors">{t("quote")}</span>
+              <span className="relative group-hover:text-white transition-colors">Cotización</span>
               <ArrowRight size={14} className="relative group-hover:text-[var(--color-brand-500)] group-hover:translate-x-0.5 transition-all" />
             </Link>
           </div>
@@ -283,7 +267,7 @@ export function Navbar({ whatsapp = "19393264007" }: { whatsapp?: string }) {
               >
                 {user ? (
                   <Link
-                    href={`/${locale}/portal`}
+                    href="/portal"
                     onClick={() => setOpen(false)}
                     className="btn btn-brand text-base justify-center"
                   >
@@ -306,11 +290,11 @@ export function Navbar({ whatsapp = "19393264007" }: { whatsapp?: string }) {
                   </div>
                 )}
                 <Link
-                  href={`/${locale}/cotizacion`}
+                  href="/cotizacion"
                   onClick={() => setOpen(false)}
                   className="btn btn-brand text-base justify-center"
                 >
-                  <Sparkles size={16} /> {t("quote")} <ArrowRight size={16} />
+                  <Sparkles size={16} /> Cotización <ArrowRight size={16} />
                 </Link>
                 <a
                   href={`https://wa.me/${whatsapp}`}
@@ -342,14 +326,6 @@ export function Navbar({ whatsapp = "19393264007" }: { whatsapp?: string }) {
                 </div>
 
                 <div className="flex items-center justify-between mt-4">
-                  <Link
-                    href={`/${other}`}
-                    onClick={() => setOpen(false)}
-                    className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest"
-                  >
-                    <Globe size={14} className="text-[var(--color-brand-500)]" />
-                    {locale.toUpperCase()} / <span className="text-white/40">{other.toUpperCase()}</span>
-                  </Link>
                   <div className="flex items-center gap-2">
                     <a href="https://www.facebook.com/ideasprllc/" className="w-9 h-9 rounded-full bg-white/5 grid place-items-center hover:bg-[var(--color-brand-500)] hover:text-[var(--color-ink-900)]"><Facebook size={14} /></a>
                     <a href="https://www.instagram.com/ideas_llc/" className="w-9 h-9 rounded-full bg-white/5 grid place-items-center hover:bg-[var(--color-brand-500)] hover:text-[var(--color-ink-900)]"><Instagram size={14} /></a>
@@ -365,7 +341,7 @@ export function Navbar({ whatsapp = "19393264007" }: { whatsapp?: string }) {
 }
 
 
-function UserMenu({ user, locale }: { user: { name?: string | null; email?: string | null; role?: string }; locale: string }) {
+function UserMenu({ user }: { user: { name?: string | null; email?: string | null; role?: string } }) {
   const [openMenu, setOpenMenu] = useState(false);
   const initials = (user.name ?? user.email ?? "U")
     .split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
@@ -400,14 +376,14 @@ function UserMenu({ user, locale }: { user: { name?: string | null; email?: stri
                 <div className="mt-1.5 inline-block text-[10px] uppercase tracking-widest font-bold text-[var(--color-brand-500)]">{roleLabel}</div>
               </div>
               <Link
-                href={`/${locale}/portal`}
+                href="/portal"
                 onClick={() => setOpenMenu(false)}
                 className="flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-white/5 text-white/85"
               >
                 <LayoutDashboard size={14} /> Mi portal
               </Link>
               <button
-                onClick={() => { setOpenMenu(false); signOut({ callbackUrl: `/${locale}` }); }}
+                onClick={() => { setOpenMenu(false); signOut({ callbackUrl: "/" }); }}
                 className="w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-red-500/10 text-red-400"
               >
                 <X size={14} /> Cerrar sesion
