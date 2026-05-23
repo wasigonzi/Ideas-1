@@ -11,7 +11,7 @@ export async function requireRole(allowed: Role[]) {
     // Redirect to the user's own portal instead of a generic page
     redirect(pathForRole(user.role));
   }
-  return user;
+  return user as { role: Role; id: string; email?: string; name?: string };
 }
 
 export function pathForRole(role: Role | undefined) {

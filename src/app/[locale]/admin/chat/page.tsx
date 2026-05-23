@@ -29,7 +29,7 @@ export default async function AdminChatPage({
           id: user.id!,
           name: user.name ?? null,
           avatar: currentUserDb?.avatar ?? null,
-          role: user.role,
+          role: user.role!,
         }}
         allUsers={allUsers.map((u) => ({
           id: u.id,
