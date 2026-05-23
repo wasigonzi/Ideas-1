@@ -20,7 +20,7 @@ export default async function AdminChatPage({
       <h1 className="heading-lg mb-6">Chat interno</h1>
       <ChatShell
         currentUser={{
-          id: user.id,
+          id: user.id!,
           name: user.name ?? null,
           avatar: user.avatar ?? null,
           role: user.role,
