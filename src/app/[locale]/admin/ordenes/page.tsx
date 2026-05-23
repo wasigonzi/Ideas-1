@@ -41,7 +41,7 @@ export default async function AdminOrdenes() {
     status: o.status,
     number: o.number,
     title: o.title,
-    service: o.service,
+    service: o.service ?? "",
     total: o.total,
     priority: o.priority,
     dueDate: o.dueDate ? o.dueDate.toISOString() : null,
