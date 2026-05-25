@@ -1,11 +1,26 @@
 import { prisma } from "@/lib/prisma";
 import { ProjectsShowcase } from "@/components/ProjectsShowcase";
 import { CtaBand } from "@/components/CtaBand";
+import { LandingRenderer } from "@/components/landing-builder/LandingRenderer";
+import type { LandingBlock } from "@/components/landing-builder/types";
 
 export const revalidate = 60;
 
 export default async function ProyectosPage() {
-  const projects = await prisma.project.findMany({ orderBy: { createdAt: "desc" } });
+  const [projects, blocksRow] = await Promise.all([
+    prisma.project.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.siteSetting.findUnique({ where: { key: "pageProyectosJson" } }).catch(() => null),
+  ]);
+
+  if (blocksRow?.value) {
+    try {
+      const blocks: LandingBlock[] = JSON.parse(blocksRow.value);
+      if (blocks.length > 0) {
+        return <LandingRenderer blocks={blocks} projects={projects} />;
+      }
+    } catch { /* fall through */ }
+  }
+
   return (
     <>
       <section className="pt-[120px] pb-6">

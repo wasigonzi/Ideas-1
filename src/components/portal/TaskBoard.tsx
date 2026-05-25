@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TrelloBoard, type BoardColumn } from "./TrelloBoard";
 import { MemberAvatar } from "./Avatar";
@@ -76,6 +76,27 @@ export function TaskBoard({
   const [filterPriority, setFilterPriority] = useState("");
   const [filterDue, setFilterDue] = useState<"all" | "overdue" | "week">("all");
 
+  // Dynamically fetch all assignable users so the picker works even when the
+  // server-side prop is empty (e.g. employee portal) or stale.
+  const [liveUsers, setLiveUsers] = useState<EditorUser[]>(users);
+  useEffect(() => {
+    fetch("/api/empleados")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { id: string; name: string | null; email: string; role: string; avatar: string | null; company: string | null }[] | null) => {
+        if (!data || !Array.isArray(data)) return;
+        const mapped: EditorUser[] = data.map((u) => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          avatar: u.avatar ?? null,
+          company: u.company ?? null,
+        }));
+        setLiveUsers(mapped);
+      })
+      .catch(() => null);
+  }, []);
+
   const filteredTasks = useMemo(() => {
     const now = new Date();
     const weekEnd = new Date(now);
@@ -140,14 +161,14 @@ export function TaskBoard({
         </div>
 
         {/* Assignee filter */}
-        {users.length > 0 && (
+        {liveUsers.length > 0 && (
           <select
             value={filterAssignee}
             onChange={(e) => setFilterAssignee(e.target.value)}
             className="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white/80 focus:outline-none focus:border-[var(--color-brand-500)]"
           >
             <option value="">Todos los miembros</option>
-            {users.map((u) => (
+            {liveUsers.map((u) => (
               <option key={u.id} value={u.id}>{u.name ?? u.email}</option>
             ))}
           </select>
@@ -337,7 +358,7 @@ export function TaskBoard({
         mode={mode}
         task={active}
         defaultStatus={defaultStatus}
-        users={users}
+        users={liveUsers}
         canEdit={canEdit}
         currentUserId={currentUserId}
         orders={orders}

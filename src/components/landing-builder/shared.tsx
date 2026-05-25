@@ -443,6 +443,7 @@ export function BlockShell({
   const bgVideoUrl = (props.bgVideoUrl as string) || "";
   const isEmbed = bgVideoUrl ? isBgVideoEmbed(bgVideoUrl) : false;
   const embedUrl = isEmbed ? getBgVideoEmbedUrl(bgVideoUrl) : "";
+  const minHeight = (props.minHeight as number) ?? undefined;
 
   return (
     <section
@@ -464,6 +465,7 @@ export function BlockShell({
         ...(boxShadow ? { boxShadow } : {}),
         ...(opacity < 100 ? { opacity: opacity / 100 } : {}),
         ...(zIndex !== undefined ? { zIndex } : {}),
+        ...(minHeight ? { minHeight } : {}),
       }}
     >
       {/* Video background */}

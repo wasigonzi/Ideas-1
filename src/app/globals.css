@@ -278,6 +278,31 @@ select { background: #0e1a2c; color: white; color-scheme: dark; }
   color: white;
 }
 
+/* ── Print styles for Hoja de Aprobación ────────────────────────────── */
+@media print {
+  /* Hide everything by default */
+  body > * { display: none !important; }
+
+  /* Show only the print-only element */
+  .print-only { display: flex !important; }
+
+  /* Reset page margins */
+  @page {
+    margin: 0;
+    size: letter portrait;
+  }
+
+  html, body {
+    background: white !important;
+    color: black !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+}
+
+.no-print { /* used in JS — @media print hides these */ }
+.print-only { display: none; }
+
 /* ───── Backgrounds ───── */
 .grid-bg-dark {
   background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,.07) 1px, transparent 0);

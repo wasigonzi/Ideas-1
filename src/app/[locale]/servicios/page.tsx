@@ -1,11 +1,26 @@
 import { prisma } from "@/lib/prisma";
 import { ServicesGrid } from "@/components/ServicesGrid";
 import { CtaBand } from "@/components/CtaBand";
+import { LandingRenderer } from "@/components/landing-builder/LandingRenderer";
+import type { LandingBlock } from "@/components/landing-builder/types";
 
 export const revalidate = 60;
 
 export default async function ServiciosPage() {
-  const services = await prisma.service.findMany({ where: { active: true }, orderBy: { order: "asc" } });
+  const [services, blocksRow] = await Promise.all([
+    prisma.service.findMany({ where: { active: true }, orderBy: { order: "asc" } }),
+    prisma.siteSetting.findUnique({ where: { key: "pageServiciosJson" } }).catch(() => null),
+  ]);
+
+  if (blocksRow?.value) {
+    try {
+      const blocks: LandingBlock[] = JSON.parse(blocksRow.value);
+      if (blocks.length > 0) {
+        return <LandingRenderer blocks={blocks} services={services} />;
+      }
+    } catch { /* fall through */ }
+  }
+
   return (
     <>
       <section className="pt-[120px] pb-6">

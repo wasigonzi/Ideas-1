@@ -1,5 +1,4 @@
 import { BlockShell, Field, TextField, ColorField, SelectField, NumberField, SectionTitle, BgSettings, SpacingSettings, UrlField } from "../shared";
-import { getBgStyle } from "../shared";
 
 export const bannerDefaults: Record<string, unknown> = {
   bgType: "image",
@@ -7,11 +6,13 @@ export const bannerDefaults: Record<string, unknown> = {
   bgOverlay: true,
   bgOverlayColor: "#000000",
   bgOverlayOpacity: 50,
-  padTop: 0,
-  padBottom: 0,
+  padTop: 120,
+  padBottom: 60,
   maxWidth: "full",
   minHeight: 400,
   alignment: "center",
+  eyebrow: "",
+  eyebrowColor: "#ffae00",
   title: "Título del banner",
   subtitle: "Descripción corta del banner",
   titleColor: "#ffffff",
@@ -24,22 +25,19 @@ export const bannerDefaults: Record<string, unknown> = {
 
 export function BannerBlock(props: Record<string, unknown>) {
   const alignment = (props.alignment as string) || "center";
-  const minH = (props.minHeight as number) || 400;
   const accent = (props.ctaBg as string) || "#ffae00";
-  const bgStyle = getBgStyle(props);
 
   return (
-    <section
-      className="relative flex items-center"
-      style={{ ...bgStyle, minHeight: minH }}
-    >
-      {(props.bgType as string) === "image" && props.bgOverlay && (
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: (props.bgOverlayColor as string) || "#000", opacity: ((props.bgOverlayOpacity as number) ?? 50) / 100 }} />
-      )}
-      <div className={`relative z-10 w-full px-5 sm:px-8 py-10 sm:py-16 flex flex-col gap-4 sm:gap-5 ${
+    <BlockShell props={props} className="flex items-center">
+      <div className={`flex flex-col gap-4 sm:gap-5 ${
         alignment === "center" ? "items-center text-center" : alignment === "right" ? "items-end text-right" : "items-start text-left"
       }`}>
+        {props.eyebrow && (
+          <p data-sel-prop="eyebrow" className="text-xs font-bold uppercase tracking-widest"
+            style={{ color: (props.eyebrowColor as string) || "#ffae00" }}>
+            {props.eyebrow as string}
+          </p>
+        )}
         {props.title && (
           <h2 data-sel-prop="title" className="text-2xl sm:text-4xl lg:text-5xl font-black leading-tight max-w-3xl"
             style={{ color: (props.titleColor as string) || "#ffffff" }}>
@@ -60,7 +58,7 @@ export function BannerBlock(props: Record<string, unknown>) {
           </a>
         )}
       </div>
-    </section>
+    </BlockShell>
   );
 }
 
@@ -78,6 +76,8 @@ export function BannerSettings({
         <SelectField value={(props.alignment as string) || "center"} onChange={(v) => onChange({ alignment: v })}
           options={[{ value: "left", label: "Izquierda" }, { value: "center", label: "Centro" }, { value: "right", label: "Derecha" }]} />
       </Field>
+      <Field label="Eyebrow"><TextField value={(props.eyebrow as string) || ""} onChange={(v) => onChange({ eyebrow: v })} placeholder="SERVICIOS" /></Field>
+      <Field label="Color eyebrow"><ColorField value={(props.eyebrowColor as string) || "#ffae00"} onChange={(v) => onChange({ eyebrowColor: v })} /></Field>
       <Field label="Título"><TextField value={(props.title as string) || ""} onChange={(v) => onChange({ title: v })} multiline /></Field>
       <Field label="Color título"><ColorField value={(props.titleColor as string) || "#ffffff"} onChange={(v) => onChange({ titleColor: v })} /></Field>
       <Field label="Subtítulo"><TextField value={(props.subtitle as string) || ""} onChange={(v) => onChange({ subtitle: v })} multiline /></Field>

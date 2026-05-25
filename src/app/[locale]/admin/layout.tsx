@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, Wrench, Image as ImageIcon, Users, ClipboardList, Receipt, Clock, NotebookPen, Settings, MessageSquareText, Globe } from "lucide-react";
+import { LayoutDashboard, FileText, Wrench, Image as ImageIcon, Users, ClipboardList, Receipt, Clock, NotebookPen, Settings, MessageSquareText, LayoutGrid } from "lucide-react";
 import { unstable_cache } from "next/cache";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { requireRole } from "@/lib/auth-helpers";
@@ -37,7 +37,7 @@ export default async function AdminLayout({
     { href: "/admin/usuarios", label: "Usuarios", icon: Users },
     { href: "/admin/servicios", label: "Servicios", icon: Wrench },
     { href: "/admin/proyectos", label: "Proyectos", icon: ImageIcon },
-    { href: "/admin/landing", label: "Landing", icon: Globe },
+    { href: "/admin/paginas", label: "Páginas", icon: LayoutGrid },
     { href: "/admin/settings", label: "Configuración", icon: Settings }
   ];
 

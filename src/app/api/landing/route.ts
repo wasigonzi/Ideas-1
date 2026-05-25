@@ -5,18 +5,29 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import type { LandingBlock } from "@/components/landing-builder/types";
 import { DEFAULT_BLOCKS } from "@/components/landing-builder/registry";
 
-const KEY = "landingJson";
+const ALLOWED_KEYS = new Set([
+  "landingJson",
+  "pageServiciosJson",
+  "pageProyectosJson",
+  "pageNosotrosJson",
+]);
 
-export async function GET() {
+function resolveKey(raw: string | null | undefined): string {
+  const k = raw ?? "landingJson";
+  return ALLOWED_KEYS.has(k) ? k : "landingJson";
+}
+
+export async function GET(req: Request) {
+  const key = resolveKey(new URL(req.url).searchParams.get("key"));
   try {
-    const row = await prisma.siteSetting.findUnique({ where: { key: KEY } });
+    const row = await prisma.siteSetting.findUnique({ where: { key } });
     if (row?.value) {
       const blocks: LandingBlock[] = JSON.parse(row.value);
       return NextResponse.json({ blocks });
     }
-    return NextResponse.json({ blocks: DEFAULT_BLOCKS });
+    return NextResponse.json({ blocks: key === "landingJson" ? DEFAULT_BLOCKS : [] });
   } catch {
-    return NextResponse.json({ blocks: DEFAULT_BLOCKS });
+    return NextResponse.json({ blocks: key === "landingJson" ? DEFAULT_BLOCKS : [] });
   }
 }
 
@@ -27,7 +38,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body: { blocks: LandingBlock[] } = await req.json();
+  const body: { blocks: LandingBlock[]; key?: string } = await req.json();
+  const key = resolveKey(body.key);
   const blocks = body.blocks;
 
   if (!Array.isArray(blocks)) {
@@ -35,12 +47,11 @@ export async function POST(req: Request) {
   }
 
   await prisma.siteSetting.upsert({
-    where: { key: KEY },
+    where: { key },
     update: { value: JSON.stringify(blocks) },
-    create: { key: KEY, value: JSON.stringify(blocks) },
+    create: { key, value: JSON.stringify(blocks) },
   });
 
-  // Revalidate all landing pages so any ISR cache is cleared
   revalidatePath("/", "layout");
   revalidatePath("/es", "layout");
   revalidatePath("/en", "layout");

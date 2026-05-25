@@ -139,7 +139,7 @@ export function Navbar({ whatsapp = "19393264007" }: { whatsapp?: string }) {
           <nav className="hidden lg:flex items-center">
             <div
               ref={navListRef}
-              className="relative flex items-center gap-1 p-1.5 rounded-full liquid-glass-pill"
+              className="relative flex items-center gap-2 p-1.5 rounded-full liquid-glass-pill"
               onMouseLeave={handleNavLeave}
             >
               {links.map((l) => {

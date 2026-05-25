@@ -3,9 +3,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, Trash2, Loader2, Save, Plus, Image as ImageIcon, Star, StarOff, Upload, Users, Search, MessageSquare, Activity, Send, Paperclip, AtSign, Play, Pause, CheckCircle, Clock, Timer } from "lucide-react";
+import { X, Trash2, Loader2, Save, Plus, Image as ImageIcon, Star, StarOff, Upload, Users, Search, MessageSquare, Activity, Send, Paperclip, AtSign, Play, Pause, CheckCircle, Clock, Timer, FileCheck } from "lucide-react";
 import type { TaskCard } from "./TaskBoard";
 import { MemberAvatar } from "./Avatar";
+import { ApprovalSheet } from "./ApprovalSheet";
 
 export type EditorUser = {
   id: string;
@@ -77,6 +78,8 @@ export function TaskEditor({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showApproval, setShowApproval] = useState(false);
+  const [approvalStatus, setApprovalStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Reset form whenever the editor (re)opens
@@ -113,6 +116,16 @@ export function TaskEditor({
       setOrderId(defaultOrderId ?? "");
     }
   }, [open, mode, task, defaultStatus]);
+
+  // Load approval status when editing a task
+  useEffect(() => {
+    if (!open || mode !== "edit" || !task) return;
+    setApprovalStatus(null);
+    fetch(`/api/tareas/${task.id}/hoja`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((s) => s ? setApprovalStatus(s.status) : null)
+      .catch(() => null);
+  }, [open, mode, task]);
 
   // Esc to close
   useEffect(() => {
@@ -216,6 +229,7 @@ export function TaskEditor({
   }
 
   return (
+    <>
     <AnimatePresence>
       {open && (
         <>
@@ -442,6 +456,19 @@ export function TaskEditor({
                 <span />
               )}
               <div className="flex items-center gap-2">
+                {mode === "edit" && task && (
+                  <button
+                    type="button"
+                    onClick={() => setShowApproval(true)}
+                    className="inline-flex items-center gap-2 text-xs font-bold px-3 py-2 rounded-lg border border-[var(--color-brand-500)]/50 text-[var(--color-brand-400)] hover:bg-[var(--color-brand-500)]/10 transition-colors"
+                  >
+                    <FileCheck size={14} />
+                    Hoja de aprobaci&#243;n
+                    {approvalStatus === "approved" && <span className="w-2 h-2 rounded-full bg-green-400" title="Aprobado" />}
+                    {approvalStatus === "changes_requested" && <span className="w-2 h-2 rounded-full bg-red-400" title="Cambios solicitados" />}
+                    {approvalStatus === "pending" && <span className="w-2 h-2 rounded-full bg-yellow-400" title="Pendiente" />}
+                  </button>
+                )}
                 <button
                   onClick={onClose}
                   disabled={saving || deleting}
@@ -463,6 +490,22 @@ export function TaskEditor({
         </>
       )}
     </AnimatePresence>
+
+    {/* Approval sheet — rendered outside the editor z-stack */}
+    {mode === "edit" && task && (
+      <ApprovalSheet
+        open={showApproval}
+        task={{
+          id: task.id,
+          title: task.title,
+          attachments: task.attachments ?? [],
+          orderNumber: task.orderNumber ?? undefined,
+          clientName: task.clientName ?? undefined,
+        }}
+        onClose={() => setShowApproval(false)}
+      />
+    )}
+    </>
   );
 }
 

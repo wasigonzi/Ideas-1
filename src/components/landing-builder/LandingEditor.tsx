@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import {
   DndContext,
   closestCenter,
@@ -18,7 +19,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Copy, Trash2, Plus, ChevronLeft, Monitor, Tablet, Smartphone, Save, Check, Loader2, Eye, X, LayoutGrid } from "lucide-react";
 import type { LandingBlock, BlockType } from "./types";
-import { BLOCK_REGISTRY, DEFAULT_BLOCKS, CATEGORY_LABELS } from "./registry";
+import { BLOCK_REGISTRY, DEFAULT_BLOCKS, PAGE_DEFAULTS, CATEGORY_LABELS } from "./registry";
 import { BgSettings, SpacingSettings, BorderSettings, ShadowSettings, FilterSettings, AccordionSection, ToggleField, Field, TextField, NumberField } from "./shared";
 
 // ── Viewport preview sizes ─────────────────────────────────────────────────
@@ -476,7 +477,7 @@ function PaletteView({ onAdd }: { onAdd: (type: BlockType) => void }) {
 }
 
 // ── Main editor ────────────────────────────────────────────────────────────
-export function LandingEditor() {
+export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }: { pageKey?: string; pageLabel?: string }) {
   const [blocks, setBlocks] = useState<LandingBlock[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [focusedProp, setFocusedProp] = useState<string | null>(null);
@@ -499,19 +500,21 @@ export function LandingEditor() {
   }, [selectedId]);
 
   // Detect locale from URL so back link and preview link work correctly
-  const locale = typeof window !== "undefined" ? window.location.pathname.split("/")[1] || "es" : "es";
+  const pathname = usePathname();
+  const locale = pathname?.split("/")[1] || "es";
 
   // Load blocks + data
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
 
-    fetch("/api/landing")
+    fetch(`/api/landing?key=${encodeURIComponent(pageKey)}`)
       .then((r) => r.json())
       .then((data: { blocks: LandingBlock[] }) => {
-        setBlocks(data.blocks?.length ? data.blocks : DEFAULT_BLOCKS);
+        const fallback = PAGE_DEFAULTS[pageKey] ?? [];
+        setBlocks(data.blocks?.length ? data.blocks : fallback);
       })
-      .catch(() => setBlocks(DEFAULT_BLOCKS));
+      .catch(() => setBlocks(PAGE_DEFAULTS[pageKey] ?? []));
 
     fetch("/api/servicios").then((r) => r.json()).then((d) => setServices(d.services ?? d ?? [])).catch(() => {});
     fetch("/api/proyectos").then((r) => r.json()).then((d) => setProjects(d.projects ?? d ?? [])).catch(() => {});
@@ -593,7 +596,7 @@ export function LandingEditor() {
       const res = await fetch("/api/landing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ blocks }),
+        body: JSON.stringify({ blocks, key: pageKey }),
       });
       if (res.ok) {
         setSaved(true);
@@ -616,7 +619,7 @@ export function LandingEditor() {
           <ChevronLeft size={14} /> Admin
         </a>
         <span className="text-white/20">|</span>
-        <span className="font-bold text-sm">Editor de página</span>
+        <span className="font-bold text-sm">Editor · {pageLabel}</span>
         {dirty && <span className="text-xs text-[var(--color-brand-400)] animate-pulse">● Sin guardar</span>}
 
         {/* Viewport toggles */}

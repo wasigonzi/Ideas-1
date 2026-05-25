@@ -126,14 +126,30 @@ model Task {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  timeEntries  TimeEntry[]
-  comments     TaskComment[]
-  activities   TaskActivity[]
-  views        TaskView[]
-  workSessions WorkSession[]
+  timeEntries   TimeEntry[]
+  comments      TaskComment[]
+  activities    TaskActivity[]
+  views         TaskView[]
+  workSessions  WorkSession[]
+  approvalSheet ApprovalSheet?
 
   @@index([status, position])
   @@index([orderId])
+}
+
+model ApprovalSheet {
+  id          String   @id @default(cuid())
+  taskId      String   @unique
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  // JSON: { numero, cliente, fecha, material, terminacion, nota, pages: [{ id, images: [{ id, url, x, y, scale }] }] }
+  data        String   @db.Text
+  // pending | approved | changes_requested
+  status      String   @default("pending")
+  clientNote  String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([taskId])
 }
 
 model TaskComment {

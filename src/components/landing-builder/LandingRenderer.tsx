@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import type { LandingBlock } from "./types";
 import { BLOCK_REGISTRY } from "./registry";
