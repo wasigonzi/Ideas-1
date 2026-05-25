@@ -31,6 +31,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="es" suppressHydrationWarning>
       <head>
         {faviconUrl && <link rel="icon" href={faviconUrl} />}
+        <script src="/anti-bis.js" />
       </head>
       <body suppressHydrationWarning>
         {children}
