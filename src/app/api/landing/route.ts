@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import type { LandingBlock } from "@/components/landing-builder/types";
 import { DEFAULT_BLOCKS } from "@/components/landing-builder/registry";
 
@@ -44,6 +44,7 @@ export async function POST(req: Request) {
   revalidatePath("/", "layout");
   revalidatePath("/es", "layout");
   revalidatePath("/en", "layout");
+  revalidateTag("home");
 
   return NextResponse.json({ ok: true });
 }

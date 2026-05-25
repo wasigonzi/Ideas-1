@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
 const ServiceSchema = z.object({
@@ -23,6 +24,7 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
   const { id } = await ctx.params;
   const data = ServiceSchema.parse(await req.json());
   const updated = await prisma.service.update({ where: { id }, data });
+  revalidateTag("home");
   return NextResponse.json(updated);
 }
 
@@ -32,5 +34,6 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
   if (role !== "admin") return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await ctx.params;
   await prisma.service.delete({ where: { id } });
+  revalidateTag("home");
   return NextResponse.json({ ok: true });
 }

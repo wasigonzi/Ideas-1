@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
 const ServiceSchema = z.object({
@@ -27,5 +28,6 @@ export async function POST(req: Request) {
   if (role !== "admin") return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const data = ServiceSchema.parse(await req.json());
   const created = await prisma.service.create({ data });
+  revalidateTag("home");
   return NextResponse.json(created);
 }

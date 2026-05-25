@@ -1,4 +1,5 @@
 import { BlockShell, Field, ColorField, SelectField, SectionTitle, BgSettings, SpacingSettings } from "../shared";
+import DOMPurify from "isomorphic-dompurify";
 
 export const richTextDefaults: Record<string, unknown> = {
   bgType: "none",
@@ -28,7 +29,7 @@ export function RichTextBlock(props: Record<string, unknown>) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ["--tw-prose-links" as any]: (props.linkColor as string) || "#ffae00",
         }}
-        dangerouslySetInnerHTML={{ __html: (props.html as string) || "" }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize((props.html as string) || "") }}
       />
     </BlockShell>
   );

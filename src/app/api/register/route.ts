@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = await getClientIp();
+    const limited = checkRateLimit(`register:${ip}`, 5, 60 * 60 * 1000); // 5/hour per IP
+    if (limited) return limited;
+
     const body = await req.json();
     const name = String(body.name ?? "").trim();
     const email = String(body.email ?? "").trim().toLowerCase();

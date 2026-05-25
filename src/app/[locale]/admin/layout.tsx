@@ -1,17 +1,27 @@
 import { LayoutDashboard, FileText, Wrench, Image as ImageIcon, Users, ClipboardList, Receipt, Clock, NotebookPen, Settings, MessageSquareText, Globe } from "lucide-react";
+import { unstable_cache } from "next/cache";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { requireRole } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
+
+const getAdminBadges = unstable_cache(
+  async () => {
+    const [overdueCount, urgentCount] = await Promise.all([
+      prisma.invoice.count({ where: { status: "overdue" } }),
+      prisma.task.count({ where: { priority: "urgent", status: { not: "done" } } }),
+    ]);
+    return { overdueCount, urgentCount };
+  },
+  ["admin-sidebar-badges"],
+  { revalidate: 30, tags: ["admin-badges"] },
+);
 
 export default async function AdminLayout({
   children,
 }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
   const user = await requireRole(["admin"]);
 
-  const [overdueCount, urgentCount] = await Promise.all([
-    prisma.invoice.count({ where: { status: "overdue" } }),
-    prisma.task.count({ where: { priority: "urgent", status: { not: "done" } } })
-  ]);
+  const { overdueCount, urgentCount } = await getAdminBadges();
   const badges: Record<string, number> = {};
   if (overdueCount > 0) badges["/admin/facturas"] = overdueCount;
   if (urgentCount > 0) badges["/admin/tareas"] = urgentCount;

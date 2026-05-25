@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { sendQuoteEmail } from "@/lib/mailer";
-import { auth } from "@/auth";
+import { requireApiRole } from "@/lib/auth-helpers";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const QuoteSchema = z.object({
   name: z.string().min(2).max(120),
@@ -17,6 +18,10 @@ const QuoteSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const ip = await getClientIp();
+    const limited = checkRateLimit(`quote:${ip}`, 5, 60 * 60 * 1000); // 5/hour per IP
+    if (limited) return limited;
+
     const json = await req.json();
     const data = QuoteSchema.parse(json);
     const quote = await prisma.quote.create({ data });
@@ -32,8 +37,8 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const auth = await requireApiRole(["admin"]);
+  if (auth instanceof NextResponse) return auth;
   const quotes = await prisma.quote.findMany({ orderBy: { createdAt: "desc" } });
   return NextResponse.json(quotes);
 }

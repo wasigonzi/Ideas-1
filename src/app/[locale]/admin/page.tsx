@@ -1,26 +1,48 @@
 import { prisma } from "@/lib/prisma";
+import { unstable_cache } from "next/cache";
 import { StatCard, StatusPill } from "@/components/portal/PortalShell";
 import { ClipboardList, Users, Receipt, TrendingUp, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
+const getAdminDashboard = unstable_cache(
+  async () => {
+    const [
+      quotesNew, tasksOpen, userCounts,
+      invoiceAgg, invoiceOverdue, latestQuotes, latestMessages,
+    ] = await Promise.all([
+      prisma.quote.count({ where: { status: "new" } }),
+      prisma.task.count({ where: { status: { notIn: ["done"] } } }),
+      prisma.user.groupBy({
+        by: ["role"],
+        _count: { _all: true },
+        where: { role: { in: ["employee", "client"] } },
+      }),
+      prisma.invoice.aggregate({ _sum: { amount: true, paid: true } }),
+      prisma.invoice.count({ where: { status: "overdue" } }),
+      prisma.quote.findMany({ orderBy: { createdAt: "desc" }, take: 5 }),
+      prisma.message.findMany({
+        orderBy: { createdAt: "desc" }, take: 5,
+        include: { from: { select: { name: true, role: true } } },
+      }),
+    ]);
+    return {
+      quotesNew, tasksOpen, userCounts,
+      invoiceAgg, invoiceOverdue, latestQuotes, latestMessages,
+    };
+  },
+  ["admin-dashboard"],
+  { revalidate: 30, tags: ["admin-dashboard"] },
+);
+
 export default async function AdminHome({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const [
-    quotesNew, tasksOpen, employees, clients,
-    invoiceAgg, invoiceOverdue, latestQuotes, latestMessages
-  ] = await Promise.all([
-    prisma.quote.count({ where: { status: "new" } }),
-    prisma.task.count({ where: { status: { notIn: ["done"] } } }),
-    prisma.user.count({ where: { role: "employee" } }),
-    prisma.user.count({ where: { role: "client" } }),
-    prisma.invoice.aggregate({ _sum: { amount: true, paid: true } }),
-    prisma.invoice.count({ where: { status: "overdue" } }),
-    prisma.quote.findMany({ orderBy: { createdAt: "desc" }, take: 5 }),
-    prisma.message.findMany({
-      orderBy: { createdAt: "desc" }, take: 5,
-      include: { from: { select: { name: true, role: true } } }
-    })
-  ]);
+  const {
+    quotesNew, tasksOpen, userCounts,
+    invoiceAgg, invoiceOverdue, latestQuotes, latestMessages,
+  } = await getAdminDashboard();
+
+  const employees = userCounts.find((c) => c.role === "employee")?._count._all ?? 0;
+  const clients = userCounts.find((c) => c.role === "client")?._count._all ?? 0;
 
   const billed = invoiceAgg._sum.amount ?? 0;
   const collected = invoiceAgg._sum.paid ?? 0;

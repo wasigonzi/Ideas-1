@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { mergeConfig } from "@/lib/site-config";
 
 export async function GET() {
@@ -36,6 +36,7 @@ export async function PUT(req: Request) {
   revalidatePath("/");
   revalidatePath("/es");
   revalidatePath("/en");
+  revalidateTag("home");
 
   return NextResponse.json({ ok: true });
 }
