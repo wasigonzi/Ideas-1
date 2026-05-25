@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, CheckCircle, Globe, Phone, Share2, Search, FileText, Palette, Upload, X } from "lucide-react";
+import { Save, CheckCircle, Globe, Phone, Share2, Search, FileText, Palette, Upload, X, LayoutTemplate } from "lucide-react";
 
 // ─── Default values ───────────────────────────────────────────────────────────
 const DEFAULTS: Record<string, string> = {
@@ -37,9 +37,20 @@ const DEFAULTS: Record<string, string> = {
   quote_terms_en: "50% upon signing the proposal, 50% upon project completion.",
   quote_footer_es: "Gracias por confiar en Ideas, LLC.",
   quote_footer_en: "Thank you for choosing Ideas, LLC.",
+  // Footer
+  footer_description: "Impresión y rotulación de gran formato en Puerto Rico. Empresa puertorriqueña dedicada a la manufactura de rótulos e impresiones de alto volumen.",
+  footer_member_1_href: "https://asociacion.hechoen.pr/quienes-somos/",
+  footer_member_1_label: "Hecho en PR",
+  footer_member_1_logo: "/logos/hecho-en-pr.svg",
+  footer_member_2_href: "https://www.midapr.com/",
+  footer_member_2_label: "MIDA",
+  footer_member_2_logo: "/logos/mida.png",
+  footer_member_3_href: "https://www.smepr.org/",
+  footer_member_3_label: "SME PR",
+  footer_member_3_logo: "/logos/sme-pr.svg",
 };
 
-type Tab = "general" | "contacto" | "redes" | "seo" | "cotizaciones";
+type Tab = "general" | "contacto" | "redes" | "seo" | "cotizaciones" | "footer";
 
 const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
   { key: "general",     label: "General",       icon: <Globe size={15} /> },
@@ -47,6 +58,7 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
   { key: "redes",       label: "Redes Sociales",icon: <Share2 size={15} /> },
   { key: "seo",         label: "SEO",           icon: <Search size={15} /> },
   { key: "cotizaciones",label: "Cotizaciones",  icon: <FileText size={15} /> },
+  { key: "footer",      label: "Footer",        icon: <LayoutTemplate size={15} /> },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -297,6 +309,36 @@ export default function SettingsPage() {
                   {inp("meta_keywords_en", "signs, printing, vinyl...")}
                 </Field>
               </Row>
+            </>
+          )}
+
+          {/* ── Footer ── */}
+          {tab === "footer" && (
+            <>
+              <SectionTitle icon={<LayoutTemplate size={16} />} title="Contenido del footer" />
+              <Field label="Descripción bajo el logo">
+                {ta("footer_description", 3, "Texto que aparece bajo el logotipo en el footer")}
+              </Field>
+
+              <SectionTitle icon={<LayoutTemplate size={16} />} title="Membresías / Asociaciones" />
+              <p className="text-xs text-white/40 -mt-4">Configura hasta 3 insignias de asociaciones que aparecen en el footer.</p>
+
+              {([1, 2, 3] as const).map((n) => (
+                <div key={n} className="rounded-xl border border-white/10 bg-white/[0.03] p-4 space-y-3">
+                  <p className="text-xs font-semibold text-white/50 uppercase tracking-widest">Membresía {n}</p>
+                  <Row>
+                    <Field label="Nombre / Alt">
+                      {inp(`footer_member_${n}_label`, "Nombre de la asociación")}
+                    </Field>
+                    <Field label="Enlace (href)">
+                      {inp(`footer_member_${n}_href`, "https://...")}
+                    </Field>
+                  </Row>
+                  <Field label="Logo" hint="Sube un PNG, SVG o JPG. Déjalo vacío para ocultar esta membresía.">
+                    {imgField(`footer_member_${n}_logo`)}
+                  </Field>
+                </div>
+              ))}
             </>
           )}
 

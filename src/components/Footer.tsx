@@ -4,8 +4,28 @@ import Link from "next/link";
 import { Facebook, Instagram, Mail, Phone, MapPin, MessageCircle, ArrowUp } from "lucide-react";
 import { Logo } from "./Logo";
 
-export function Footer({ whatsapp = "19393264007" }: { whatsapp?: string }) {
+type MemberItem = { href: string; label: string; logo: string };
+
+export function Footer({
+  whatsapp = "19393264007",
+  description,
+  members,
+}: {
+  whatsapp?: string;
+  description?: string;
+  members?: MemberItem[];
+}) {
   const year = new Date().getFullYear();
+
+  const resolvedDescription = description ??
+    "Impresión y rotulación de gran formato en Puerto Rico. Empresa puertorriqueña dedicada a la manufactura de rótulos e impresiones de alto volumen.";
+
+  const defaultMembers: MemberItem[] = [
+    { href: "https://asociacion.hechoen.pr/quienes-somos/", label: "Hecho en PR", logo: "/logos/hecho-en-pr.svg" },
+    { href: "https://www.midapr.com/", label: "MIDA", logo: "/logos/mida.png" },
+    { href: "https://www.smepr.org/", label: "SME PR", logo: "/logos/sme-pr.svg" },
+  ];
+  const resolvedMembers = members ?? defaultMembers;
 
   const scrollTop = () => {
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
@@ -46,8 +66,7 @@ export function Footer({ whatsapp = "19393264007" }: { whatsapp?: string }) {
             </div>
 
             <p className="mt-7 text-white/70 text-sm leading-relaxed max-w-sm">
-              Impresión y rotulación de gran formato en Puerto Rico. Empresa puertorriqueña dedicada a la manufactura de rótulos e
-              impresiones de alto volumen.
+              {resolvedDescription}
             </p>
 
             <div className="mt-7 flex items-center gap-3">
@@ -134,23 +153,7 @@ export function Footer({ whatsapp = "19393264007" }: { whatsapp?: string }) {
           {/* Memberships */}
           <div className="md:col-span-3 md:pt-6">
             <div className="flex flex-wrap gap-3">
-              {[
-                {
-                  href: "https://asociacion.hechoen.pr/quienes-somos/",
-                  label: "Hecho en PR",
-                  logo: "https://asociacion.hechoen.pr/wp-content/uploads/logo-hecho-en-pr.png",
-                },
-                {
-                  href: "https://www.midapr.com/",
-                  label: "MIDA",
-                  logo: "https://www.midapr.com/images/mida-logo-footer.png",
-                },
-                {
-                  href: "https://www.smepr.org/",
-                  label: "SME PR",
-                  logo: "https://www.smepr.org/wp-content/uploads/sme-pr-logo.png",
-                },
-              ].map((m) => (
+              {resolvedMembers.filter((m) => m.logo).map((m) => (
                 <a
                   key={m.label}
                   href={m.href}
