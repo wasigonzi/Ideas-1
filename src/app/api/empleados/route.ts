@@ -31,8 +31,11 @@ const CreateSchema = z.object({
 });
 
 export async function GET() {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const session = await auth();
+  const u = session?.user as { id?: string; role?: string } | undefined;
+  if (!u?.id || !["admin", "employee"].includes(u.role ?? "")) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
 
   const users = await prisma.user.findMany({
     orderBy: [{ role: "asc" }, { name: "asc" }],

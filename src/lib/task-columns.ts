@@ -10,8 +10,7 @@ export type TaskColumnDTO = {
 export const DEFAULT_TASK_COLUMNS: TaskColumnDTO[] = [
   { key: "todo",        label: "Por hacer",       accent: "bg-amber-500" },
   { key: "in_progress", label: "En progreso",      accent: "bg-violet-500" },
-  { key: "review",      label: "Para revisión",    accent: "bg-sky-500" },
-  { key: "blocked",     label: "Bloqueadas",       accent: "bg-rose-500" },
+  { key: "review",      label: "Para revisión",    accent: "bg-sky-500" },  { key: "produccion",  label: "Producci\u00f3n",        accent: "bg-orange-500" },  { key: "blocked",     label: "Bloqueadas",       accent: "bg-rose-500" },
   { key: "done",        label: "Hechas",           accent: "bg-emerald-500" }
 ];
 

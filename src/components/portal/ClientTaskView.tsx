@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { StatusPill, PriorityPill, ProgressBar } from "./ui";
 import { CommentsActivity } from "./TaskEditor";
@@ -46,11 +47,14 @@ function isOverdue(t: ClientTask) {
 const STATUS_LABEL: Record<string, string> = {
   todo: "Por hacer",
   in_progress: "En progreso",
+  review: "Para revisión",
+  produccion: "Producción",
   blocked: "Bloqueada",
   done: "Hecha",
 };
 
 export function ClientTaskView({ tasks, currentUserId }: { tasks: ClientTask[]; currentUserId?: string }) {
+  const router = useRouter();
   const [selected, setSelected] = useState<ClientTask | null>(null);
 
   const doneCount = tasks.filter((t) => t.status === "done").length;
@@ -198,7 +202,15 @@ export function ClientTaskView({ tasks, currentUserId }: { tasks: ClientTask[]; 
             </div>
 
             {/* Approval Sheet */}
-            <ApprovalSheetPanel taskId={selected.id} />
+            <ApprovalSheetPanel
+              taskId={selected.id}
+              taskStatus={selected.status}
+              onRespond={(approvalStatus) => {
+                const newTaskStatus = approvalStatus === "approved" ? "produccion" : "in_progress";
+                setSelected((prev) => prev ? { ...prev, status: newTaskStatus } : prev);
+                router.refresh();
+              }}
+            />
 
             {/* Comments & Activity */}
             <div className="card p-5">
@@ -229,9 +241,10 @@ interface SheetState {
   data: SheetData;
 }
 
-function ApprovalSheetPanel({ taskId }: { taskId: string }) {
+function ApprovalSheetPanel({ taskId, taskStatus, onRespond }: { taskId: string; taskStatus?: string; onRespond?: (status: "approved" | "changes_requested") => void }) {
   const [sheet, setSheet] = useState<SheetState | null | undefined>(undefined); // undefined = not loaded yet
-  const [expanded, setExpanded] = useState(false);
+  // Auto-expand when the task is waiting for client approval
+  const [expanded, setExpanded] = useState(taskStatus === "review");
   const [responding, setResponding] = useState(false);
   const [note, setNote] = useState("");
   const [showNoteBox, setShowNoteBox] = useState(false);
@@ -243,6 +256,12 @@ function ApprovalSheetPanel({ taskId }: { taskId: string }) {
     const data = await res.json();
     setSheet(data);
   }
+
+  // If auto-expanded (review status), load the sheet immediately on mount
+  useEffect(() => {
+    if (taskStatus === "review") load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function respond(status: "approved" | "changes_requested") {
     if (status === "changes_requested" && !note.trim()) {
@@ -261,6 +280,7 @@ function ApprovalSheetPanel({ taskId }: { taskId: string }) {
       setSheet(updated);
       setShowNoteBox(false);
       setNote("");
+      onRespond?.(status);
     } catch {
       alert("Error al enviar respuesta");
     } finally {

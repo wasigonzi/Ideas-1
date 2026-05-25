@@ -30,6 +30,7 @@ const STATUS_OPTIONS = [
   { value: "todo", label: "Por hacer" },
   { value: "in_progress", label: "En progreso" },
   { value: "review", label: "En revisión" },
+  { value: "produccion", label: "Producción" },
   { value: "blocked", label: "Bloqueada" },
   { value: "done", label: "Hecha" }
 ];
@@ -50,6 +51,7 @@ export function TaskEditor({
   canEdit = true,
   orders,
   defaultOrderId,
+  columns,
   onClose
 }: {
   open: boolean;
@@ -61,9 +63,13 @@ export function TaskEditor({
   canEdit?: boolean;
   orders?: EditorOrder[];
   defaultOrderId?: string;
+  columns?: { key: string; label: string }[];
   onClose: () => void;
 }) {
   const router = useRouter();
+  const statusOptions = (columns && columns.length > 0)
+    ? columns.map((c) => ({ value: c.key, label: c.label }))
+    : STATUS_OPTIONS;
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("todo");
@@ -293,7 +299,7 @@ export function TaskEditor({
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Estado">
                   <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputCls}>
-                    {STATUS_OPTIONS.map((o) => (
+                    {statusOptions.map((o) => (
                       <option key={o.value} value={o.value}>{o.label}</option>
                     ))}
                   </select>
@@ -562,17 +568,17 @@ function MembersPicker({
     const q = query.trim().toLowerCase();
     const list = users.filter((u) => {
       if (!q) return true;
-      const hay = `${u.name ?? ""} ${u.email} ${u.company ?? ""}`.toLowerCase();
+      const roleLabel = u.role === "client" ? "cliente" : u.role === "employee" ? "empleado" : "admin";
+      const hay = `${u.name ?? ""} ${u.email} ${u.company ?? ""} ${roleLabel}`.toLowerCase();
       return hay.includes(q);
     });
-    // Sort: team first (admin/employee), then clients; selected to top within each group.
+    // Sort: team first (admin/employee), then clients; alphabetical within each group.
+    // Do NOT sort selected items to the top — stable order prevents list jumping
+    // while the user is clicking multiple people.
     return list.sort((a, b) => {
       const ar = a.role === "client" ? 1 : 0;
       const br = b.role === "client" ? 1 : 0;
       if (ar !== br) return ar - br;
-      const aSel = value.includes(a.id) ? 0 : 1;
-      const bSel = value.includes(b.id) ? 0 : 1;
-      if (aSel !== bSel) return aSel - bSel;
       return (a.name ?? a.email).localeCompare(b.name ?? b.email);
     });
   }, [users, query, value]);
@@ -643,6 +649,11 @@ function MembersPicker({
               placeholder="Buscar empleado o cliente…"
               className="flex-1 bg-transparent outline-none text-sm placeholder-white/30"
             />
+            {value.length > 0 && (
+              <span className="shrink-0 text-[10px] font-semibold text-[var(--color-brand-400)] bg-[var(--color-brand-500)]/15 px-1.5 py-0.5 rounded-full">
+                {value.length} ✓
+              </span>
+            )}
           </div>
           <div className="max-h-72 overflow-y-auto py-1">
             {filtered.length === 0 && (

@@ -24,6 +24,7 @@ export function StatusPill({ status }: { status: string }) {
     pending: "bg-white/10 text-white/80",
     in_progress: "bg-sky-500/15 text-sky-300",
     review: "bg-amber-500/15 text-amber-300",
+    produccion: "bg-orange-500/15 text-orange-300",
     completed: "bg-emerald-500/15 text-emerald-300",
     cancelled: "bg-red-500/15 text-red-300",
     todo: "bg-white/10 text-white/80",
@@ -38,7 +39,8 @@ export function StatusPill({ status }: { status: string }) {
     lost: "bg-red-500/15 text-red-300"
   };
   const labels: Record<string, string> = {
-    pending: "Pendiente", in_progress: "En progreso", review: "En revisión",
+    pending: "Pendiente", in_progress: "En progreso", review: "Para revisión",
+    produccion: "Producción",
     completed: "Completado", cancelled: "Cancelado", todo: "Por hacer",
     done: "Hecho", blocked: "Bloqueado", new: "Nuevo", paid: "Pagado",
     overdue: "Vencida", reviewed: "Revisado", quoted: "Cotizado",

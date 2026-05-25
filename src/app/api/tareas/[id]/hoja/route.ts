@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { randomUUID } from "crypto";
 
 type Ctx = { params: Promise<{ id: string }> };
+
+type SheetRow = {
+  id: string;
+  taskId: string;
+  data: string;
+  status: string;
+  clientNote: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 // GET /api/tareas/[id]/hoja — anyone with access to the task can read
 export async function GET(_req: NextRequest, ctx: Ctx) {
@@ -21,18 +32,17 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
     user.role === "admin" ||
     user.role === "employee" ||
     task.assigneeId === user.id ||
-    members.includes(user.id);
+    members.includes(user.id ?? "");
 
   if (!hasAccess) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sheet = await (prisma as any).approvalSheet.findUnique({ where: { taskId: id } });
+  const rows = await prisma.$queryRaw<SheetRow[]>`
+    SELECT * FROM "ApprovalSheet" WHERE "taskId" = ${id} LIMIT 1
+  `;
+  const sheet = rows[0] ?? null;
   if (!sheet) return NextResponse.json(null);
 
-  return NextResponse.json({
-    ...sheet,
-    data: JSON.parse(sheet.data),
-  });
+  return NextResponse.json({ ...sheet, data: JSON.parse(sheet.data) });
 }
 
 // POST /api/tareas/[id]/hoja — admin/employee only: save or update
@@ -49,13 +59,20 @@ export async function POST(req: NextRequest, ctx: Ctx) {
 
   const body = await req.json();
   const dataStr = JSON.stringify(body.data);
+  const newId = randomUUID();
+  const now = new Date();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sheet = await (prisma as any).approvalSheet.upsert({
-    where: { taskId: id },
-    create: { taskId: id, data: dataStr, status: "pending" },
-    update: { data: dataStr, status: "pending", clientNote: null },
-  });
+  const rows = await prisma.$queryRaw<SheetRow[]>`
+    INSERT INTO "ApprovalSheet" (id, "taskId", data, status, "clientNote", "createdAt", "updatedAt")
+    VALUES (${newId}, ${id}, ${dataStr}, 'pending', NULL, ${now}, ${now})
+    ON CONFLICT ("taskId") DO UPDATE
+      SET data = ${dataStr}, status = 'pending', "clientNote" = NULL, "updatedAt" = ${now}
+    RETURNING *
+  `;
+  const sheet = rows[0];
+
+  // Move task to "Para revisión" so the client knows it's waiting for their approval.
+  await prisma.task.update({ where: { id }, data: { status: "review" } });
 
   return NextResponse.json({ ...sheet, data: JSON.parse(sheet.data) });
 }

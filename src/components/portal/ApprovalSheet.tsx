@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Check, CheckCircle2, FileCheck, Loader2, Plus, Printer, Save, Trash2, Upload, X, ZoomIn, ZoomOut,
 } from "lucide-react";
-import { LOGO_URL } from "@/components/Logo";
 
 export interface ApprovalSheetTask {
   id: string;
@@ -44,9 +43,9 @@ interface Props {
   onClose: () => void;
 }
 
-const DOC_W = 816;
-const DOC_H = 1056;
-const IMG_AREA_H = 460;
+const DOC_W = 1056;   // letter landscape width  @ 96 dpi
+const DOC_H = 816;    // letter landscape height @ 96 dpi
+const IMG_AREA_H = 430;
 
 function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v));
@@ -471,7 +470,7 @@ export function ApprovalSheet({ open, task, onClose }: Props) {
                       <div className="text-[10px] font-bold uppercase tracking-wider text-center py-1 bg-[#0d1422] text-white/50">
                         Pagina {idx + 1}
                       </div>
-                      <div style={{ transform: "scale(0.72)", transformOrigin: "top center", width: DOC_W, marginBottom: `-${Math.round(DOC_H * 0.28)}px` }}>
+                      <div style={{ transform: "scale(0.65)", transformOrigin: "top center", width: DOC_W, marginBottom: `-${Math.round(DOC_H * 0.35)}px` }}>
                         <ApprovalDocument
                           numero={numero} cliente={cliente} fecha={fecha}
                           material={material} terminacion={terminacion} nota={nota}
@@ -536,56 +535,77 @@ function ApprovalDocument({
       style={{
         width: DOC_W, minHeight: DOC_H, background: "#fff", color: "#000",
         fontFamily: "Arial, Helvetica, sans-serif", fontSize: "12px",
-        padding: "24px 28px", boxSizing: "border-box",
-        pageBreakAfter: "always",
+        padding: "20px 24px", boxSizing: "border-box",
+        pageBreakAfter: "always", display: "flex", flexDirection: "column",
       }}
     >
-      <div style={{ display: "flex", alignItems: "stretch", borderBottom: "2px solid #000" }}>
-        <div style={{ flex: 1, textAlign: "center", padding: "8px 0", borderRight: "2px solid #000" }}>
-          <div style={{ fontSize: "20px", fontWeight: 900, letterSpacing: "2px" }}>HOJA DE APROBACION</div>
-        </div>
-        <div style={{ width: "120px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "6px 10px" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "1px" }}>No:</div>
-          <div style={{ fontSize: "22px", fontWeight: 900, color: "#c00", lineHeight: "1.1" }}>{numero || "____"}</div>
-        </div>
-      </div>
-
-      <div style={{ display: "flex", alignItems: "stretch", border: "2px solid #000", borderTop: "none" }}>
-        <div style={{ width: "130px", borderRight: "2px solid #000", padding: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      {/* ── Header: logo | title + No: | info fields ── */}
+      <div style={{ border: "2px solid #000", display: "flex", alignItems: "stretch", marginBottom: 0 }}>
+        {/* Logo cell */}
+        <div style={{
+          width: 160, borderRight: "2px solid #000",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "10px 14px",
+        }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO_URL} alt="Ideas, LLC" style={{ width: "100px", height: "auto", objectFit: "contain" }} />
+          <img src="/logos/ideas-logo-full.png" alt="Ideas LLC" style={{ width: 136, height: "auto", objectFit: "contain" }} />
         </div>
-        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", padding: "8px 12px", gap: "2px 20px" }}>
-          <DocField label="Cliente" value={cliente} />
-          <DocField label="Material" value={material} />
-          <DocField label="Fecha" value={fecha} />
-          <DocField label="Terminacion" value={terminacion} />
+
+        {/* Right side */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+          {/* Title + No row */}
+          <div style={{ display: "flex", alignItems: "stretch", borderBottom: "2px solid #000" }}>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "8px 16px", fontSize: "24px", fontWeight: 900, letterSpacing: "3px" }}>
+              HOJA DE APROBACI&#211;N
+            </div>
+            <div style={{ width: 95, borderLeft: "2px solid #000", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "6px 10px" }}>
+              <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "1px" }}>No:</div>
+              <div style={{ fontSize: "28px", fontWeight: 900, color: "#c00", lineHeight: 1 }}>{numero || "____"}</div>
+            </div>
+          </div>
+
+          {/* Info fields row */}
+          <div style={{ display: "flex", padding: "8px 16px", gap: "28px" }}>
+            <div style={{ flex: 1 }}>
+              <DocField label="Cliente" value={cliente} />
+              <DocField label="Fecha" value={fecha} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <DocField label="Material" value={material} />
+              <DocField label="Terminaci&#243;n" value={terminacion} />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div style={{ border: "2px solid #000", borderTop: "none", display: "flex", alignItems: "center", padding: "6px 12px", marginBottom: "12px", background: "#f0f0f0" }}>
-        <span style={{ fontWeight: 900, fontSize: "13px", marginRight: "10px", background: "#333", color: "#fff", padding: "2px 8px", borderRadius: "3px", letterSpacing: "1px" }}>NOTA:</span>
-        <span style={{ fontWeight: 700, fontSize: "13px" }}>{nota || taskTitle}</span>
+      {/* ── NOTA bar ── */}
+      <div style={{
+        display: "flex", alignItems: "center", padding: "5px 12px",
+        background: "#e8e8e8", border: "2px solid #000", borderTop: "none",
+        marginBottom: 10, minHeight: 32,
+      }}>
+        <span style={{ fontWeight: 900, fontSize: "11px", marginRight: 10, background: "#222", color: "#fff", padding: "2px 8px", borderRadius: 3, letterSpacing: 1, whiteSpace: "nowrap" }}>NOTA:</span>
+        <span style={{ fontWeight: 700, fontSize: "13px" }}>{nota || "\u00a0"}</span>
       </div>
 
+      {/* ── Image box ── */}
       <div
         ref={interactive ? boxRef : undefined}
         onPointerMove={interactive ? onBoxPointerMove : undefined}
         onPointerUp={interactive ? onBoxPointerUp : undefined}
         onPointerLeave={interactive ? onBoxPointerUp : undefined}
         style={{
-          border: "2px solid #ccc", borderRadius: "16px", overflow: "hidden",
-          height: IMG_AREA_H, position: "relative",
+          border: "2px solid #ccc", borderRadius: 16, overflow: "hidden",
+          height: IMG_AREA_H, flex: "none", position: "relative",
           background: page.images.length === 0 ? "#f8f8f8" : "#fff",
-          marginBottom: "12px", userSelect: "none",
+          marginBottom: 10, userSelect: "none",
         }}
       >
         {page.images.length === 0 && (
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#aaa", fontSize: "14px", textAlign: "center", padding: "40px" }}>
-            {interactive ? "Agrega imagenes desde el panel y arrastralas para posicionarlas" : "Sin imagen"}
+            {interactive ? "Agrega im\u00e1genes desde el panel y arrastralas para posicionarlas" : "Sin imagen"}
           </div>
         )}
-
         {page.images.map((img) => (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -607,28 +627,29 @@ function ApprovalDocument({
             }}
           />
         ))}
-
         {interactive && page.images.length > 0 && (
-          <div style={{ position: "absolute", bottom: 8, right: 8, background: "rgba(0,0,0,0.5)", color: "#fff", fontSize: "10px", padding: "3px 8px", borderRadius: "6px", pointerEvents: "none" }}>
-            Arrastra las imagenes para posicionarlas
+          <div style={{ position: "absolute", bottom: 8, right: 8, background: "rgba(0,0,0,0.5)", color: "#fff", fontSize: "10px", padding: "3px 8px", borderRadius: 6, pointerEvents: "none" }}>
+            Arrastra las im&#225;genes para posicionarlas
           </div>
         )}
       </div>
 
-      <div style={{ display: "flex", gap: "12px", marginBottom: "8px" }}>
-        <div style={{ flex: 1, fontSize: "10px", lineHeight: "1.4" }}>
+      {/* ── Footer ── */}
+      <div style={{ display: "flex", gap: 14, marginBottom: 8 }}>
+        <div style={{ flex: 1, fontSize: "9.5px", lineHeight: 1.45 }}>
           <span style={{ fontWeight: 700 }}>*FAVOR DE REVISAR</span> que todo este correcto antes de aprobar.
           Una vez aprobado el arte, el cliente se hace responsable de cualquier error u omision que tenga el mismo.{" "}
           <span style={{ fontWeight: 700 }}>*UNA VEZ APROBADO EL ARTE, TODO CAMBIO CONLLEVA UN COSTO ADICIONAL.</span>{" "}
-          El tamano ilustrado no es tamano real y los colores pueden variar (+) o (-) en la impresion.
+          El tama&#241;o ilustrado no es tama&#241;o real y los colores pueden variar (+) o (-) en la impresi&#243;n.
         </div>
-        <div style={{ width: "180px", border: "1px solid #000", padding: "8px 12px", fontSize: "11px", lineHeight: "2.2" }}>
-          <div>FIRMA: <span style={{ borderBottom: "1px solid #000", display: "inline-block", width: "110px" }}></span></div>
-          <div>FECHA: <span style={{ borderBottom: "1px solid #000", display: "inline-block", width: "110px" }}></span></div>
+        <div style={{ width: 190, border: "1px solid #000", padding: "8px 14px", fontSize: "11px", lineHeight: 2.3, flexShrink: 0 }}>
+          <div>FIRMA: <span style={{ borderBottom: "1px solid #000", display: "inline-block", width: 118 }}></span></div>
+          <div>FECHA: <span style={{ borderBottom: "1px solid #000", display: "inline-block", width: 118 }}></span></div>
         </div>
       </div>
 
-      <div style={{ borderTop: "1px solid #ccc", paddingTop: "6px", fontSize: "9px", color: "#555", lineHeight: "1.4" }}>
+      {/* ── Confidentiality ── */}
+      <div style={{ borderTop: "1px solid #ccc", paddingTop: 5, fontSize: "8.5px", color: "#555", lineHeight: 1.4 }}>
         <span style={{ fontWeight: 700 }}>AVISO DE CONFIDENCIALIDAD:</span> Todos los artes y contenido de esta cotizacion son creaciones propiedad de iDEAS LLC,
         Por lo que no pueden ser compartidas con terceros, replicadas o ejecutadas en el presente o futuro.
         Las descripciones de productos y servicios provistas solamente tienen un proposito ilustrativo y no deben de ser consideradas las descripciones de productos y servicios.

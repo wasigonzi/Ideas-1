@@ -4,9 +4,11 @@ import { ClientTaskView } from "@/components/portal/ClientTaskView";
 
 const STATUS_ORDER: Record<string, number> = {
   in_progress: 0,
-  todo: 1,
-  blocked: 2,
-  done: 3,
+  review:      1,
+  todo:        2,
+  produccion:  3,
+  blocked:     4,
+  done:        5,
 };
 
 export default async function ClienteTareas() {

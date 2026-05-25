@@ -39,11 +39,12 @@ export type TaskCard = {
 };
 
 const DEFAULT_COLUMNS: BoardColumn[] = [
-  { key: "todo", label: "Por hacer", accent: "bg-amber-500" },
-  { key: "in_progress", label: "En progreso", accent: "bg-violet-500" },
-  { key: "review", label: "En revisión", accent: "bg-sky-500" },
-  { key: "blocked", label: "Bloqueadas", accent: "bg-rose-500" },
-  { key: "done", label: "Hechas", accent: "bg-emerald-500" }
+  { key: "todo",        label: "Por hacer",     accent: "bg-amber-500" },
+  { key: "in_progress", label: "En progreso",   accent: "bg-violet-500" },
+  { key: "review",      label: "Para revisión", accent: "bg-sky-500" },
+  { key: "produccion",  label: "Producción",    accent: "bg-orange-500" },
+  { key: "blocked",     label: "Bloqueadas",    accent: "bg-rose-500" },
+  { key: "done",        label: "Hechas",        accent: "bg-emerald-500" }
 ];
 
 export function TaskBoard({
@@ -76,14 +77,20 @@ export function TaskBoard({
   const [filterPriority, setFilterPriority] = useState("");
   const [filterDue, setFilterDue] = useState<"all" | "overdue" | "week">("all");
 
-  // Dynamically fetch all assignable users so the picker works even when the
-  // server-side prop is empty (e.g. employee portal) or stale.
+  // Dynamically fetch all assignable users as a fallback when the server-side
+  // prop is empty (e.g. employee portal passes users=[]). Both admins and
+  // employees can call /api/empleados GET now.
   const [liveUsers, setLiveUsers] = useState<EditorUser[]>(users);
+
+  // Keep liveUsers in sync if the prop updates (e.g. router.refresh())
+  useEffect(() => { setLiveUsers(users); }, [users]);
+
   useEffect(() => {
+    if (users.length > 0) return; // already have users from SSR
     fetch("/api/empleados")
       .then((r) => r.ok ? r.json() : null)
       .then((data: { id: string; name: string | null; email: string; role: string; avatar: string | null; company: string | null }[] | null) => {
-        if (!data || !Array.isArray(data)) return;
+        if (!data || !Array.isArray(data) || data.length === 0) return;
         const mapped: EditorUser[] = data.map((u) => ({
           id: u.id,
           name: u.name,
@@ -95,8 +102,7 @@ export function TaskBoard({
         setLiveUsers(mapped);
       })
       .catch(() => null);
-  }, []);
-
+  }, [users]);
   const filteredTasks = useMemo(() => {
     const now = new Date();
     const weekEnd = new Date(now);
@@ -363,6 +369,7 @@ export function TaskBoard({
         currentUserId={currentUserId}
         orders={orders}
         defaultOrderId={defaultOrderId}
+        columns={cols}
         onClose={() => setEditorOpen(false)}
       />
     </>

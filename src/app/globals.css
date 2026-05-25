@@ -289,7 +289,7 @@ select { background: #0e1a2c; color: white; color-scheme: dark; }
   /* Reset page margins */
   @page {
     margin: 0;
-    size: letter portrait;
+    size: letter landscape;
   }
 
   html, body {

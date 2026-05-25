@@ -33,11 +33,22 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     return NextResponse.json({ error: "invalid status" }, { status: 400 });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sheet = await (prisma as any).approvalSheet.update({
-    where: { taskId: id },
-    data: { status, clientNote },
-  });
+  const now = new Date();
+  type SheetRow = { id: string; taskId: string; data: string; status: string; clientNote: string | null; createdAt: Date; updatedAt: Date };
+
+  const rows = await prisma.$queryRaw<SheetRow[]>`
+    UPDATE "ApprovalSheet"
+    SET status = ${status}, "clientNote" = ${clientNote}, "updatedAt" = ${now}
+    WHERE "taskId" = ${id}
+    RETURNING *
+  `;
+
+  if (!rows[0]) return NextResponse.json({ error: "sheet not found" }, { status: 404 });
+  const sheet = rows[0];
+
+  // Automatically transition the task column based on the client's decision.
+  const nextTaskStatus = status === "approved" ? "produccion" : "in_progress";
+  await prisma.task.update({ where: { id }, data: { status: nextTaskStatus } });
 
   return NextResponse.json({ ...sheet, data: JSON.parse(sheet.data) });
 }

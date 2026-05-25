@@ -67,7 +67,15 @@ export function TrelloBoard<T extends BoardItem>({
   const [items, setItems] = useState<T[]>(initialItems);
 
   // Re-sync when parent provides new data (e.g. router.refresh()).
-  const sig = initialItems.map((i) => `${i.id}:${i.status}:${i.position ?? ""}`).join("|");
+  // Include coverImage and attachments in the sig so cover/attachment edits
+  // are reflected without a status/position change.
+  const sig = initialItems.map((i) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const any = i as any;
+    const cover: string = any.coverImage ?? "";
+    const attachLen: number = (any.attachments as string[] | undefined)?.length ?? 0;
+    return `${i.id}:${i.status}:${i.position ?? ""}:${cover}:${attachLen}`;
+  }).join("|");
   const [lastSig, setLastSig] = useState(sig);
   if (sig !== lastSig) {
     setLastSig(sig);
