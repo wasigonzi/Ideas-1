@@ -292,11 +292,9 @@ export function TrelloBoard<T extends BoardItem>({
       </div>
 
       {/* ─── COLUMNS ─── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        {columns.map((col) => {
-          const isActiveMobile = mobileCol === col.key;
-          return (
-            <div key={col.key} className={isActiveMobile ? "block" : "hidden md:block"}>
+      <div className="hidden md:flex gap-3 overflow-x-auto pb-4 items-start">
+        {columns.map((col) => (
+          <div key={col.key} className="min-w-[275px] w-[275px] shrink-0">
               <Column
                 col={col}
                 items={grouped[col.key] ?? []}
@@ -308,14 +306,34 @@ export function TrelloBoard<T extends BoardItem>({
                 onDeleteColumn={onDeleteColumn}
               />
             </div>
-          );
-        })}
+          ))}
         {onAddColumn && (
-          <div className="hidden md:block">
+          <div className="min-w-[180px] shrink-0">
             <AddColumnTile onAdd={onAddColumn} />
           </div>
         )}
       </div>
+
+      {/* ─── MOBILE: single active column ─── */}
+      <div className="md:hidden">
+        {columns.map((col) => {
+          if (mobileCol !== col.key) return null;
+          return (
+            <Column
+              key={col.key}
+              col={col}
+              items={grouped[col.key] ?? []}
+              renderCard={renderCard}
+              savingId={savingId}
+              onCardClick={onCardClick}
+              footer={renderColumnFooter?.(col)}
+              onUpdateColumn={onUpdateColumn}
+              onDeleteColumn={onDeleteColumn}
+            />
+          );
+        })}
+      </div>
+
       <DragOverlay dropAnimation={null}>
         {activeItem ? (
           <div className="rotate-2 scale-[1.02] shadow-2xl shadow-black/50">
@@ -350,7 +368,7 @@ function Column<T extends BoardItem>({
   return (
     <div
       ref={setNodeRef}
-      className={`group rounded-2xl border bg-[#1d2329]/80 min-h-[420px] transition flex flex-col overflow-hidden ${
+      className={`group rounded-2xl border bg-[#1d2329]/80 transition flex flex-col overflow-hidden h-[calc(100vh-13rem)] ${
         isOver
           ? "border-[var(--color-brand-500)]/60"
           : "border-white/5"
@@ -358,7 +376,7 @@ function Column<T extends BoardItem>({
     >
       {/* Trello-style colored top bar */}
       {col.accent && <div className={`h-1.5 w-full ${col.accent}`} />}
-      <div className="px-3 sm:px-4 pt-3 pb-3 flex flex-col flex-1">
+      <div className="px-3 sm:px-4 pt-3 pb-3 flex flex-col flex-1 min-h-0">
       <div className="hidden md:flex items-center justify-between mb-3 gap-2">
         <h3 className="font-semibold text-sm text-white/90 truncate">
           {col.label}
@@ -377,7 +395,10 @@ function Column<T extends BoardItem>({
         </div>
       </div>
       <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-        <div className="space-y-3 flex-1">
+        <div
+          className="space-y-3 overflow-y-auto flex-1 min-h-0 pr-0.5"
+          style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.12) transparent" }}
+        >
           {items.map((item) => (
             <Card
               key={item.id}
@@ -394,7 +415,7 @@ function Column<T extends BoardItem>({
           )}
         </div>
       </SortableContext>
-      {footer && <div className="mt-3">{footer}</div>}
+      {footer && <div className="mt-3 shrink-0">{footer}</div>}
       </div>
     </div>
   );

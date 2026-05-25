@@ -3,12 +3,20 @@ import { auth } from "@/auth";
 import { ClientTaskView } from "@/components/portal/ClientTaskView";
 
 const STATUS_ORDER: Record<string, number> = {
-  in_progress: 0,
-  review:      1,
-  todo:        2,
-  produccion:  3,
-  blocked:     4,
-  done:        5,
+  pendientes:    0,
+  espera:        1,
+  arte:          2,
+  produccion:    3,
+  terminaciones: 4,
+  instalacion:   5,
+  facturar:      6,
+  cerrado:       7,
+  // legacy fallbacks
+  in_progress: 1,
+  review:      2,
+  todo:        0,
+  blocked:     1,
+  done:        7,
 };
 
 export default async function ClienteTareas() {
@@ -39,8 +47,8 @@ export default async function ClienteTareas() {
       assigneeId: t.assigneeId ?? null,
     }));
 
-  const active = tasks.filter((t) => t.status !== "done");
-  const done   = tasks.filter((t) => t.status === "done");
+  const active = tasks.filter((t) => t.status !== "done" && t.status !== "cerrado");
+  const done   = tasks.filter((t) => t.status === "done" || t.status === "cerrado");
   const all    = [...active, ...done];
 
   return (

@@ -41,7 +41,7 @@ function fmtDate(d: string | null) {
 }
 
 function isOverdue(t: ClientTask) {
-  return t.dueDate && t.status !== "done" && new Date(t.dueDate) < new Date();
+  return t.dueDate && t.status !== "done" && t.status !== "cerrado" && new Date(t.dueDate) < new Date();
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -50,8 +50,14 @@ const STATUS_LABEL: Record<string, string> = {
   review: "Para revisión",
   produccion: "Producción",
   blocked: "Bloqueada",
-  done: "Hecha",
-};
+  done: "Hecha",  // New Trello workflow columns:
+  pendientes:    "Jobs Pendientes",
+  espera:        "En Espera",
+  arte:          "Arte / Dise\u00f1o",
+  terminaciones: "Terminaciones",
+  instalacion:   "Instalaci\u00f3n / Entrega",
+  facturar:      "Facturar",
+  cerrado:       "Cerrado / Cobrado",};
 
 export function ClientTaskView({ tasks, currentUserId }: { tasks: ClientTask[]; currentUserId?: string }) {
   const router = useRouter();
@@ -206,7 +212,7 @@ export function ClientTaskView({ tasks, currentUserId }: { tasks: ClientTask[]; 
               taskId={selected.id}
               taskStatus={selected.status}
               onRespond={(approvalStatus) => {
-                const newTaskStatus = approvalStatus === "approved" ? "produccion" : "in_progress";
+                const newTaskStatus = approvalStatus === "approved" ? "produccion" : "espera";
                 setSelected((prev) => prev ? { ...prev, status: newTaskStatus } : prev);
                 router.refresh();
               }}

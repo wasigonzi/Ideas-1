@@ -1230,7 +1230,17 @@ function statusLabel(s: string): string {
     todo: "Por hacer",
     in_progress: "En progreso",
     blocked: "Bloqueada",
-    done: "Hecha"
+    done: "Hecha",
+    review: "Para revisi\u00f3n",
+    produccion: "Producci\u00f3n",
+    // New Trello workflow columns:
+    pendientes:    "Jobs Pendientes",
+    espera:        "En Espera",
+    arte:          "Arte / Dise\u00f1o",
+    terminaciones: "Terminaciones",
+    instalacion:   "Instalaci\u00f3n",
+    facturar:      "Facturar",
+    cerrado:       "Cerrado",
   };
   return map[s] ?? s;
 }

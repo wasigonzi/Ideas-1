@@ -4,7 +4,7 @@ import { useRef, useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TrelloBoard, type BoardColumn } from "./TrelloBoard";
 import { MemberAvatar } from "./Avatar";
-import { AlignLeft, Calendar, Clock, Plus, X, Loader2, Maximize2, Paperclip, LayoutGrid, CalendarDays } from "lucide-react";
+import { AlignLeft, Calendar, Clock, Plus, X, Loader2, Maximize2, Paperclip, LayoutGrid, CalendarDays, Search } from "lucide-react";
 import { TaskEditor, type EditorUser } from "./TaskEditor";
 import { TaskCalendar } from "./TaskCalendar";
 
@@ -76,6 +76,7 @@ export function TaskBoard({
   const [filterAssignee, setFilterAssignee] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
   const [filterDue, setFilterDue] = useState<"all" | "overdue" | "week">("all");
+  const [search, setSearch] = useState("");
 
   // Dynamically fetch all assignable users as a fallback when the server-side
   // prop is empty (e.g. employee portal passes users=[]). Both admins and
@@ -107,14 +108,16 @@ export function TaskBoard({
     const now = new Date();
     const weekEnd = new Date(now);
     weekEnd.setDate(now.getDate() + 7);
+    const q = search.trim().toLowerCase();
     return tasks.filter((t) => {
+      if (q && !t.title.toLowerCase().includes(q)) return false;
       if (filterAssignee && t.assigneeId !== filterAssignee && !(t.members ?? []).some((m) => m.id === filterAssignee)) return false;
       if (filterPriority && t.priority !== filterPriority) return false;
       if (filterDue === "overdue" && (t.status === "done" || !t.dueDate || new Date(t.dueDate) >= now)) return false;
       if (filterDue === "week" && (!t.dueDate || new Date(t.dueDate) < now || new Date(t.dueDate) > weekEnd)) return false;
       return true;
     });
-  }, [tasks, filterAssignee, filterPriority, filterDue]);
+  }, [tasks, filterAssignee, filterPriority, filterDue, search]);
 
   function openCreate(status: string) {
     setMode("create");
@@ -141,6 +144,26 @@ export function TaskBoard({
             <Plus size={13} /> Nueva Tarea
           </button>
         )}
+
+        {/* Search */}
+        <div className="relative flex items-center">
+          <Search size={12} className="absolute left-2.5 text-white/35 pointer-events-none" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar trabajo..."
+            className="pl-7 pr-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white/85 placeholder-white/30 focus:outline-none focus:border-[var(--color-brand-500)] w-44"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-2 text-white/35 hover:text-white/70"
+            >
+              <X size={11} />
+            </button>
+          )}
+        </div>
 
         {/* View toggle */}
         <div className="flex gap-0.5 p-0.5 bg-white/5 rounded-lg">
@@ -212,9 +235,9 @@ export function TaskBoard({
           </button>
         )))}
 
-        {(filterAssignee || filterPriority || filterDue !== "all") && (
+        {(filterAssignee || filterPriority || filterDue !== "all" || search) && (
           <button
-            onClick={() => { setFilterAssignee(""); setFilterPriority(""); setFilterDue("all"); }}
+            onClick={() => { setFilterAssignee(""); setFilterPriority(""); setFilterDue("all"); setSearch(""); }}
             className="px-2.5 py-1.5 rounded-lg text-xs text-white/40 hover:text-white hover:bg-white/8"
           >
             × Limpiar

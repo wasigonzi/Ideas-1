@@ -36,7 +36,16 @@ export function StatusPill({ status }: { status: string }) {
     reviewed: "bg-sky-500/15 text-sky-300",
     quoted: "bg-amber-500/15 text-amber-300",
     won: "bg-emerald-500/15 text-emerald-300",
-    lost: "bg-red-500/15 text-red-300"
+    lost: "bg-red-500/15 text-red-300",
+    // New Trello workflow columns:
+    pendientes:    "bg-amber-500/15 text-amber-300",
+    espera:        "bg-yellow-500/15 text-yellow-300",
+    arte:          "bg-violet-500/15 text-violet-300",
+    produccion:    "bg-cyan-500/15 text-cyan-300",
+    terminaciones: "bg-orange-500/15 text-orange-300",
+    instalacion:   "bg-lime-500/15 text-lime-300",
+    facturar:      "bg-sky-500/15 text-sky-300",
+    cerrado:       "bg-emerald-500/15 text-emerald-300",
   };
   const labels: Record<string, string> = {
     pending: "Pendiente", in_progress: "En progreso", review: "Para revisión",
@@ -44,7 +53,15 @@ export function StatusPill({ status }: { status: string }) {
     completed: "Completado", cancelled: "Cancelado", todo: "Por hacer",
     done: "Hecho", blocked: "Bloqueado", new: "Nuevo", paid: "Pagado",
     overdue: "Vencida", reviewed: "Revisado", quoted: "Cotizado",
-    won: "Ganado", lost: "Perdido"
+    won: "Ganado", lost: "Perdido",
+    // New Trello workflow columns:
+    pendientes:    "Jobs Pendientes",
+    espera:        "En Espera",
+    arte:          "Arte / Diseño",
+    terminaciones: "Terminaciones",
+    instalacion:   "Instalación",
+    facturar:      "Facturar",
+    cerrado:       "Cerrado",
   };
   return (
     <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full ${map[status] ?? "bg-white/10"}`}>
