@@ -13,12 +13,20 @@ import type { LandingBlock } from "@/components/landing-builder/types";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [services, projects, settingRows, employees] = await Promise.all([
-    prisma.service.findMany({ where: { active: true }, orderBy: { order: "asc" }, take: 6 }),
-    prisma.project.findMany({ where: { featured: true }, orderBy: { createdAt: "desc" }, take: 6 }),
-    prisma.siteSetting.findMany(),
-    prisma.user.findMany({ where: { role: "employee" }, select: { id: true, name: true, avatar: true } }),
-  ]);
+  let services: Awaited<ReturnType<typeof prisma.service.findMany>> = [];
+  let projects: Awaited<ReturnType<typeof prisma.project.findMany>> = [];
+  let settingRows: Awaited<ReturnType<typeof prisma.siteSetting.findMany>> = [];
+  let employees: { id: string; name: string | null; avatar: string | null }[] = [];
+  try {
+    [services, projects, settingRows, employees] = await Promise.all([
+      prisma.service.findMany({ where: { active: true }, orderBy: { order: "asc" }, take: 6 }),
+      prisma.project.findMany({ where: { featured: true }, orderBy: { createdAt: "desc" }, take: 6 }),
+      prisma.siteSetting.findMany(),
+      prisma.user.findMany({ where: { role: "employee" }, select: { id: true, name: true, avatar: true } }),
+    ]);
+  } catch {
+    // DB unavailable — render with empty defaults
+  }
 
   const config = mergeConfig(settingRows);
 

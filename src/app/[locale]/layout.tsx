@@ -17,9 +17,14 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
 
-  const [messages, whatsappRow] = await Promise.all([
+  let whatsappRow = null;
+  try {
+    whatsappRow = await prisma.siteSetting.findUnique({ where: { key: "whatsapp" } });
+  } catch {
+    // DB unavailable — use default
+  }
+  const [messages] = await Promise.all([
     import("../../../messages/es.json").then((m) => m.default),
-    prisma.siteSetting.findUnique({ where: { key: "whatsapp" } }),
   ]);
   const whatsapp = whatsappRow?.value ?? "19393264007";
 

@@ -19,18 +19,18 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const faviconRow = await prisma.siteSetting.findUnique({ where: { key: "favicon_url" } });
-  const faviconUrl = faviconRow?.value || null;
+  let faviconUrl: string | null = null;
+  try {
+    const faviconRow = await prisma.siteSetting.findUnique({ where: { key: "favicon_url" } });
+    faviconUrl = faviconRow?.value || null;
+  } catch {
+    // DB unavailable — proceed without favicon
+  }
 
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
         {faviconUrl && <link rel="icon" href={faviconUrl} />}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var BLOCK=['bis_skin_checked','bis_register','bis_use','data-bis-config','data-dynamic-id'];function isBlocked(n){if(!n)return false;n=String(n);if(BLOCK.indexOf(n)>-1)return true;if(n.indexOf('__processed_')===0)return true;if(n.indexOf('bis_')===0)return true;return false;}var origSet=Element.prototype.setAttribute;Element.prototype.setAttribute=function(name,value){if(isBlocked(name))return;return origSet.call(this,name,value);};var origSetNS=Element.prototype.setAttributeNS;Element.prototype.setAttributeNS=function(ns,name,value){if(isBlocked(name))return;return origSetNS.call(this,ns,name,value);};function strip(n){if(!n||n.nodeType!==1)return;var atts=n.attributes;if(!atts)return;for(var i=atts.length-1;i>=0;i--){var a=atts[i];if(a&&isBlocked(a.name)){try{n.removeAttribute(a.name);}catch(e){}}}}var mo=new MutationObserver(function(muts){for(var i=0;i<muts.length;i++){var m=muts[i];if(m.type==='attributes'&&m.target&&isBlocked(m.attributeName)){try{m.target.removeAttribute(m.attributeName);}catch(e){}}else if(m.type==='childList'&&m.addedNodes){m.addedNodes.forEach(function(x){strip(x);if(x.querySelectorAll)x.querySelectorAll('*').forEach(strip);});}}});try{mo.observe(document.documentElement,{attributes:true,subtree:true,childList:true});}catch(e){}document.addEventListener('DOMContentLoaded',function(){try{document.querySelectorAll('*').forEach(strip);}catch(e){}});}catch(e){}})();`
-          }}
-        />
       </head>
       <body suppressHydrationWarning>
         {children}
