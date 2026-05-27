@@ -72,7 +72,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Factura ${esc(inv.number)} — Ideas, LLC</title>
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;color:#1a1a2e;background:#fff;font-size:14px;line-height:1.55}
     .page{max-width:760px;margin:0 auto;padding:0 0 40px}
     .header{display:flex;justify-content:space-between;align-items:center;background:#111827;padding:28px 48px;margin-bottom:36px;border-radius:0}
