@@ -12,6 +12,13 @@ const ALLOWED_IMAGES = new Set([
   "image/svg+xml",
   "image/x-icon",
   "image/vnd.microsoft.icon",
+  "image/heic",
+  "image/heif",
+  "image/tiff",
+  "image/x-tiff",
+  "image/bmp",
+  "image/x-bmp",
+  "image/vnd.adobe.photoshop",
 ]);
 const ALLOWED_AUDIO = new Set([
   "audio/webm",
@@ -47,7 +54,7 @@ const ALLOWED_FILES = new Set([
   "application/x-7z-compressed",
   "application/json"
 ]);
-const MAX_BYTES = 16 * 1024 * 1024; // 16 MB
+const MAX_BYTES = 30 * 1024 * 1024; // 30 MB
 const MAX_VIDEO_BYTES = 200 * 1024 * 1024; // 200 MB for video backgrounds
 
 const BUCKET = "uploads";
@@ -59,6 +66,7 @@ export async function POST(req: Request) {
   const form = await req.formData();
   const file = form.get("file");
   if (!(file instanceof File)) {
+    console.error("[upload] no_file — got:", typeof file, file);
     return NextResponse.json({ error: "no_file" }, { status: 400 });
   }
   const isImage = ALLOWED_IMAGES.has(file.type);
@@ -66,9 +74,11 @@ export async function POST(req: Request) {
   const isVideo = ALLOWED_VIDEO.has(file.type);
   const isFile = ALLOWED_FILES.has(file.type);
   if (!isImage && !isAudio && !isVideo && !isFile) {
+    console.error("[upload] invalid_type:", file.type, "name:", file.name);
     return NextResponse.json({ error: "invalid_type" }, { status: 400 });
   }
   if (file.size > (isVideo ? MAX_VIDEO_BYTES : MAX_BYTES)) {
+    console.error("[upload] too_large:", file.size, "type:", file.type);
     return NextResponse.json({ error: "too_large" }, { status: 400 });
   }
 

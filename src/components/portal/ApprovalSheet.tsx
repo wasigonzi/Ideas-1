@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Check, CheckCircle2, FileCheck, Loader2, Plus, Printer, Save, Trash2, Upload, X, ZoomIn, ZoomOut,
+  Check, CheckCircle2, FileCheck, FileImage, Loader2, Plus, Printer, Save, Trash2, Upload, X, ZoomIn, ZoomOut,
+  AlignLeft, AlignCenter, AlignRight, AlignStartVertical, AlignCenterVertical, AlignEndVertical,
+  Maximize2, Minimize2,
 } from "lucide-react";
 
 export interface ApprovalSheetTask {
@@ -20,6 +23,8 @@ export interface ImageItem {
   x: number;
   y: number;
   scale: number;
+  w?: number; // natural width px
+  h?: number; // natural height px
 }
 
 export interface SheetPage {
@@ -46,6 +51,8 @@ interface Props {
 const DOC_W = 1056;   // letter landscape width  @ 96 dpi
 const DOC_H = 816;    // letter landscape height @ 96 dpi
 const IMG_AREA_H = 430;
+const BOX_W = DOC_W - 48;  // 1008 — doc padding 24px each side
+const BOX_H = IMG_AREA_H;
 
 function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v));
@@ -83,10 +90,47 @@ export function ApprovalSheet({ open, task, onClose }: Props) {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [exporting, setExporting] = useState(false);
+  const exportContainerRef = useRef<HTMLDivElement>(null);
+
   const dragState = useRef<{
     id: string; startPx: number; startPy: number; startIx: number; startIy: number;
   } | null>(null);
+  const resizeState = useRef<{
+    id: string; startScale: number; startDist: number; centerPx: number; centerPy: number;
+  } | null>(null);
   const boxRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  async function exportImages(format: "jpg" | "png") {
+    if (!exportContainerRef.current) return;
+    setExporting(true);
+    try {
+      const h2c = (await import("html2canvas")).default;
+      const kids = Array.from(exportContainerRef.current.children) as HTMLElement[];
+      for (let i = 0; i < kids.length; i++) {
+        const canvas = await h2c(kids[i], {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: "#ffffff",
+          width: DOC_W,
+          height: DOC_H,
+        });
+        const mime = format === "jpg" ? "image/jpeg" : "image/png";
+        const url = canvas.toDataURL(mime, 0.95);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `hoja-${numero || "sin-numero"}-p${i + 1}.${format}`;
+        a.click();
+        // small delay between pages to avoid browser download throttling
+        if (i < kids.length - 1) await new Promise((r) => setTimeout(r, 300));
+      }
+    } catch {
+      alert("Error al exportar imagen");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   // Load existing sheet from server on open
   useEffect(() => {
@@ -151,7 +195,53 @@ export function ApprovalSheet({ open, task, onClose }: Props) {
   function setScale(id: string, scale: number) {
     updatePage((p) => ({
       ...p,
-      images: p.images.map((i) => (i.id === id ? { ...i, scale: clamp(scale, 0.1, 5) } : i)),
+      images: p.images.map((i) => (i.id === id ? { ...i, scale: clamp(scale, 0.02, 10) } : i)),
+    }));
+  }
+
+  function setImgDimensions(id: string, w: number, h: number) {
+    setPages((prev) => prev.map((p) => ({
+      ...p,
+      images: p.images.map((i) => (i.id === id && !i.w ? { ...i, w, h } : i)),
+    })));
+  }
+
+  function alignImg(id: string, axis: "h" | "v", pos: "start" | "center" | "end") {
+    updatePage((p) => ({
+      ...p,
+      images: p.images.map((i) => {
+        if (i.id !== id) return i;
+        const iw = (i.w ?? 200) * i.scale;
+        const ih = (i.h ?? 200) * i.scale;
+        if (axis === "h") {
+          const x = pos === "start" ? (iw / 2 / BOX_W) * 100
+            : pos === "end" ? 100 - (iw / 2 / BOX_W) * 100
+            : 50;
+          return { ...i, x: clamp(x, 0, 100) };
+        } else {
+          const y = pos === "start" ? (ih / 2 / BOX_H) * 100
+            : pos === "end" ? 100 - (ih / 2 / BOX_H) * 100
+            : 50;
+          return { ...i, y: clamp(y, 0, 100) };
+        }
+      }),
+    }));
+  }
+
+  function fitImg(id: string, type: "width" | "height" | "fill" | "contain") {
+    updatePage((p) => ({
+      ...p,
+      images: p.images.map((i) => {
+        if (i.id !== id || !i.w || !i.h) return i;
+        const sw = BOX_W / i.w;
+        const sh = BOX_H / i.h;
+        const scale =
+          type === "width" ? sw :
+          type === "height" ? sh :
+          type === "fill" ? Math.max(sw, sh) :
+          Math.min(sw, sh);
+        return { ...i, scale: clamp(scale, 0.02, 10), x: 50, y: 50 };
+      }),
     }));
   }
 
@@ -211,6 +301,24 @@ export function ApprovalSheet({ open, task, onClose }: Props) {
 
   const onBoxPointerMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>, pageIdx: number) => {
+      // Resize takes priority
+      const r = resizeState.current;
+      if (r) {
+        const dist = Math.max(Math.hypot(e.clientX - r.centerPx, e.clientY - r.centerPy), 1);
+        const newScale = clamp(r.startScale * (dist / r.startDist), 0.02, 10);
+        setPages((prev) =>
+          prev.map((p, i) =>
+            i !== pageIdx ? p : {
+              ...p,
+              images: p.images.map((img) =>
+                img.id !== r.id ? img : { ...img, scale: newScale }
+              ),
+            }
+          )
+        );
+        return;
+      }
+      // Drag
       const d = dragState.current;
       if (!d) return;
       const box = boxRefs.current[pageIdx];
@@ -232,7 +340,26 @@ export function ApprovalSheet({ open, task, onClose }: Props) {
     []
   );
 
-  const onBoxPointerUp = useCallback(() => { dragState.current = null; }, []);
+  const onBoxPointerUp = useCallback(() => { dragState.current = null; resizeState.current = null; }, []);
+
+  const onResizeHandlePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>, id: string, pageIdx: number) => {
+      e.stopPropagation();
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      const pg = pages[pageIdx];
+      const item = pg?.images.find((i) => i.id === id);
+      if (!item) return;
+      const box = boxRefs.current[pageIdx];
+      if (!box) return;
+      const rect = box.getBoundingClientRect();
+      const centerPx = rect.left + (item.x / 100) * rect.width;
+      const centerPy = rect.top + (item.y / 100) * rect.height;
+      const startDist = Math.max(Math.hypot(e.clientX - centerPx, e.clientY - centerPy), 1);
+      resizeState.current = { id, startScale: item.scale, startDist, centerPx, centerPy };
+      setSelectedId(id);
+    },
+    [pages]
+  );
 
   const activePage = pages[activePageIdx];
   const statusInfo = savedStatus ? STATUS_LABELS[savedStatus] : null;
@@ -431,15 +558,47 @@ export function ApprovalSheet({ open, task, onClose }: Props) {
                                 </button>
                               </div>
                               {isSel && (
-                                <div className="mt-2 flex items-center gap-2">
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); setScale(img.id, img.scale - 0.1); }} className="p-1 rounded bg-white/5 hover:bg-white/10 text-white/60"><ZoomOut size={12} /></button>
-                                  <input type="range" min="0.1" max="5" step="0.05" value={img.scale}
-                                    onChange={(e) => setScale(img.id, parseFloat(e.target.value))}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="flex-1 h-1 accent-[#ffae00]"
-                                  />
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); setScale(img.id, img.scale + 0.1); }} className="p-1 rounded bg-white/5 hover:bg-white/10 text-white/60"><ZoomIn size={12} /></button>
-                                  <span className="text-[10px] text-white/40 w-8 text-right">{img.scale.toFixed(1)}x</span>
+                                <div className="mt-2 space-y-2" onClick={(e) => e.stopPropagation()}>
+                                  {/* Scale */}
+                                  <div className="flex items-center gap-2">
+                                    <button type="button" onClick={() => setScale(img.id, img.scale - 0.05)} className="p-1 rounded bg-white/5 hover:bg-white/10 text-white/60"><ZoomOut size={12} /></button>
+                                    <input type="range" min="0.02" max="5" step="0.01" value={img.scale}
+                                      onChange={(e) => setScale(img.id, parseFloat(e.target.value))}
+                                      className="flex-1 h-1 accent-[#ffae00]"
+                                    />
+                                    <button type="button" onClick={() => setScale(img.id, img.scale + 0.05)} className="p-1 rounded bg-white/5 hover:bg-white/10 text-white/60"><ZoomIn size={12} /></button>
+                                    <span className="text-[10px] text-white/40 w-10 text-right">{(img.scale * 100).toFixed(0)}%</span>
+                                  </div>
+                                  {/* Align H */}
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-[10px] text-white/35 w-12 shrink-0">Alinear</span>
+                                    <div className="flex gap-1 flex-1">
+                                      <button type="button" title="Izquierda" onClick={() => alignImg(img.id, "h", "start")} className="flex-1 flex justify-center p-1 rounded bg-white/5 hover:bg-[#ffae00]/20 text-white/60 hover:text-[#ffae00]"><AlignLeft size={13} /></button>
+                                      <button type="button" title="Centro H" onClick={() => alignImg(img.id, "h", "center")} className="flex-1 flex justify-center p-1 rounded bg-white/5 hover:bg-[#ffae00]/20 text-white/60 hover:text-[#ffae00]"><AlignCenter size={13} /></button>
+                                      <button type="button" title="Derecha" onClick={() => alignImg(img.id, "h", "end")} className="flex-1 flex justify-center p-1 rounded bg-white/5 hover:bg-[#ffae00]/20 text-white/60 hover:text-[#ffae00]"><AlignRight size={13} /></button>
+                                      <div className="w-px bg-white/10 mx-0.5" />
+                                      <button type="button" title="Arriba" onClick={() => alignImg(img.id, "v", "start")} className="flex-1 flex justify-center p-1 rounded bg-white/5 hover:bg-[#ffae00]/20 text-white/60 hover:text-[#ffae00]"><AlignStartVertical size={13} /></button>
+                                      <button type="button" title="Centro V" onClick={() => alignImg(img.id, "v", "center")} className="flex-1 flex justify-center p-1 rounded bg-white/5 hover:bg-[#ffae00]/20 text-white/60 hover:text-[#ffae00]"><AlignCenterVertical size={13} /></button>
+                                      <button type="button" title="Abajo" onClick={() => alignImg(img.id, "v", "end")} className="flex-1 flex justify-center p-1 rounded bg-white/5 hover:bg-[#ffae00]/20 text-white/60 hover:text-[#ffae00]"><AlignEndVertical size={13} /></button>
+                                    </div>
+                                  </div>
+                                  {/* Fit To */}
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-[10px] text-white/35 w-12 shrink-0">Ajustar</span>
+                                    <div className="flex gap-1 flex-1">
+                                      {([["width","Ancho"],["height","Alto"],["fill","Llenar"],["contain","Encajar"]] as const).map(([type, label]) => (
+                                        <button
+                                          key={type}
+                                          type="button"
+                                          onClick={() => fitImg(img.id, type)}
+                                          disabled={!img.w}
+                                          className="flex-1 text-[10px] px-1 py-1 rounded bg-white/5 hover:bg-[#ffae00]/20 text-white/60 hover:text-[#ffae00] disabled:opacity-30 disabled:cursor-not-allowed leading-none"
+                                        >
+                                          {label}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -455,6 +614,22 @@ export function ApprovalSheet({ open, task, onClose }: Props) {
                   >
                     <Printer size={16} /> Imprimir / Guardar PDF
                   </button>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => exportImages("jpg")}
+                      disabled={exporting}
+                      className="flex-1 flex items-center justify-center gap-1.5 font-bold text-xs px-3 py-2 rounded-xl bg-[#1e2d45] text-white/80 hover:brightness-125 transition-all disabled:opacity-50"
+                    >
+                      <FileImage size={14} /> {exporting ? "Exportando..." : "JPG"}
+                    </button>
+                    <button
+                      onClick={() => exportImages("png")}
+                      disabled={exporting}
+                      className="flex-1 flex items-center justify-center gap-1.5 font-bold text-xs px-3 py-2 rounded-xl bg-[#1e2d45] text-white/80 hover:brightness-125 transition-all disabled:opacity-50"
+                    >
+                      <FileImage size={14} /> {exporting ? "Exportando..." : "PNG"}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Preview — all pages stacked */}
@@ -479,6 +654,8 @@ export function ApprovalSheet({ open, task, onClose }: Props) {
                           selectedId={selectedId}
                           boxRef={(el) => { boxRefs.current[idx] = el; }}
                           onImgPointerDown={onImgPointerDown}
+                          onImgLoad={setImgDimensions}
+                          onResizeHandlePointerDown={(e, id) => onResizeHandlePointerDown(e, id, idx)}
                           onBoxPointerMove={(e) => onBoxPointerMove(e, idx)}
                           onBoxPointerUp={onBoxPointerUp}
                         />
@@ -490,17 +667,35 @@ export function ApprovalSheet({ open, task, onClose }: Props) {
             </div>
           </motion.div>
 
-          {/* Print-only — all pages */}
-          <div className="print-only fixed inset-0 z-[120] bg-white overflow-visible">
-            {pages.map((page) => (
-              <ApprovalDocument
-                key={page.id}
-                numero={numero} cliente={cliente} fecha={fecha}
-                material={material} terminacion={terminacion} nota={nota}
-                page={page} taskTitle={task.title}
-              />
-            ))}
-          </div>
+          {/* Export container — off-screen, full-size pages for html2canvas */}
+          {typeof document !== "undefined" && ReactDOM.createPortal(
+            <div ref={exportContainerRef} style={{ position: "fixed", left: "-9999px", top: 0, zIndex: -1, pointerEvents: "none" }}>
+              {pages.map((page) => (
+                <ApprovalDocument
+                  key={page.id}
+                  numero={numero} cliente={cliente} fecha={fecha}
+                  material={material} terminacion={terminacion} nota={nota}
+                  page={page} taskTitle={task.title}
+                />
+              ))}
+            </div>,
+            document.body
+          )}
+
+          {/* Print-only — all pages rendered via portal directly into body */}
+          {typeof document !== "undefined" && ReactDOM.createPortal(
+            <div className="print-only" style={{ position: "fixed", inset: 0, zIndex: 9999, background: "#fff", overflow: "visible", display: "none" }}>
+              {pages.map((page) => (
+                <ApprovalDocument
+                  key={page.id}
+                  numero={numero} cliente={cliente} fecha={fecha}
+                  material={material} terminacion={terminacion} nota={nota}
+                  page={page} taskTitle={task.title}
+                />
+              ))}
+            </div>,
+            document.body
+          )}
         </>
       )}
     </AnimatePresence>
@@ -521,22 +716,25 @@ interface DocProps {
   interactive?: boolean;
   selectedId?: string | null;
   boxRef?: (el: HTMLDivElement | null) => void;
+  onImgLoad?: (id: string, w: number, h: number) => void;
   onImgPointerDown?: (e: React.PointerEvent<HTMLImageElement>, id: string) => void;
+  onResizeHandlePointerDown?: (e: React.PointerEvent<HTMLDivElement>, id: string) => void;
   onBoxPointerMove?: (e: React.PointerEvent<HTMLDivElement>) => void;
   onBoxPointerUp?: (e: React.PointerEvent<HTMLDivElement>) => void;
 }
 
 function ApprovalDocument({
   numero, cliente, fecha, material, terminacion, nota, page, taskTitle,
-  interactive = false, selectedId, boxRef, onImgPointerDown, onBoxPointerMove, onBoxPointerUp,
+  interactive = false, selectedId, boxRef, onImgLoad, onImgPointerDown, onResizeHandlePointerDown, onBoxPointerMove, onBoxPointerUp,
 }: DocProps) {
   return (
     <div
+      className="approval-doc"
       style={{
         width: DOC_W, minHeight: DOC_H, background: "#fff", color: "#000",
         fontFamily: "Arial, Helvetica, sans-serif", fontSize: "12px",
         padding: "20px 24px", boxSizing: "border-box",
-        pageBreakAfter: "always", display: "flex", flexDirection: "column",
+        pageBreakAfter: "always", breakAfter: "page", display: "flex", flexDirection: "column",
       }}
     >
       {/* ── Header: logo | title + No: | info fields ── */}
@@ -607,25 +805,58 @@ function ApprovalDocument({
           </div>
         )}
         {page.images.map((img) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <div
             key={img.id}
-            src={img.url}
-            alt="Arte"
-            draggable={false}
-            onPointerDown={interactive ? (e) => onImgPointerDown?.(e, img.id) : undefined}
             style={{
               position: "absolute",
               left: `${img.x}%`,
               top: `${img.y}%`,
               transform: `translate(-50%, -50%) scale(${img.scale})`,
-              maxWidth: "none", width: "auto", height: "auto",
+              transformOrigin: "center center",
+              display: "inline-flex",
               cursor: interactive ? "grab" : "default",
-              outline: interactive && img.id === selectedId ? "3px solid #ffae00" : "none",
-              outlineOffset: "2px",
               touchAction: "none",
             }}
-          />
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={img.url}
+              alt="Arte"
+              draggable={false}
+              onLoad={interactive ? (e) => {
+                const el = e.currentTarget;
+                onImgLoad?.(img.id, el.naturalWidth, el.naturalHeight);
+              } : undefined}
+              onPointerDown={interactive ? (e) => onImgPointerDown?.(e, img.id) : undefined}
+              style={{
+                display: "block",
+                maxWidth: "none", width: "auto", height: "auto",
+                outline: interactive && img.id === selectedId ? "3px solid #ffae00" : "none",
+                outlineOffset: "2px",
+                touchAction: "none",
+                userSelect: "none",
+              }}
+            />
+            {interactive && img.id === selectedId && (
+              <div
+                onPointerDown={(e) => { e.stopPropagation(); onResizeHandlePointerDown?.(e, img.id); }}
+                style={{
+                  position: "absolute",
+                  bottom: -7,
+                  right: -7,
+                  width: 18,
+                  height: 18,
+                  background: "#ffae00",
+                  border: "2.5px solid #000",
+                  borderRadius: 4,
+                  cursor: "nwse-resize",
+                  touchAction: "none",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                  zIndex: 10,
+                }}
+              />
+            )}
+          </div>
         ))}
         {interactive && page.images.length > 0 && (
           <div style={{ position: "absolute", bottom: 8, right: 8, background: "rgba(0,0,0,0.5)", color: "#fff", fontSize: "10px", padding: "3px 8px", borderRadius: 6, pointerEvents: "none" }}>

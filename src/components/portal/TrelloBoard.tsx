@@ -96,8 +96,13 @@ export function TrelloBoard<T extends BoardItem>({
 
   const grouped = useMemo(() => {
     const g: Record<string, T[]> = {};
+    const knownKeys = new Set(columns.map((c) => c.key));
+    const fallbackKey = columns[0]?.key ?? "";
     for (const c of columns) g[c.key] = [];
-    for (const i of items) (g[i.status] ??= []).push(i);
+    for (const i of items) {
+      const key = knownKeys.has(i.status) ? i.status : fallbackKey;
+      (g[key] ??= []).push(i);
+    }
     return g;
   }, [items, columns]);
 

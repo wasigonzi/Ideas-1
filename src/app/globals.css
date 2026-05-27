@@ -284,7 +284,22 @@ select { background: #0e1a2c; color: white; color-scheme: dark; }
   body > * { display: none !important; }
 
   /* Show only the print-only element */
-  .print-only { display: flex !important; }
+  .print-only {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  /* Each approval document gets its own page */
+  .approval-doc {
+    page-break-after: always;
+    break-after: page;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
 
   /* Reset page margins */
   @page {
