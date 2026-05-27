@@ -26,7 +26,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { MoreHorizontal, Plus, Trash2, X } from "lucide-react";
 
 export type BoardItem = { id: string; status: string; position?: number };
-export type BoardColumn = { key: string; label: string; accent?: string };
+export type BoardColumn = { key: string; label: string; accent?: string | null };
 
 const POS_STEP = 1000;
 
