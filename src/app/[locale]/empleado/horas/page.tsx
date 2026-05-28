@@ -23,16 +23,20 @@ export default function EmpleadoHoras() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [hourlyRate, setHourlyRate] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const selectedPeriod = ALL_PERIODS[periodIdx];
 
   const load = useCallback(async (period: Period) => {
     setLoading(true);
+    setError("");
     const r = await fetch(`/api/horas/me?from=${period.start}&to=${period.end}`);
     if (r.ok) {
       const data = await r.json();
       setEntries(data.entries ?? []);
       setHourlyRate(data.hourlyRate ?? null);
+    } else {
+      setError("No se pudieron cargar las horas. Intenta de nuevo.");
     }
     setLoading(false);
   }, []);
@@ -56,6 +60,12 @@ export default function EmpleadoHoras() {
         <h1 className="heading-lg">Mis nóminas</h1>
         <p className="text-white/65 mt-1">Horas trabajadas y estimado de pago bisemanal.</p>
       </header>
+
+      {error && (
+        <div className="card p-4 border border-red-500/40 bg-red-500/8 text-red-300 text-sm">
+          {error}
+        </div>
+      )}
 
       {/* Period navigator */}
       <div className="card p-4">

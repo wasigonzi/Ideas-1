@@ -26,7 +26,8 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if ("amount" in body) data.amount = Number(body.amount);
   if ("dueDate" in body) data.dueDate = new Date(body.dueDate);
   if ("notes"  in body) data.notes  = body.notes;
-  if (body.status === "paid" && !("paidAt" in data)) data.paidAt = new Date();
+  // Always set paidAt when status changes to paid
+  if (body.status === "paid") data.paidAt = new Date();
 
   const invoice = await prisma.invoice.update({
     where: { id },

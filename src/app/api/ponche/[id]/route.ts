@@ -27,8 +27,14 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if (!current) return NextResponse.json({ error: "not_found" }, { status: 404 });
   const inAt = (data.in as Date | undefined) ?? current.in;
   const outAt = "out" in data ? (data.out as Date | null) : current.out;
-  if (outAt) data.hours = Math.round(hoursBetween(inAt, outAt) * 100) / 100;
-  else data.hours = null;
+  if (outAt) {
+    if (outAt <= inAt) {
+      return NextResponse.json({ error: "La salida debe ser posterior a la entrada" }, { status: 400 });
+    }
+    data.hours = Math.round(hoursBetween(inAt, outAt) * 100) / 100;
+  } else {
+    data.hours = null;
+  }
 
   const updated = await prisma.punch.update({ where: { id }, data });
   return NextResponse.json(updated);

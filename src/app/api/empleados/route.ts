@@ -36,7 +36,14 @@ export async function GET() {
   if (!u?.id || !["admin", "employee"].includes(u.role ?? "")) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-
+  // Employees only get the fields needed for UI (name, avatar, role) — no sensitive data
+  if (u.role === "employee") {
+    const users = await prisma.user.findMany({
+      orderBy: [{ role: "asc" }, { name: "asc" }],
+      select: { id: true, name: true, email: true, role: true, avatar: true, active: true },
+    });
+    return NextResponse.json(users);
+  }
   const users = await prisma.user.findMany({
     orderBy: [{ role: "asc" }, { name: "asc" }],
     select: userSelect,

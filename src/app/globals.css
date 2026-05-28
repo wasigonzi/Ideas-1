@@ -31,7 +31,7 @@
 }
 
 @layer base {
-  html, body { height: 100%; }
+  html, body { height: 100%; overflow-x: hidden; }
   html {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;

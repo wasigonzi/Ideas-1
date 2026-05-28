@@ -77,6 +77,14 @@ export default function AdminInstruccionesPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [employees]);
 
+  // Clear pending auto-save timers on unmount to prevent state updates after unmount
+  useEffect(() => {
+    return () => {
+      for (const t of timers.current.values()) clearTimeout(t);
+      timers.current.clear();
+    };
+  }, []);
+
   async function saveNote(userId: string, content: string) {
     setSaving((s) => new Set(s).add(userId));
     try {

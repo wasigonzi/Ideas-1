@@ -18,9 +18,19 @@ export async function POST(
 
   const { id: taskId } = await params;
 
-  // Verify the task exists and is assigned to this user (or user is admin)
+  // Verify the task exists and the user has permission (admin, assignee, or member)
   const task = await prisma.task.findUnique({ where: { id: taskId } });
   if (!task) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+  if (role !== "admin") {
+    let members: string[] = [];
+    try { members = task.members ? JSON.parse(task.members) : []; } catch { /* ignore */ }
+    const isAssignee = task.assigneeId === userId;
+    const isMember = members.includes(userId);
+    if (!isAssignee && !isMember) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+  }
 
   // If already has an active session on this exact task, return it (idempotent)
   const existing = await prisma.workSession.findFirst({
@@ -30,15 +40,15 @@ export async function POST(
     return NextResponse.json({ session: existing });
   }
 
-  // End any other active sessions this user has on other tasks
-  await prisma.workSession.updateMany({
-    where: { userId, endedAt: null },
-    data: { endedAt: new Date() },
-  });
-
-  // Create new session
-  const ws = await prisma.workSession.create({
-    data: { taskId, userId },
+  // End any other active sessions and create the new one atomically to prevent race conditions
+  const ws = await prisma.$transaction(async (tx) => {
+    await tx.workSession.updateMany({
+      where: { userId, endedAt: null },
+      data: { endedAt: new Date() },
+    });
+    return tx.workSession.create({
+      data: { taskId, userId },
+    });
   });
 
   // Move task to in_progress if it was todo

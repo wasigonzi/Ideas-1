@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
 
 export async function GET() {
   const rows = await prisma.siteSetting.findMany();
@@ -28,5 +29,6 @@ export async function PUT(req: Request) {
     )
   );
 
+  revalidateTag("site-config");
   return NextResponse.json({ ok: true });
 }

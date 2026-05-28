@@ -227,7 +227,7 @@ export function Navbar({ whatsapp = "19393264007" }: { whatsapp?: string }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="lg:hidden fixed inset-0 z-30 bg-[var(--color-ink-900)]/98 backdrop-blur-xl pt-24 overflow-y-auto"
+            className="lg:hidden fixed inset-0 z-30 bg-[var(--color-ink-900)]/98 backdrop-blur-xl pt-24 overflow-y-auto overflow-x-hidden"
           >
             <div className="absolute inset-0 grid-bg-dark opacity-30 pointer-events-none" />
             <div className="absolute -top-32 -right-32 w-[28rem] h-[28rem] rounded-full bg-[var(--color-brand-500)]/20 blur-3xl pointer-events-none" />

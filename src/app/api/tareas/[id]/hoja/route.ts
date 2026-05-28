@@ -27,7 +27,8 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   const task = await prisma.task.findUnique({ where: { id }, select: { id: true, assigneeId: true, members: true } });
   if (!task) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  const members: string[] = task.members ? JSON.parse(task.members) : [];
+  let members: string[] = [];
+  try { members = task.members ? JSON.parse(task.members) : []; } catch { /* corrupt JSON — treat as empty */ }
   const hasAccess =
     user.role === "admin" ||
     user.role === "employee" ||
@@ -42,7 +43,9 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   const sheet = rows[0] ?? null;
   if (!sheet) return NextResponse.json(null);
 
-  return NextResponse.json({ ...sheet, data: JSON.parse(sheet.data) });
+  let parsedData: unknown;
+  try { parsedData = JSON.parse(sheet.data); } catch { parsedData = null; }
+  return NextResponse.json({ ...sheet, data: parsedData });
 }
 
 // POST /api/tareas/[id]/hoja — admin/employee only: save or update
@@ -74,5 +77,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
   // Move task to "Para revisión" so the client knows it's waiting for their approval.
   await prisma.task.update({ where: { id }, data: { status: "review" } });
 
-  return NextResponse.json({ ...sheet, data: JSON.parse(sheet.data) });
+  let parsedDataPost: unknown;
+  try { parsedDataPost = JSON.parse(sheet.data); } catch { parsedDataPost = null; }
+  return NextResponse.json({ ...sheet, data: parsedDataPost });
 }

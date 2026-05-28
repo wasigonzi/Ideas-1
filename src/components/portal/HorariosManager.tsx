@@ -423,7 +423,8 @@ export function HorariosManager({
                           <button
                             onClick={async () => {
                               if (!confirm("¿Eliminar este ponche?")) return;
-                              await fetch(`/api/ponche/${p.id}`, { method: "DELETE" });
+                              const res = await fetch(`/api/ponche/${p.id}`, { method: "DELETE" });
+                              if (!res.ok) { alert("No se pudo eliminar el ponche. Intenta de nuevo."); return; }
                               router.refresh();
                             }}
                             className="p-1.5 rounded hover:bg-red-500/20 text-red-300"
@@ -471,7 +472,8 @@ export function HorariosManager({
                               <button
                                 onClick={async () => {
                                   if (!confirm("¿Eliminar este descanso?")) return;
-                                  await fetch(`/api/ponche/break/${b.id}`, { method: "DELETE" });
+                                  const res = await fetch(`/api/ponche/break/${b.id}`, { method: "DELETE" });
+                                  if (!res.ok) { alert("No se pudo eliminar el descanso. Intenta de nuevo."); return; }
                                   router.refresh();
                                 }}
                                 className="p-1.5 rounded hover:bg-red-500/20 text-red-300"
