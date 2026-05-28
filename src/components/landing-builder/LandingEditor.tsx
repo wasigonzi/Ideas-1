@@ -499,9 +499,8 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
     el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [selectedId]);
 
-  // Detect locale from URL so back link and preview link work correctly
+  // pathname kept in case it's needed elsewhere
   const pathname = usePathname();
-  const locale = pathname?.split("/")[1] || "es";
 
   // Load blocks + data
   useEffect(() => {
@@ -615,7 +614,7 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
     <div className="fixed inset-0 z-50 flex flex-col bg-[var(--color-ink-950)] text-white overflow-hidden">
       {/* ── Top bar ── */}
       <header className="flex items-center gap-3 px-4 py-3 border-b border-white/8 bg-black/40 backdrop-blur-sm shrink-0 z-20">
-        <a href={`/${locale}/admin`} className="flex items-center gap-1.5 text-white/40 hover:text-white text-xs transition-colors">
+        <a href="/admin" className="flex items-center gap-1.5 text-white/40 hover:text-white text-xs transition-colors">
           <ChevronLeft size={14} /> Admin
         </a>
         <span className="text-white/20">|</span>
@@ -651,7 +650,7 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
         </button>
 
         <a
-          href={`/${locale}`}
+          href="/"
           target="_blank"
           rel="noreferrer"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-white/10 text-white/50 hover:text-white transition-colors"
