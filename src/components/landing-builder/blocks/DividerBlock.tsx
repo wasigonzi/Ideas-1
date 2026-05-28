@@ -13,7 +13,7 @@ export const dividerDefaults: Record<string, unknown> = {
   labelColor: "rgba(255,255,255,0.4)",
 };
 
-export function DividerBlock(props: Record<string, unknown>) {
+export function DividerBlock(props: Record<string, any>) {
   const color = (props.color as string) || "rgba(255,255,255,0.15)";
   const thickness = (props.thickness as number) || 1;
   const lineStyle = (props.style as string) || "solid";
@@ -59,7 +59,7 @@ export function DividerSettings({
           options={[{ value: "100%", label: "100%" }, { value: "75%", label: "75%" }, { value: "50%", label: "50%" }, { value: "25%", label: "25%" }]} />
       </Field>
       <Field label="Etiqueta (opcional)"><TextField value={(props.label as string) || ""} onChange={(v) => onChange({ label: v })} placeholder="o" /></Field>
-      {props.label && (
+      {Boolean(props.label) && (
         <Field label="Color etiqueta"><ColorField value={(props.labelColor as string) || "rgba(255,255,255,0.4)"} onChange={(v) => onChange({ labelColor: v })} /></Field>
       )}
       <SectionTitle>Espaciado</SectionTitle>

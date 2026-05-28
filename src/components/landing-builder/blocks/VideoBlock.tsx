@@ -35,7 +35,7 @@ function getEmbedUrl(url: string, autoplay: boolean): string {
   }
 }
 
-export function VideoBlock(props: Record<string, unknown>) {
+export function VideoBlock(props: Record<string, any>) {
   const videoUrl = (props.videoUrl as string) || "";
   const embedUrl = getEmbedUrl(videoUrl, !!(props.autoplay));
   const aspect = (props.aspectRatio as string) || "16/9";

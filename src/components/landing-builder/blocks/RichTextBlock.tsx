@@ -13,7 +13,7 @@ export const richTextDefaults: Record<string, unknown> = {
   linkColor: "#ffae00",
 };
 
-export function RichTextBlock(props: Record<string, unknown>) {
+export function RichTextBlock(props: Record<string, any>) {
   const sizeCls: Record<string, string> = {
     sm: "text-sm", base: "text-base", lg: "text-lg", xl: "text-xl",
   };

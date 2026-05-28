@@ -21,7 +21,7 @@ export const testimonialsDefaults: Record<string, unknown> = {
   ] as Testimonial[],
 };
 
-export function TestimonialsBlock(props: Record<string, unknown>) {
+export function TestimonialsBlock(props: Record<string, any>) {
   const testimonials = (props.testimonials as Testimonial[]) || [];
   const cols = (props.columns as string) || "3";
   const accent = (props.accentColor as string) || "#ffae00";

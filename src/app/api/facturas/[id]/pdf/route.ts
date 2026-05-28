@@ -168,7 +168,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
     </div>
   </div>
 
-  ${inv.notes && inv.order ? `<div class="notes"><h4>Notas</h4><p>${esc(inv.notes)}</p></div>` : ""}
+  ${inv.notes ? `<div class="notes"><h4>Notas</h4><p>${esc(inv.notes)}</p></div>` : ""}
 
   <div class="footer">
     Gracias por su preferencia · <strong>IDEAS, LLC</strong> · ideas@printingideaspr.com<br>

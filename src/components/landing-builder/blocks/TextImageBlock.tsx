@@ -21,7 +21,7 @@ export const textImageDefaults: Record<string, unknown> = {
   gap: "16",
 };
 
-export function TextImageBlock(props: Record<string, unknown>) {
+export function TextImageBlock(props: Record<string, any>) {
   const layout = (props.layout as string) || "imageRight";
   const isImageLeft = layout === "imageLeft";
   const accent = (props.ctaBg as string) || "#ffae00";

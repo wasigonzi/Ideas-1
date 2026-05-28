@@ -37,7 +37,7 @@ export function OrdersManager({
       id: selected.id,
       number: selected.number,
       title: selected.title,
-      clientName: selected.clientName,
+      clientName: selected.clientName ?? "",
     };
     const pct =
       selected.totalTasks > 0

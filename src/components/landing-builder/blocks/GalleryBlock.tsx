@@ -175,7 +175,7 @@ export const galleryDefaults: Record<string, unknown> = {
   ] as GalleryImage[],
 };
 
-export function GalleryBlock(props: Record<string, unknown>) {
+export function GalleryBlock(props: Record<string, any>) {
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const images = (props.images as GalleryImage[]) || [];
   const cols = (props.columns as string) || "3";

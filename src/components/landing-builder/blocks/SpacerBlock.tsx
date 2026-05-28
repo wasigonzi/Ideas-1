@@ -8,7 +8,7 @@ export const spacerDefaults: Record<string, unknown> = {
   height: 80,
 };
 
-export function SpacerBlock(props: Record<string, unknown>) {
+export function SpacerBlock(props: Record<string, any>) {
   return (
     <BlockShell props={{ ...props, padTop: 0, padBottom: 0 }}>
       <div style={{ height: (props.height as number) || 80 }} />

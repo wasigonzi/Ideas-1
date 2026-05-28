@@ -21,7 +21,7 @@ export const contactFormDefaults: Record<string, unknown> = {
   successMessage: "¡Gracias! Nos pondremos en contacto pronto.",
 };
 
-export function ContactFormBlock(props: Record<string, unknown>) {
+export function ContactFormBlock(props: Record<string, any>) {
   const accent = (props.accentColor as string) || "#ffae00";
   const [form, setForm] = useState({ name: "", email: "", phone: "", company: "", message: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");

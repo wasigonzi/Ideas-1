@@ -38,7 +38,7 @@ export const heroDefaults: Record<string, unknown> = {
 };
 
 // ── Block ──────────────────────────────────────────────────────────────────
-export function HeroBlock(props: Record<string, unknown>) {
+export function HeroBlock(props: Record<string, any>) {
   const alignment = (props.alignment as string) || "left";
   const titleSize = (props.titleSize as string) || "5xl";
   const accentColor = (props.ctaPrimaryBg as string) || "#ffae00";
@@ -220,7 +220,7 @@ export function HeroSettings({
       <Field label="Mostrar tarjeta" horizontal>
         <ToggleField value={!!(props.showCard)} onChange={(v) => onChange({ showCard: v })} />
       </Field>
-      {props.showCard && (
+      {Boolean(props.showCard) && (
         <>
           <ImageField label="Imagen" value={(props.cardImage as string) || ""} onChange={(v) => onChange({ cardImage: v })} />
           <Field label="Badge"><TextField value={(props.cardBadge as string) || ""} onChange={(v) => onChange({ cardBadge: v })} /></Field>
@@ -232,7 +232,7 @@ export function HeroSettings({
       <Field label="Mostrar stats" horizontal>
         <ToggleField value={!!(props.showStats)} onChange={(v) => onChange({ showStats: v })} />
       </Field>
-      {props.showStats && (
+      {Boolean(props.showStats) && (
         <>
           {(["1", "2", "3"] as const).map((n) => (
             <div key={n} className="grid grid-cols-2 gap-2">

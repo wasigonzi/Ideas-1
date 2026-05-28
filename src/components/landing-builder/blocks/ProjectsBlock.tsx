@@ -26,7 +26,7 @@ interface Project {
   category?: string | null;
 }
 
-export function ProjectsBlock(props: Record<string, unknown>) {
+export function ProjectsBlock(props: Record<string, any>) {
   const projects = (props.projects as Project[]) || [];
   const cols = (props.columns as string) || "3";
   const gridCls: Record<string, string> = {

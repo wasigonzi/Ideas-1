@@ -20,7 +20,7 @@ export const servicesDefaults: Record<string, unknown> = {
   moreUrl: "/es/servicios",
 };
 
-export function ServicesBlock(props: Record<string, unknown>) {
+export function ServicesBlock(props: Record<string, any>) {
   const services = (props.services as ServiceItem[]) || [];
   const cols = (props.columns as string) || "3";
   const accent      = (props.accentColor     as string) || "#ffae00";

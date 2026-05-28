@@ -21,7 +21,7 @@ export const logoCloudDefaults: Record<string, unknown> = {
   marquee: true,
 };
 
-export function LogoCloudBlock(props: Record<string, unknown>) {
+export function LogoCloudBlock(props: Record<string, any>) {
   const logos = (props.logos as LogoItem[]) || [];
 
   return (

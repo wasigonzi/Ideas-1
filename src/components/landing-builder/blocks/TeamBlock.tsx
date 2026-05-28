@@ -18,7 +18,7 @@ export const teamDefaults: Record<string, unknown> = {
   showAvatar: true,
 };
 
-export function TeamBlock(props: Record<string, unknown>) {
+export function TeamBlock(props: Record<string, any>) {
   const employees = (props.employees as Employee[]) || [];
   const accent = (props.accentColor as string) || "#ffae00";
   const cols = (props.columns as string) || "4";

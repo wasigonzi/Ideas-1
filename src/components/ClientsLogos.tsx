@@ -4,7 +4,13 @@ import Image from "next/image";
 import type { SiteConfig } from "@/lib/site-config";
 import { SITE_CONFIG_DEFAULTS } from "@/lib/site-config";
 
-export function ClientsLogos({ config = SITE_CONFIG_DEFAULTS }: { config?: SiteConfig }) {
+export function ClientsLogos({
+  config = SITE_CONFIG_DEFAULTS,
+  title,
+}: {
+  config?: SiteConfig;
+  title?: string;
+}) {
   const logos = config.logosItems.length > 0 ? config.logosItems : SITE_CONFIG_DEFAULTS.logosItems;
   const marqueeItems = [...logos, ...logos]; // duplicate for seamless loop
 
@@ -12,7 +18,7 @@ export function ClientsLogos({ config = SITE_CONFIG_DEFAULTS }: { config?: SiteC
     <section className="py-16 bg-[var(--color-ink-900)] border-y border-white/5 relative">
       <div className="container-x relative">
         <p className="text-center text-xs uppercase tracking-[0.25em] text-white/50 font-semibold mb-10">
-          {config.logosTitle}
+          {title ?? config.logosTitle}
         </p>
       </div>
       <div className="marquee">

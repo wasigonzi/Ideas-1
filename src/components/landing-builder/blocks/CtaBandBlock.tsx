@@ -21,7 +21,7 @@ export const ctaBandDefaults: Record<string, unknown> = {
   btn2Url: "/es/servicios",
 };
 
-export function CtaBandBlock(props: Record<string, unknown>) {
+export function CtaBandBlock(props: Record<string, any>) {
   const alignment = (props.alignment as string) || "center";
 
   return (

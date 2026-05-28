@@ -21,7 +21,7 @@ export const statsDefaults: Record<string, unknown> = {
   dividers: true,
 };
 
-export function StatsBlock(props: Record<string, unknown>) {
+export function StatsBlock(props: Record<string, any>) {
   const stats = (props.stats as StatItem[]) || [];
   const cols = props.columns as string || "4";
   const gridCls: Record<string, string> = {

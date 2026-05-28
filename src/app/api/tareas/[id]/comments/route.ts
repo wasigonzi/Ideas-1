@@ -138,10 +138,14 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const actorId = (session?.user as { id?: string } | undefined)?.id;
   if (!actorId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await ctx.params;
-  const json = await req.json().catch(() => null);
+  const json = (await req.json().catch(() => null)) as {
+    body?: unknown;
+    attachments?: unknown;
+    mentions?: unknown;
+  } | null;
   const body = typeof json?.body === "string" ? json.body.trim() : "";
-  const rawAttachments = Array.isArray(json?.attachments) ? json.attachments : [];
-  const rawMentions = Array.isArray(json?.mentions) ? json.mentions : [];
+  const rawAttachments: unknown[] = Array.isArray(json?.attachments) ? json.attachments : [];
+  const rawMentions: unknown[] = Array.isArray(json?.mentions) ? json.mentions : [];
 
   // Normalize attachments to { url, name, type, kind }.
   const attachments = rawAttachments

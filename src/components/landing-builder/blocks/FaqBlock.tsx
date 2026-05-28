@@ -109,7 +109,7 @@ function CardsVariant({ items, accent, textColor, subtitleColor }: {
   );
 }
 
-export function FaqBlock(props: Record<string, unknown>) {
+export function FaqBlock(props: Record<string, any>) {
   const items = (props.items as FaqItem[]) || [];
   const accent = (props.accentColor as string) || "#ffae00";
   const textColor = (props.textColor as string) || "#ffffff";

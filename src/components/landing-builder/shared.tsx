@@ -441,6 +441,7 @@ export function BlockShell({
 
   const bgType = (props.bgType as string) || "none";
   const bgVideoUrl = (props.bgVideoUrl as string) || "";
+  const bgOverlay = Boolean(props.bgOverlay);
   const isEmbed = bgVideoUrl ? isBgVideoEmbed(bgVideoUrl) : false;
   const embedUrl = isEmbed ? getBgVideoEmbedUrl(bgVideoUrl) : "";
   const minHeight = (props.minHeight as number) ?? undefined;
@@ -491,7 +492,7 @@ export function BlockShell({
         )
       )}
       {/* Overlay for image or video */}
-      {(bgType === "image" || bgType === "video") && props.bgOverlay && (
+      {(bgType === "image" || bgType === "video") && bgOverlay && (
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -1114,7 +1115,7 @@ export function TypographySettings({
 }
 
 // ── Array editor ───────────────────────────────────────────────────────────
-export function ArrayEditor<T extends Record<string, unknown>>({
+export function ArrayEditor<T extends object>({
   items,
   onChange,
   defaultItem,

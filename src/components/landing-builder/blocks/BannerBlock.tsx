@@ -23,7 +23,7 @@ export const bannerDefaults: Record<string, unknown> = {
   ctaColor: "#0a1422",
 };
 
-export function BannerBlock(props: Record<string, unknown>) {
+export function BannerBlock(props: Record<string, any>) {
   const alignment = (props.alignment as string) || "center";
   const accent = (props.ctaBg as string) || "#ffae00";
 

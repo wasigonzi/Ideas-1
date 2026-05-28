@@ -32,8 +32,8 @@ function HighlightedTitle({ title }: { title: string }) {
 
 export function Hero({ config = SITE_CONFIG_DEFAULTS }: { config?: SiteConfig }) {
 
-  const bgImage = config.heroBgImage || HERO_IMG_FALLBACK;
-  const cardImage = config.heroCardImage || HERO_CARD_IMG_FALLBACK;
+  const bgImage = config.heroBgImage || HERO_IMG;
+  const cardImage = config.heroCardImage || HERO_CARD_IMG;
 
   const miniStats = [
     { n: config.heroStat1Value, l: config.heroStat1Label },
