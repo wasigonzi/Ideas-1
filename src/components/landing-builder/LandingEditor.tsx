@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
 import {
   DndContext,
   closestCenter,
@@ -479,6 +478,7 @@ function PaletteView({ onAdd }: { onAdd: (type: BlockType) => void }) {
 // ── Main editor ────────────────────────────────────────────────────────────
 export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }: { pageKey?: string; pageLabel?: string }) {
   const [blocks, setBlocks] = useState<LandingBlock[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [focusedProp, setFocusedProp] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -489,7 +489,6 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
   const [projects, setProjects] = useState<unknown[]>([]);
   const [employees, setEmployees] = useState<unknown[]>([]);
   const [previewMode, setPreviewMode] = useState(false);
-  const initialized = useRef(false);
   const canvasRef = useRef<HTMLElement>(null);
 
   // Scroll selected block into view whenever selection changes
@@ -499,26 +498,34 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
     el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [selectedId]);
 
-  // pathname kept in case it's needed elsewhere
-  const pathname = usePathname();
-
-  // Load blocks + data
+  // Load blocks for the current pageKey. Using AbortController so Strict Mode
+  // double-invocation and navigating between editor pages both work correctly.
   useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
+    const controller = new AbortController();
+    setLoading(true);
+    setSelectedId(null);
 
-    fetch(`/api/landing?key=${encodeURIComponent(pageKey)}`)
+    fetch(`/api/landing?key=${encodeURIComponent(pageKey)}`, { signal: controller.signal })
       .then((r) => r.json())
       .then((data: { blocks: LandingBlock[] }) => {
+        if (controller.signal.aborted) return;
         const fallback = PAGE_DEFAULTS[pageKey] ?? [];
         setBlocks(data.blocks?.length ? data.blocks : fallback);
       })
-      .catch(() => setBlocks(PAGE_DEFAULTS[pageKey] ?? []));
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setBlocks(PAGE_DEFAULTS[pageKey] ?? []);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
 
-    fetch("/api/servicios").then((r) => r.json()).then((d) => setServices(d.services ?? d ?? [])).catch(() => {});
-    fetch("/api/proyectos").then((r) => r.json()).then((d) => setProjects(d.projects ?? d ?? [])).catch(() => {});
-    fetch("/api/empleados").then((r) => r.json()).then((d) => setEmployees(d.employees ?? d ?? [])).catch(() => {});
-  }, []);
+    fetch("/api/servicios", { signal: controller.signal }).then((r) => r.json()).then((d) => { if (!controller.signal.aborted) setServices(d.services ?? d ?? []); }).catch(() => {});
+    fetch("/api/proyectos", { signal: controller.signal }).then((r) => r.json()).then((d) => { if (!controller.signal.aborted) setProjects(d.projects ?? d ?? []); }).catch(() => {});
+    fetch("/api/empleados", { signal: controller.signal }).then((r) => r.json()).then((d) => { if (!controller.signal.aborted) setEmployees(d.employees ?? d ?? []); }).catch(() => {});
+
+    return () => controller.abort();
+  }, [pageKey]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -693,7 +700,12 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
             className="mx-auto transition-all duration-300"
             style={{ width: currentViewport.width, minHeight: "100%" }}
           >
-            {blocks.length === 0 ? (
+            {loading ? (
+              <div className="flex flex-col items-center justify-center h-96 gap-3 text-white/30">
+                <Loader2 size={24} className="animate-spin" />
+                <p className="text-sm">Cargando configuración…</p>
+              </div>
+            ) : blocks.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-96 gap-4 text-white/20">
                 <p className="text-sm">No hay módulos. Agrega uno desde el panel izquierdo.</p>
               </div>
