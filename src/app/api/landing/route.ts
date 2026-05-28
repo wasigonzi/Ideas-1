@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
 import type { LandingBlock } from "@/components/landing-builder/types";
-import { DEFAULT_BLOCKS } from "@/components/landing-builder/registry";
+import { DEFAULT_BLOCKS, PAGE_DEFAULTS } from "@/components/landing-builder/registry";
 
 const ALLOWED_KEYS = new Set([
   "landingJson",
@@ -25,9 +25,11 @@ export async function GET(req: Request) {
       const blocks: LandingBlock[] = JSON.parse(row.value);
       return NextResponse.json({ blocks });
     }
-    return NextResponse.json({ blocks: key === "landingJson" ? DEFAULT_BLOCKS : [] });
+    const fallback = PAGE_DEFAULTS[key] ?? DEFAULT_BLOCKS;
+    return NextResponse.json({ blocks: fallback });
   } catch {
-    return NextResponse.json({ blocks: key === "landingJson" ? DEFAULT_BLOCKS : [] });
+    const fallback = PAGE_DEFAULTS[key] ?? DEFAULT_BLOCKS;
+    return NextResponse.json({ blocks: fallback });
   }
 }
 
@@ -56,6 +58,10 @@ export async function POST(req: Request) {
   revalidatePath("/es", "layout");
   revalidatePath("/en", "layout");
   revalidateTag("home");
+
+  if (key === "pageServiciosJson") revalidatePath("/servicios", "page");
+  if (key === "pageProyectosJson") revalidatePath("/proyectos", "page");
+  if (key === "pageNosotrosJson") revalidatePath("/nosotros", "page");
 
   return NextResponse.json({ ok: true });
 }

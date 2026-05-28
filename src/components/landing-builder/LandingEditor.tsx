@@ -477,6 +477,14 @@ function PaletteView({ onAdd }: { onAdd: (type: BlockType) => void }) {
 
 // ── Main editor ────────────────────────────────────────────────────────────
 export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }: { pageKey?: string; pageLabel?: string }) {
+  const PAGE_URLS: Record<string, string> = {
+    landingJson: "/",
+    pageServiciosJson: "/servicios",
+    pageProyectosJson: "/proyectos",
+    pageNosotrosJson: "/nosotros",
+  };
+  const previewUrl = PAGE_URLS[pageKey] ?? "/";
+
   const [blocks, setBlocks] = useState<LandingBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -657,7 +665,7 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
         </button>
 
         <a
-          href="/"
+          href={previewUrl}
           target="_blank"
           rel="noreferrer"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-white/10 text-white/50 hover:text-white transition-colors"
