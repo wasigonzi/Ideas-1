@@ -23,6 +23,7 @@ import {
   Loader2,
   FileIcon,
   Download,
+  Trash2,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -179,6 +180,9 @@ export function ChatShell({
   const [isUploading, setIsUploading] = useState(false);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [mobileView, setMobileView] = useState<"rooms" | "chat">("rooms");
+  // presence: { userId -> lastSeenISO }
+  const [presence, setPresence] = useState<Record<string, string>>({});
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -200,6 +204,33 @@ export function ChatShell({
   }, []);
 
   useEffect(() => { fetchRooms(); }, [fetchRooms]);
+
+  // ── Presence: heartbeat + polling ────────────────────────────────────────
+  const fetchPresence = useCallback(async () => {
+    try {
+      const r = await fetch("/api/chat/presence");
+      const j = await r.json();
+      if (j.presence) setPresence(j.presence);
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    // Send heartbeat immediately, then every 30 s
+    fetch("/api/chat/presence", { method: "POST" }).catch(() => {});
+    fetchPresence();
+    const heartbeat = setInterval(() => {
+      fetch("/api/chat/presence", { method: "POST" }).catch(() => {});
+      fetchPresence();
+    }, 30_000);
+    return () => clearInterval(heartbeat);
+  }, [fetchPresence]);
+
+  // ── isOnline helper (seen within last 2 minutes) ──────────────────────────
+  function isOnline(userId: string) {
+    const ts = presence[userId];
+    if (!ts) return false;
+    return Date.now() - new Date(ts).getTime() < 2 * 60 * 1000;
+  }
 
   // ── Load messages ────────────────────────────────────────────────────────
   const fetchMessages = useCallback(async (roomId: string, silent = false) => {
@@ -422,6 +453,24 @@ export function ChatShell({
     }
   }
 
+  // ── Delete a DM room ──────────────────────────────────────────────────────
+  async function deleteRoom(roomId: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!confirm("¿Eliminar este chat y todos sus mensajes?")) return;
+    setDeletingId(roomId);
+    try {
+      await fetch(`/api/chat/rooms/${roomId}`, { method: "DELETE" });
+      if (selectedRoom?.id === roomId) {
+        setSelectedRoom(null);
+        setMessages([]);
+        setMobileView("rooms");
+      }
+      await fetchRooms();
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   // ── Derived values ────────────────────────────────────────────────────────
   const filteredUsers = useMemo(() => {
     const q = userQuery.toLowerCase();
@@ -480,37 +529,64 @@ export function ChatShell({
             rooms.map((room) => {
               const other = roomOther(room);
               const isSelected = selectedRoom?.id === room.id;
+              const online = other ? isOnline(other.id) : false;
               return (
-                <button
+                <div
                   key={room.id}
-                  onClick={() => selectRoom(room)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                  className={`group flex items-center gap-3 px-4 py-3 transition-colors cursor-pointer ${
                     isSelected
                       ? "bg-[var(--color-brand-500)]/10 border-r-2 border-[var(--color-brand-500)]"
                       : "hover:bg-white/5"
                   }`}
+                  onClick={() => selectRoom(room)}
                 >
                   {room.type === "general" ? (
                     <div className="w-9 h-9 rounded-full bg-[var(--color-brand-500)]/20 grid place-items-center shrink-0">
                       <Users size={16} className="text-[var(--color-brand-400)]" />
                     </div>
                   ) : (
-                    <MemberAvatar
-                      id={other?.id ?? ""}
-                      name={other?.name ?? "?"}
-                      avatar={other?.avatar ?? null}
-                      size={36}
-                    />
+                    <div className="relative shrink-0">
+                      <MemberAvatar
+                        id={other?.id ?? ""}
+                        name={other?.name ?? "?"}
+                        avatar={other?.avatar ?? null}
+                        size={36}
+                      />
+                      <span
+                        className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[var(--color-ink-950)] ${
+                          online ? "bg-emerald-400" : "bg-white/20"
+                        }`}
+                      />
+                    </div>
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
                       <span className="text-sm font-medium truncate">{roomName(room)}</span>
-                      {room.unread > 0 && (
-                        <span className="shrink-0 min-w-[18px] h-[18px] rounded-full bg-[var(--color-brand-500)] text-[var(--color-ink-950)] text-[10px] font-bold grid place-items-center px-1">
-                          {room.unread > 99 ? "99+" : room.unread}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-1 shrink-0">
+                        {room.unread > 0 && (
+                          <span className="min-w-[18px] h-[18px] rounded-full bg-[var(--color-brand-500)] text-[var(--color-ink-950)] text-[10px] font-bold grid place-items-center px-1">
+                            {room.unread > 99 ? "99+" : room.unread}
+                          </span>
+                        )}
+                        {room.type !== "general" && (
+                          <button
+                            onClick={(e) => deleteRoom(room.id, e)}
+                            disabled={deletingId === room.id}
+                            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-500/20 text-white/30 hover:text-red-400 transition-all"
+                            title="Eliminar chat"
+                          >
+                            {deletingId === room.id
+                              ? <Loader2 size={12} className="animate-spin" />
+                              : <Trash2 size={12} />}
+                          </button>
+                        )}
+                      </div>
                     </div>
+                    {room.type !== "general" && (
+                      <p className={`text-[10px] font-medium mt-0.5 ${online ? "text-emerald-400" : "text-white/25"}`}>
+                        {online ? "● En línea" : "○ Desconectado"}
+                      </p>
+                    )}
                     {room.lastMessage ? (
                       <p className="text-xs text-white/40 truncate mt-0.5">
                         {room.lastMessage.body ?? "📎 Archivo"}
@@ -519,7 +595,7 @@ export function ChatShell({
                       <p className="text-xs text-white/25 mt-0.5 italic">Sin mensajes</p>
                     )}
                   </div>
-                </button>
+                </div>
               );
             })
           )}
@@ -561,9 +637,13 @@ export function ChatShell({
               )}
               <div>
                 <div className="font-semibold text-sm">{roomName(selectedRoom)}</div>
-                {selectedRoom.type === "general" && (
+                {selectedRoom.type === "general" ? (
                   <div className="text-[11px] text-white/40">
                     {selectedRoom.members.length} miembros
+                  </div>
+                ) : (
+                  <div className={`text-[11px] font-medium ${isOnline(roomOther(selectedRoom)?.id ?? "") ? "text-emerald-400" : "text-white/30"}`}>
+                    {isOnline(roomOther(selectedRoom)?.id ?? "") ? "● En línea" : "○ Desconectado"}
                   </div>
                 )}
               </div>
@@ -871,29 +951,44 @@ export function ChatShell({
                       No se encontraron usuarios
                     </p>
                   ) : (
-                    filteredUsers.map((u) => (
-                      <button
-                        key={u.id}
-                        onClick={() => openDM(u.id)}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-left transition-colors"
-                      >
-                        <MemberAvatar
-                          id={u.id}
-                          name={u.name ?? "?"}
-                          avatar={u.avatar}
-                          size={34}
-                        />
-                        <div className="min-w-0">
-                          <div className="text-sm font-medium truncate">
-                            {u.name ?? "Usuario"}
+                    filteredUsers.map((u) => {
+                      const online = isOnline(u.id);
+                      return (
+                        <button
+                          key={u.id}
+                          onClick={() => openDM(u.id)}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-left transition-colors"
+                        >
+                          <div className="relative shrink-0">
+                            <MemberAvatar
+                              id={u.id}
+                              name={u.name ?? "?"}
+                              avatar={u.avatar}
+                              size={34}
+                            />
+                            <span
+                              className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[var(--color-ink-900)] ${
+                                online ? "bg-emerald-400" : "bg-white/20"
+                              }`}
+                            />
                           </div>
-                          <div className="text-xs text-white/40 truncate">
-                            {u.role === "admin" ? "Administrador" : "Empleado"}
-                            {u.company ? ` · ${u.company}` : ""}
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-medium truncate">
+                              {u.name ?? "Usuario"}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-white/40 truncate">
+                                {u.role === "admin" ? "Administrador" : "Empleado"}
+                                {u.company ? ` · ${u.company}` : ""}
+                              </span>
+                              <span className={`text-[10px] font-medium shrink-0 ${online ? "text-emerald-400" : "text-white/20"}`}>
+                                {online ? "● En línea" : "○"}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      </button>
-                    ))
+                        </button>
+                      );
+                    })
                   )}
                 </div>
               </div>

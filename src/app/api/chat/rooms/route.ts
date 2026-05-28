@@ -86,7 +86,18 @@ export async function GET() {
     return bTime.localeCompare(aTime);
   });
 
-  return NextResponse.json({ rooms });
+  // Deduplicate direct rooms: keep only the most-recent room per partner pair
+  const seen = new Set<string>();
+  const deduped = rooms.filter((room) => {
+    if (room.type !== "direct") return true;
+    const otherId = room.members.find((m) => m.id !== userId)?.id ?? "";
+    const key = [userId, otherId].sort().join(":");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return NextResponse.json({ rooms: deduped });
 }
 
 // ─── POST /api/chat/rooms ─── create / get DM room ────────────────────────────
