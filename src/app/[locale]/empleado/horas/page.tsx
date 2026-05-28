@@ -160,7 +160,7 @@ export default function EmpleadoHoras() {
       </div>
 
       {/* Entries table */}
-      <section className="card p-6">
+      <section className="card p-6 overflow-hidden">
         <h2 className="font-semibold text-lg mb-4">Detalle de horas</h2>
         {loading ? (
           <div className="flex items-center justify-center py-12 text-white/55">

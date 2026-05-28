@@ -1,25 +1,27 @@
+/**
+ * This file is kept for reference only.
+ * All real tests have been moved to the comprehensive QA suite:
+ *
+ *   tests/global-setup.ts       — Auth state creation
+ *   tests/crawler.spec.ts       — Full site crawl + JS error detection
+ *   tests/auth.spec.ts          — Login / logout flows
+ *   tests/admin.spec.ts         — Admin portal pages
+ *   tests/empleado.spec.ts      — Employee portal pages
+ *   tests/forms.spec.ts         — Form testing
+ *   tests/api-monitor.spec.ts   — API failure detection
+ *   tests/visual.spec.ts        — Visual regression / screenshots
+ *   tests/performance.spec.ts   — Performance & Core Web Vitals
+ *   tests/stress.spec.ts        — Concurrent load testing
+ *
+ * Run: npx playwright test
+ * Update snapshots: npx playwright test visual.spec.ts --update-snapshots
+ */
+
 import { test, expect } from '@playwright/test';
 
-test('navigate to Next.js app and take a screenshot', async ({ page }) => {
-  // Navigate to the local server
+test('app loads successfully', async ({ page }) => {
   await page.goto('/');
-
-  // Take a screenshot of the home page
+  await expect(page).toHaveTitle(/.+/);
   await page.screenshot({ path: 'tests/screenshots/home.png' });
-
-  // Optional: check that the page loaded by verifying the title doesn't crash
-  // Depending on your app, you might want to assert specific elements
-  const title = await page.title();
-  console.log(`Page title is: ${title}`);
 });
 
-test('navigate to example.com and take a screenshot', async ({ page }) => {
-  // Navigate to an external website
-  await page.goto('https://example.com');
-
-  // Verify the domain
-  await expect(page).toHaveTitle(/Example Domain/);
-
-  // Take a screenshot
-  await page.screenshot({ path: 'tests/screenshots/example.png' });
-});

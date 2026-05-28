@@ -9,3 +9,11 @@ out
 public/uploads/*
 !public/uploads/.gitkeep
 .vercel
+
+# Playwright
+tests/.auth/
+tests/report/
+tests/snapshots/
+playwright-report/
+test-results/
+.env*

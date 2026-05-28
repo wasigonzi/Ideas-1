@@ -188,7 +188,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 bg-white/5 rounded-xl p-1 border border-white/10 overflow-x-auto">
+      <div className="flex gap-1 bg-white/5 rounded-xl p-1 border border-white/10 overflow-x-auto no-scrollbar">
         {TABS.map((t) => (
           <button
             key={t.key}

@@ -48,7 +48,7 @@ export default async function EmpleadoDashboard() {
         <StatCard label="Horas (10 últimas)" value={totalHours.toFixed(1)} accent="blue" hint="registradas" />
       </div>
 
-      <section className="card p-6">
+      <section className="card p-6 overflow-hidden">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-lg">Tareas asignadas</h2>
           <span className="text-xs text-white/55">{tasks.length} totales</span>

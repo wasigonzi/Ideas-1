@@ -134,7 +134,7 @@ export default function AdminInstruccionesPage() {
       </header>
 
       {/* Date navigator */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           onClick={() => setDate((d) => shiftDate(d, -1))}
           className="p-2 rounded-lg hover:bg-white/10 text-white/65 hover:text-white transition"

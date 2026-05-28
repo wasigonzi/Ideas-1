@@ -297,7 +297,7 @@ export function TrelloBoard<T extends BoardItem>({
       </div>
 
       {/* ─── COLUMNS ─── */}
-      <div className="hidden md:flex gap-3 overflow-x-auto pb-4 items-start">
+      <div className="hidden md:flex gap-3 overflow-x-auto no-scrollbar pb-4 items-start">
         {columns.map((col) => (
           <div key={col.key} className="min-w-[275px] w-[275px] shrink-0">
               <Column
