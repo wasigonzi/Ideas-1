@@ -3,7 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
 import type { LandingBlock } from "@/components/landing-builder/types";
-import { DEFAULT_BLOCKS, PAGE_DEFAULTS } from "@/components/landing-builder/registry";
+import { DEFAULT_BLOCKS, PAGE_DEFAULTS } from "@/components/landing-builder/page-defaults";
+
+export const dynamic = "force-dynamic";
 
 const ALLOWED_KEYS = new Set([
   "landingJson",
@@ -27,7 +29,8 @@ export async function GET(req: Request) {
     }
     const fallback = PAGE_DEFAULTS[key] ?? DEFAULT_BLOCKS;
     return NextResponse.json({ blocks: fallback });
-  } catch {
+  } catch (err) {
+    console.error("[api/landing GET] DB error:", err);
     const fallback = PAGE_DEFAULTS[key] ?? DEFAULT_BLOCKS;
     return NextResponse.json({ blocks: fallback });
   }
