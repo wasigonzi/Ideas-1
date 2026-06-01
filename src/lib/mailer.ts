@@ -24,6 +24,57 @@ export function getTransporter() {
   });
 }
 
+export async function sendTaskAssignedEmail(opts: {
+  toEmail: string;
+  toName: string;
+  taskTitle: string;
+  taskId: string;
+  assignedByName: string;
+}) {
+  const transporter = getTransporter();
+  if (!transporter) return;
+  const baseUrl = process.env.NEXTAUTH_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const link = `${baseUrl}/empleado/tareas`;
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM,
+    to: opts.toEmail,
+    subject: `Se te asignó una tarea: ${opts.taskTitle.replace(/[\r\n]/g, " ")}`,
+    html: `
+      <p>Hola ${escapeHtml(opts.toName)},</p>
+      <p><b>${escapeHtml(opts.assignedByName)}</b> te asignó la tarea:</p>
+      <p><b>${escapeHtml(opts.taskTitle)}</b></p>
+      <p><a href="${escapeHtml(link)}">Ver mis tareas →</a></p>
+    `
+  });
+}
+
+export async function sendMentionEmail(opts: {
+  toEmail: string;
+  toName: string;
+  taskTitle: string;
+  taskId: string;
+  mentionedByName: string;
+  commentBody: string;
+}) {
+  const transporter = getTransporter();
+  if (!transporter) return;
+  const baseUrl = process.env.NEXTAUTH_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const link = `${baseUrl}/empleado/tareas`;
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM,
+    to: opts.toEmail,
+    subject: `${opts.mentionedByName.replace(/[\r\n]/g, " ")} te mencionó en una tarea`,
+    html: `
+      <p>Hola ${escapeHtml(opts.toName)},</p>
+      <p><b>${escapeHtml(opts.mentionedByName)}</b> te mencionó en la tarea <b>${escapeHtml(opts.taskTitle)}</b>:</p>
+      <blockquote style="border-left:3px solid #ccc;padding-left:1em;color:#555">
+        ${escapeHtml(opts.commentBody).replace(/\n/g, "<br/>")}
+      </blockquote>
+      <p><a href="${escapeHtml(link)}">Ver tarea →</a></p>
+    `
+  });
+}
+
 export async function sendQuoteEmail(quote: {
   name: string;
   email: string;

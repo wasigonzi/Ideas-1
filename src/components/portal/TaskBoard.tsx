@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useState, useMemo, useEffect } from "react";
+import { useRef, useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { TrelloBoard, type BoardColumn } from "./TrelloBoard";
 import { MemberAvatar } from "./Avatar";
-import { AlignLeft, Calendar, Clock, Plus, X, Loader2, Maximize2, Paperclip, LayoutGrid, CalendarDays, Search } from "lucide-react";
+import { AlignLeft, Calendar, Clock, Plus, X, Loader2, Maximize2, Paperclip, LayoutGrid, CalendarDays, Search, Archive } from "lucide-react";
 import { TaskEditor, type EditorUser } from "./TaskEditor";
 import { TaskCalendar } from "./TaskCalendar";
 import { useRealtimeRefresh } from "@/lib/realtime";
@@ -78,12 +78,25 @@ export function TaskBoard({
   const [active, setActive] = useState<TaskCard | null>(null);
   const [defaultStatus, setDefaultStatus] = useState<string>("todo");
 
-  // ─ View & filters ─
-  const [viewMode, setViewMode] = useState<"board" | "calendar">("board");
-  const [filterAssignee, setFilterAssignee] = useState("");
-  const [filterPriority, setFilterPriority] = useState("");
-  const [filterDue, setFilterDue] = useState<"all" | "overdue" | "week">("all");
-  const [search, setSearch] = useState("");
+  // ─ View & filters (persisted in localStorage) ─
+  const LS_KEY = "taskboard_filters";
+  function loadFilters() {
+    if (typeof window === "undefined") return {};
+    try { return JSON.parse(localStorage.getItem(LS_KEY) ?? "{}"); } catch { return {}; }
+  }
+  const saved = loadFilters();
+  const [viewMode, setViewMode] = useState<"board" | "calendar">(saved.viewMode ?? "board");
+  const [filterAssignee, setFilterAssignee] = useState<string>(saved.filterAssignee ?? "");
+  const [filterPriority, setFilterPriority] = useState<string>(saved.filterPriority ?? "");
+  const [filterDue, setFilterDue] = useState<"all" | "overdue" | "week">(saved.filterDue ?? "all");
+  const [search, setSearch] = useState<string>(saved.search ?? "");
+
+  // Persist filters whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({ viewMode, filterAssignee, filterPriority, filterDue, search }));
+    } catch { /* ignore */ }
+  }, [viewMode, filterAssignee, filterPriority, filterDue, search]);
 
   // Dynamically fetch all assignable users as a fallback when the server-side
   // prop is empty (e.g. employee portal passes users=[]). Both admins and
@@ -137,6 +150,18 @@ export function TaskBoard({
     setActive(t);
     setEditorOpen(true);
   }
+
+  const [archiving, setArchiving] = useState(false);
+  const archiveDone = useCallback(async () => {
+    if (!confirm("¿Archivar todas las tareas en la columna 'Hechas'? Dejarán de aparecer en el tablero.")) return;
+    setArchiving(true);
+    try {
+      await fetch("/api/tareas/archive-done", { method: "POST" });
+      router.refresh();
+    } catch { /* ignore */ } finally {
+      setArchiving(false);
+    }
+  }, [router]);
 
   return (
     <>
@@ -248,6 +273,19 @@ export function TaskBoard({
             className="px-2.5 py-1.5 rounded-lg text-xs text-white/40 hover:text-white hover:bg-white/8"
           >
             × Limpiar
+          </button>
+        )}
+
+        {/* Archive done tasks */}
+        {canEdit && (
+          <button
+            onClick={archiveDone}
+            disabled={archiving}
+            title="Archivar todas las tareas Hechas"
+            className="ml-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-white/40 hover:text-white hover:bg-white/8 disabled:opacity-50"
+          >
+            {archiving ? <Loader2 size={12} className="animate-spin" /> : <Archive size={12} />}
+            Archivar hechas
           </button>
         )}
       </div>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { sendTaskAssignedEmail } from "@/lib/mailer";
 
 const ALLOWED_FIELDS = [
   "status", "priority", "title", "description", "assigneeId", "hours", "dueDate", "position", "coverImage", "attachments", "members", "orderId"
@@ -91,6 +92,29 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
           data: JSON.stringify(e.data)
         }))
       });
+    }
+
+    // Send assignment notification (fire-and-forget, never fail the request)
+    if (
+      "assigneeId" in data &&
+      task.assigneeId &&
+      task.assigneeId !== before.assigneeId &&
+      task.assigneeId !== actorId
+    ) {
+      prisma.user
+        .findUnique({ where: { id: task.assigneeId }, select: { email: true, name: true } })
+        .then((u) => {
+          if (!u) return;
+          const actor = (session!.user as { name?: string | null }).name ?? "Alguien";
+          return sendTaskAssignedEmail({
+            toEmail: u.email,
+            toName: u.name ?? u.email,
+            taskTitle: task.title,
+            taskId: id,
+            assignedByName: actor,
+          });
+        })
+        .catch(() => null);
     }
   }
 

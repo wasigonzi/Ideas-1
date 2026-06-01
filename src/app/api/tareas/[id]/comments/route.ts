@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { sendMentionEmail } from "@/lib/mailer";
 
 // GET /api/tareas/[id]/comments
 // Returns the merged feed of comments + activity for a task, oldest first.
@@ -184,6 +185,27 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       mentions: mentions.length ? JSON.stringify(mentions) : null
     }
   });
+
+  // Send mention notifications (fire-and-forget)
+  if (mentions.length) {
+    const task = await prisma.task.findUnique({ where: { id }, select: { title: true } }).catch(() => null);
+    const actor = await prisma.user.findUnique({ where: { id: actorId }, select: { name: true, email: true } }).catch(() => null);
+    const mentionedUsers = await prisma.user.findMany({
+      where: { id: { in: mentions.filter((m) => m !== actorId) } },
+      select: { id: true, email: true, name: true }
+    }).catch(() => []);
+    for (const u of mentionedUsers) {
+      sendMentionEmail({
+        toEmail: u.email,
+        toName: u.name ?? u.email,
+        taskTitle: task?.title ?? "una tarea",
+        taskId: id,
+        mentionedByName: actor?.name ?? actor?.email ?? "Alguien",
+        commentBody: body.slice(0, 300),
+      }).catch(() => null);
+    }
+  }
+
   return NextResponse.json({ comment });
 }
 

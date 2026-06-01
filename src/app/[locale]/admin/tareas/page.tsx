@@ -20,6 +20,7 @@ export default async function AdminTareas() {
 
   const [tasks, users, columns] = await Promise.all([
     prisma.task.findMany({
+      where: { archived: false },
       include: { assignee: true },
       orderBy: [{ status: "asc" }, { position: "asc" }, { createdAt: "asc" }]
     }),

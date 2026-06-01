@@ -20,6 +20,7 @@ export default async function EmpleadoTareas() {
   const [tasks, columns] = await Promise.all([
     prisma.task.findMany({
       where: {
+        archived: false,
         OR: [
           { assigneeId: userId },
           { members: { contains: userId } },

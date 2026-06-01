@@ -19,14 +19,17 @@ export async function POST(
   const { id: taskId } = await params;
 
   // Verify the task exists and the user has permission (admin, assignee, or member)
-  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    include: { taskMembers: { select: { userId: true } } },
+  });
   if (!task) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   if (role !== "admin") {
-    let members: string[] = [];
-    try { members = task.members ? JSON.parse(task.members) : []; } catch { /* ignore */ }
+    let legacyMembers: string[] = [];
+    try { legacyMembers = task.members ? JSON.parse(task.members) : []; } catch { /* ignore */ }
     const isAssignee = task.assigneeId === userId;
-    const isMember = members.includes(userId);
+    const isMember = legacyMembers.includes(userId) || task.taskMembers.some((m) => m.userId === userId);
     if (!isAssignee && !isMember) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
@@ -40,11 +43,19 @@ export async function POST(
     return NextResponse.json({ session: existing });
   }
 
+  const now = new Date();
+  // Close any orphaned sessions (started more than 8 hours ago and never ended).
+  const staleThreshold = new Date(now.getTime() - 8 * 60 * 60 * 1000);
+  await prisma.workSession.updateMany({
+    where: { userId, endedAt: null, startedAt: { lt: staleThreshold } },
+    data: { endedAt: staleThreshold },
+  });
+
   // End any other active sessions and create the new one atomically to prevent race conditions
   const ws = await prisma.$transaction(async (tx) => {
     await tx.workSession.updateMany({
       where: { userId, endedAt: null },
-      data: { endedAt: new Date() },
+      data: { endedAt: now },
     });
     return tx.workSession.create({
       data: { taskId, userId },

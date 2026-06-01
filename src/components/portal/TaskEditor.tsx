@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, Trash2, Loader2, Save, Plus, Image as ImageIcon, Star, StarOff, Upload, Users, Search, MessageSquare, Activity, Send, Paperclip, AtSign, Play, Pause, CheckCircle, Clock, Timer, FileCheck } from "lucide-react";
+import { X, Trash2, Loader2, Save, Plus, Image as ImageIcon, Star, StarOff, Upload, Users, Search, MessageSquare, Activity, Send, Paperclip, AtSign, Play, Pause, CheckCircle, Clock, Timer, FileCheck, CheckSquare, Square } from "lucide-react";
 import type { TaskCard } from "./TaskBoard";
 import { MemberAvatar } from "./Avatar";
 import { ApprovalSheet } from "./ApprovalSheet";
@@ -426,6 +426,11 @@ export function TaskEditor({
                   </div>
                 </div>
               </Field>
+
+              {/* Checklist (only for existing tasks) */}
+              {mode === "edit" && task?.id && (
+                <ChecklistSection taskId={task.id} canEdit={canEdit} />
+              )}
 
               {/* Employee time tracking (shown in task detail when canEdit=false) */}
               {!canEdit && mode === "edit" && task?.id && (
@@ -1534,6 +1539,150 @@ function WorkTimerSection({
           )}
           Comenzar trabajo
         </button>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Checklist section — shows a list of to-do items inside a task with checkboxes.
+// ─────────────────────────────────────────────────────────────────────────────
+type CheckItem = { id: string; text: string; done: boolean; position: number };
+
+function ChecklistSection({ taskId, canEdit }: { taskId: string; canEdit: boolean }) {
+  const [items, setItems] = useState<CheckItem[]>([]);
+  const [newText, setNewText] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [showInput, setShowInput] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/tareas/${taskId}/checklist`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: CheckItem[]) => setItems(Array.isArray(data) ? data : []))
+      .catch(() => null);
+  }, [taskId]);
+
+  async function toggleItem(item: CheckItem) {
+    const updated = { ...item, done: !item.done };
+    setItems((prev) => prev.map((i) => i.id === item.id ? updated : i));
+    await fetch(`/api/tareas/${taskId}/checklist/${item.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ done: updated.done }),
+    }).catch(() => null);
+  }
+
+  async function deleteItem(id: string) {
+    setItems((prev) => prev.filter((i) => i.id !== id));
+    await fetch(`/api/tareas/${taskId}/checklist/${id}`, { method: "DELETE" }).catch(() => null);
+  }
+
+  async function addItem() {
+    const text = newText.trim();
+    if (!text) return;
+    setAdding(true);
+    try {
+      const res = await fetch(`/api/tareas/${taskId}/checklist`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (res.ok) {
+        const item: CheckItem = await res.json();
+        setItems((prev) => [...prev, item]);
+        setNewText("");
+        setShowInput(false);
+      }
+    } catch { /* ignore */ } finally {
+      setAdding(false);
+    }
+  }
+
+  const done = items.filter((i) => i.done).length;
+  const pct = items.length ? Math.round((done / items.length) * 100) : 0;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-medium uppercase tracking-wider text-white/55 flex items-center gap-1.5">
+          <CheckSquare size={12} /> Checklist
+          {items.length > 0 && (
+            <span className="text-white/40 font-normal normal-case tracking-normal">
+              {done}/{items.length}
+            </span>
+          )}
+        </span>
+        {canEdit && (
+          <button
+            type="button"
+            onClick={() => setShowInput((v) => !v)}
+            className="text-xs text-white/40 hover:text-white"
+          >
+            {showInput ? "Cancelar" : "+ Añadir"}
+          </button>
+        )}
+      </div>
+
+      {items.length > 0 && (
+        <div className="mb-2 h-1.5 rounded-full bg-white/10 overflow-hidden">
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-all"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      )}
+
+      <div className="space-y-1">
+        {items.map((item) => (
+          <div key={item.id} className="flex items-start gap-2 group">
+            <button
+              type="button"
+              onClick={() => toggleItem(item)}
+              className="mt-0.5 shrink-0 text-white/50 hover:text-white"
+              aria-label={item.done ? "Desmarcar" : "Marcar como hecho"}
+            >
+              {item.done
+                ? <CheckSquare size={15} className="text-emerald-400" />
+                : <Square size={15} />}
+            </button>
+            <span className={`flex-1 text-sm ${item.done ? "line-through text-white/35" : "text-white/85"}`}>
+              {item.text}
+            </span>
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => deleteItem(item.id)}
+                className="opacity-0 group-hover:opacity-100 text-white/30 hover:text-red-400 transition"
+                aria-label="Eliminar"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {showInput && (
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            autoFocus
+            type="text"
+            value={newText}
+            onChange={(e) => setNewText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addItem(); } }}
+            placeholder="Nuevo ítem…"
+            maxLength={500}
+            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[var(--color-brand-500)]/60"
+          />
+          <button
+            type="button"
+            onClick={addItem}
+            disabled={adding || !newText.trim()}
+            className="px-3 py-1.5 rounded-lg bg-[var(--color-brand-500)] text-[var(--color-ink-950,#060b14)] text-xs font-bold disabled:opacity-50"
+          >
+            {adding ? <Loader2 size={13} className="animate-spin" /> : "Añadir"}
+          </button>
+        </div>
       )}
     </div>
   );
