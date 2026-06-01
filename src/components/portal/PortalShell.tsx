@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { signOut } from "@/auth";
 import type { LucideIcon } from "lucide-react";
-import { LogOut } from "lucide-react";
 import { MobileBottomNav } from "./MobileBottomNav";
+import { PortalRealtime } from "./PortalRealtime";
+import { LogoutButton } from "./LogoutButton";
 
 // Re-export pure UI pieces so existing imports keep working.
 export { StatCard, StatusPill, PriorityPill, ProgressBar } from "./ui";
@@ -27,6 +27,7 @@ export function PortalShell({
 
   return (
     <div className="lg:container-x lg:py-10 lg:grid lg:grid-cols-[260px_1fr] lg:gap-8 min-h-[80vh]">
+      <PortalRealtime />
       {/* ────────── MOBILE APP BAR ────────── */}
       <header className="app-bar lg:hidden flex items-center justify-between px-4 h-14">
         <div className="flex items-center gap-3 min-w-0">
@@ -77,16 +78,7 @@ export function PortalShell({
               </Link>
             );
           })}
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/" });
-            }}
-          >
-            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-red-500/10 text-red-400 mt-4">
-              <LogOut size={16} /> Cerrar sesión
-            </button>
-          </form>
+          <LogoutButton />
         </nav>
 
         <div className="text-[11px] text-white/45 px-3 mt-5 break-all border-t border-white/10 pt-4">

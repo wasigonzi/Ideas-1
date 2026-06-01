@@ -25,6 +25,7 @@ import {
   Download,
   Trash2,
 } from "lucide-react";
+import { useRealtimeRefresh } from "@/lib/realtime";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -249,6 +250,21 @@ export function ChatShell({
       if (!silent) setLoadingMsgs(false);
     }
   }, []);
+
+  useRealtimeRefresh({
+    channelName: `portal-chat-${currentUser.id}`,
+    tables: ["ChatMessage", "ChatRoom", "ChatRoomMember", "SiteSetting"],
+    fallbackMs: 10000,
+    onChange: () => {
+      fetchRooms();
+      fetchPresence();
+      const roomId = selectedRoomIdRef.current;
+      if (roomId) {
+        fetchMessages(roomId, true);
+        fetch(`/api/chat/rooms/${roomId}/read`, { method: "POST" }).catch(() => {});
+      }
+    },
+  });
 
   // ── Select a room ────────────────────────────────────────────────────────
   const selectRoom = useCallback(

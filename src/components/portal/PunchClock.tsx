@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, Play, Square, Loader2, Coffee } from "lucide-react";
+import { useRealtimeRefresh } from "@/lib/realtime";
 
 type PunchState = {
   open: { id: string; in: string; note?: string | null } | null;
@@ -18,6 +19,13 @@ export function PunchClock({ schedule }: { schedule: { dayOfWeek: number; start:
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const tickRef = useRef<number | null>(null);
+
+  useRealtimeRefresh({
+    channelName: "portal-punch-clock",
+    tables: ["Punch", "PunchBreak", "Shift", "TimeEntry"],
+    fallbackMs: 30000,
+    onChange: refresh,
+  });
 
   // Load initial status
   useEffect(() => {

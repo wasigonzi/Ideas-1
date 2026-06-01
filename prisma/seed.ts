@@ -17,10 +17,19 @@ function daysFromNow(n: number) {
 
 async function main() {
   const adminEmail = process.env.ADMIN_EMAIL ?? "admin@printingideaspr.com";
-  const adminPass = process.env.ADMIN_PASSWORD ?? "admin123";
+  const adminPass = process.env.ADMIN_PASSWORD;
+  const employeePass = process.env.SEED_EMPLOYEE_PASSWORD;
+  const clientPass = process.env.SEED_CLIENT_PASSWORD;
+
+  if (!adminPass || !employeePass || !clientPass) {
+    throw new Error(
+      "Define ADMIN_PASSWORD, SEED_EMPLOYEE_PASSWORD and SEED_CLIENT_PASSWORD before running db:seed."
+    );
+  }
+
   const password = await bcrypt.hash(adminPass, 10);
-  const empPass = await bcrypt.hash("empleado123", 10);
-  const cliPass = await bcrypt.hash("cliente123", 10);
+  const empPass = await bcrypt.hash(employeePass, 10);
+  const cliPass = await bcrypt.hash(clientPass, 10);
 
   // ---- Users
   const admin = await prisma.user.upsert({
@@ -231,8 +240,8 @@ async function main() {
 
   console.log("Seed listo.");
   console.log(`Admin:    ${adminEmail} / [contraseña configurada en ADMIN_PASSWORD]`);
-  console.log(`Empleado: empleado@printingideaspr.com / [ver seed.ts]`);
-  console.log(`Cliente:  cliente@printingideaspr.com / [ver seed.ts]`);
+  console.log("Empleado: empleado@printingideaspr.com / [configurada en SEED_EMPLOYEE_PASSWORD]");
+  console.log("Cliente:  cliente@printingideaspr.com / [configurada en SEED_CLIENT_PASSWORD]");
 }
 
 main().catch((e) => { console.error(e); process.exit(1); }).finally(() => prisma.$disconnect());

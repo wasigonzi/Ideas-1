@@ -23,8 +23,8 @@ export default function LoginPage() {
     if (res?.error) {
       setError("Credenciales inválidas");
     } else {
-      router.push("/portal");
       router.refresh();
+      window.location.assign("/portal");
     }
   }
 
@@ -35,10 +35,10 @@ export default function LoginPage() {
         <p className="text-white/65 text-sm mt-1">Ingresa tus credenciales para continuar</p>
 
         <label className="text-sm font-medium mt-6 block">Email</label>
-        <input name="email" type="email" required className="input mt-1" defaultValue="admin@printingideaspr.com" />
+        <input name="email" type="email" required className="input mt-1" autoComplete="email" />
 
         <label className="text-sm font-medium mt-4 block">Contraseña</label>
-        <input name="password" type="password" required className="input mt-1" />
+        <input name="password" type="password" required className="input mt-1" autoComplete="current-password" />
 
         {error && <p className="text-red-400 text-sm mt-3">{error}</p>}
 
@@ -46,14 +46,6 @@ export default function LoginPage() {
           {loading ? "..." : "Entrar"}
         </button>
 
-        <div className="mt-6 pt-5 border-t border-white/10">
-          <p className="text-xs uppercase tracking-widest text-white/55 mb-3">Cuentas de demo</p>
-          <ul className="space-y-1.5 text-xs text-white/70">
-            <li><span className="text-[var(--color-brand-400)] font-semibold">Admin:</span> admin@printingideaspr.com / admin123</li>
-            <li><span className="text-[var(--color-brand-400)] font-semibold">Empleado:</span> empleado@printingideaspr.com / empleado123</li>
-            <li><span className="text-[var(--color-brand-400)] font-semibold">Cliente:</span> cliente@printingideaspr.com / cliente123</li>
-          </ul>
-        </div>
       </form>
     </section>
   );

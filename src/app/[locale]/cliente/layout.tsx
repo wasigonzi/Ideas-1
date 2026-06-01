@@ -5,7 +5,7 @@ import { requireRole } from "@/lib/auth-helpers";
 export default async function ClienteLayout({
   children,
 }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
-  const user = await requireRole(["admin", "client"]);
+  const user = await requireRole(["client"]);
 
   const links = [
     { href: "/cliente/tareas", label: "Mis tareas", icon: ListChecks },

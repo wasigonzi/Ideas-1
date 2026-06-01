@@ -2,9 +2,7 @@
  * Pure-data fallback blocks for each page key.
  * NO React component imports — safe to import from API routes and server code.
  */
-import type { LandingBlock } from "./types";
-
-type BlockType = string;
+import type { BlockType, LandingBlock } from "./types";
 
 export const DEFAULT_BLOCKS: LandingBlock[] = [
   { id: "default-hero", type: "HeroBlock" as BlockType, props: {} },

@@ -39,8 +39,9 @@ export async function GET() {
   // Employees only get the fields needed for UI (name, avatar, role) — no sensitive data
   if (u.role === "employee") {
     const users = await prisma.user.findMany({
+      where: { active: true, role: { in: ["admin", "employee"] } },
       orderBy: [{ role: "asc" }, { name: "asc" }],
-      select: { id: true, name: true, email: true, role: true, avatar: true, active: true },
+      select: { id: true, name: true, email: true, role: true, avatar: true, company: true },
     });
     return NextResponse.json(users);
   }

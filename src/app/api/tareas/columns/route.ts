@@ -10,6 +10,9 @@ import {
 } from "@/lib/task-columns";
 
 export async function GET() {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
   const cols = await loadTaskColumns();
   return NextResponse.json(cols);
 }

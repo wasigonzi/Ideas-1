@@ -7,6 +7,7 @@ import { MemberAvatar } from "./Avatar";
 import { AlignLeft, Calendar, Clock, Plus, X, Loader2, Maximize2, Paperclip, LayoutGrid, CalendarDays, Search } from "lucide-react";
 import { TaskEditor, type EditorUser } from "./TaskEditor";
 import { TaskCalendar } from "./TaskCalendar";
+import { useRealtimeRefresh } from "@/lib/realtime";
 
 export type TaskMember = {
   id: string;
@@ -65,6 +66,12 @@ export function TaskBoard({
   defaultOrderId?: string;
 }) {
   const router = useRouter();
+  useRealtimeRefresh({
+    channelName: `portal-tasks-${currentUserId ?? "admin"}`,
+    tables: ["Task", "TaskColumn", "TaskComment", "TaskActivity", "TaskView", "ApprovalSheet", "WorkSession", "TimeEntry", "Order"],
+    fallbackMs: 15000,
+  });
+
   const cols = columns && columns.length > 0 ? columns : DEFAULT_COLUMNS;
   const [editorOpen, setEditorOpen] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");

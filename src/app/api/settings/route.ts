@@ -4,6 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
 
 export async function GET() {
+  const session = await auth();
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  if (role !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const rows = await prisma.siteSetting.findMany();
   const result: Record<string, string> = {};
   for (const r of rows) result[r.key] = r.value;
