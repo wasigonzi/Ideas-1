@@ -58,7 +58,7 @@ export default async function LocaleLayout({
         <PublicChrome><Navbar whatsapp={whatsapp} /></PublicChrome>
         <main>{children}</main>
         <PublicChrome><Footer whatsapp={whatsapp} description={footerDescription} members={resolvedMembers} /></PublicChrome>
-        <WhatsAppButton whatsapp={whatsapp} />
+        <PublicChrome><WhatsAppButton whatsapp={whatsapp} /></PublicChrome>
       </Providers>
     </NextIntlClientProvider>
   );
