@@ -12,7 +12,6 @@ if (!directUrl) {
 }
 
 const prisma = new PrismaClient({
-  // @ts-expect-error override datasource url at runtime
   datasources: { db: { url: directUrl } },
 });
 
