@@ -6,11 +6,15 @@ import { prisma } from "@/lib/prisma";
 
 const getAdminBadges = unstable_cache(
   async () => {
-    const [overdueCount, urgentCount] = await Promise.all([
-      prisma.invoice.count({ where: { status: "overdue" } }),
-      prisma.task.count({ where: { priority: "urgent", status: { not: "done" } } }),
-    ]);
-    return { overdueCount, urgentCount };
+    try {
+      const [overdueCount, urgentCount] = await Promise.all([
+        prisma.invoice.count({ where: { status: "overdue" } }),
+        prisma.task.count({ where: { priority: "urgent", status: { not: "done" } } }),
+      ]);
+      return { overdueCount, urgentCount };
+    } catch {
+      return { overdueCount: 0, urgentCount: 0 };
+    }
   },
   ["admin-sidebar-badges"],
   { revalidate: 30, tags: ["admin-badges"] },

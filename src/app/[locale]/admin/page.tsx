@@ -6,6 +6,7 @@ import Link from "next/link";
 
 const getAdminDashboard = unstable_cache(
   async () => {
+    try {
     const [
       quotesNew, tasksOpen, userCounts,
       invoiceAgg, invoiceOverdue, latestQuotes, latestMessages,
@@ -29,6 +30,13 @@ const getAdminDashboard = unstable_cache(
       quotesNew, tasksOpen, userCounts,
       invoiceAgg, invoiceOverdue, latestQuotes, latestMessages,
     };
+    } catch {
+      return {
+        quotesNew: 0, tasksOpen: 0, userCounts: [],
+        invoiceAgg: { _sum: { amount: null, paid: null } },
+        invoiceOverdue: 0, latestQuotes: [], latestMessages: [],
+      };
+    }
   },
   ["admin-dashboard"],
   { revalidate: 30, tags: ["admin-dashboard"] },
