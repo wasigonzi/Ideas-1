@@ -29,6 +29,7 @@ export type ClientTask = {
   dueDate: string | null;
   coverImage: string | null;
   assigneeId: string | null;
+  checklist?: { id: string; text: string; done: boolean }[];
 };
 
 function fmtDate(d: string | null) {
@@ -206,6 +207,38 @@ export function ClientTaskView({ tasks, currentUserId }: { tasks: ClientTask[]; 
                 </p>
               )}
             </div>
+
+            {/* Checklist progress (read-only for client) */}
+            {selected.checklist && selected.checklist.length > 0 && (
+              <div className="card p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm font-semibold">
+                    <ClipboardList size={15} className="text-white/55" />
+                    Lista de verificación
+                  </div>
+                  <span className="text-xs text-white/50 font-semibold">
+                    {selected.checklist.filter((c) => c.done).length} / {selected.checklist.length}
+                  </span>
+                </div>
+                <ProgressBar
+                  value={selected.checklist.filter((c) => c.done).length}
+                  max={selected.checklist.length}
+                />
+                <ul className="space-y-1.5 pt-1">
+                  {selected.checklist.map((c) => (
+                    <li key={c.id} className="flex items-start gap-2 text-sm">
+                      <CheckCircle2
+                        size={15}
+                        className={`mt-0.5 shrink-0 ${c.done ? "text-green-400" : "text-white/20"}`}
+                      />
+                      <span className={c.done ? "text-white/70 line-through" : "text-white/60"}>
+                        {c.text}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Approval Sheet */}
             <ApprovalSheetPanel

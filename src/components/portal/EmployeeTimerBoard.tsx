@@ -286,7 +286,7 @@ export function EmployeeTimerBoard({
         body: JSON.stringify({ submitForReview }),
       });
       const j = await r.json();
-      if (!r.ok) { alert(j.error ?? "Error al detener"); return; }
+      if (!r.ok) { alert(j.message ?? j.error ?? "Error al detener"); return; }
       setTasks((prev) =>
         prev.map((t) => {
           if (t.id !== taskId) return t;

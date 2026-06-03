@@ -171,7 +171,10 @@ export function TaskEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      if (!res.ok) throw new Error(`save failed (${res.status})`);
+      if (!res.ok) {
+        const info = await res.json().catch(() => null);
+        throw new Error(info?.message || `Error al guardar (${res.status})`);
+      }
       router.refresh();
       onClose();
     } catch (e) {
@@ -1450,7 +1453,11 @@ function WorkTimerSection({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ submitForReview }),
       });
-      if (!res.ok) throw new Error("stop failed");
+      if (!res.ok) {
+        const info = await res.json().catch(() => null);
+        if (info?.message) alert(info.message);
+        throw new Error(info?.message || "stop failed");
+      }
       const data = await res.json();
       setTotalLogged((prev) => prev + (data.elapsedSeconds ?? 0));
       setSession(null);

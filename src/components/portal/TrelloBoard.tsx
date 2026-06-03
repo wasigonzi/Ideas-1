@@ -236,10 +236,13 @@ export function TrelloBoard<T extends BoardItem>({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: moved.status, position: newPosition })
       });
-      if (!res.ok) throw new Error("save failed");
-    } catch {
+      if (!res.ok) {
+        const info = await res.json().catch(() => null);
+        throw new Error(info?.message || "No se pudo guardar el cambio. Intenta de nuevo.");
+      }
+    } catch (err) {
       if (preSnapshot) setItems(preSnapshot);
-      alert("No se pudo guardar el cambio. Intenta de nuevo.");
+      alert(err instanceof Error ? err.message : "No se pudo guardar el cambio. Intenta de nuevo.");
     } finally {
       setSavingId(null);
     }

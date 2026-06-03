@@ -56,6 +56,22 @@ export async function POST(
   // Optionally change task status to "review"
   let updatedStatus: string | undefined;
   if (submitForReview) {
+    // Regla de oro: no se puede enviar a revisión sin una hoja de aprobación
+    // creada para que el cliente la pueda revisar.
+    const approval = await prisma.approvalSheet.findUnique({
+      where: { taskId },
+      select: { id: true },
+    });
+    if (!approval) {
+      return NextResponse.json(
+        {
+          error: "approval_sheet_required",
+          message:
+            "No puedes enviar a revisión sin crear la hoja de aprobación para el cliente.",
+        },
+        { status: 400 }
+      );
+    }
     const task = await prisma.task.update({
       where: { id: taskId },
       data: { status: "review" },

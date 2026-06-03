@@ -31,6 +31,12 @@ export default async function ClienteTareas() {
       ]
     },
     orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
+    include: {
+      checklistItems: {
+        select: { id: true, text: true, done: true, position: true },
+        orderBy: { position: "asc" },
+      },
+    },
   });
 
   const tasks = [...raw]
@@ -45,6 +51,7 @@ export default async function ClienteTareas() {
       dueDate: t.dueDate ? t.dueDate.toISOString() : null,
       coverImage: t.coverImage ?? null,
       assigneeId: t.assigneeId ?? null,
+      checklist: t.checklistItems.map((c) => ({ id: c.id, text: c.text, done: c.done })),
     }));
 
   const active = tasks.filter((t) => t.status !== "done" && t.status !== "cerrado");
