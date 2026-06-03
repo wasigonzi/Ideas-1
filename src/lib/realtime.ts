@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { RealtimeChannel } from "@supabase/supabase-js";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase";
 
 type RealtimeTable =
   | "Task"
@@ -58,6 +58,8 @@ export function useRealtimeRefresh({
   useEffect(() => {
     const tableList = tableKey.split(",").filter(Boolean) as RealtimeTable[];
     if (!enabled || tableList.length === 0) return;
+    // Skip WebSocket subscription when Supabase URL is misconfigured (prevents 404 spam).
+    if (!isSupabaseConfigured) return;
 
     let channel: RealtimeChannel | null = null;
     let fallback: ReturnType<typeof setInterval> | null = null;
