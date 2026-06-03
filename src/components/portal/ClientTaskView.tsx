@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { StatusPill, PriorityPill, ProgressBar } from "./ui";
@@ -293,6 +293,31 @@ function ApprovalSheetPanel({ taskId, taskStatus, onRespond }: { taskId: string;
   const [showNoteBox, setShowNoteBox] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const panRef = useRef<HTMLDivElement>(null);
+  const panState = useRef<{ x: number; y: number; left: number; top: number } | null>(null);
+  const [panning, setPanning] = useState(false);
+
+  function onPanDown(e: React.PointerEvent<HTMLDivElement>) {
+    const el = panRef.current;
+    if (!el) return;
+    // Solo iniciar pan si hay contenido desbordado (la hoja está ampliada).
+    if (el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight) return;
+    panState.current = { x: e.clientX, y: e.clientY, left: el.scrollLeft, top: el.scrollTop };
+    setPanning(true);
+  }
+
+  function onPanMove(e: React.PointerEvent<HTMLDivElement>) {
+    const el = panRef.current;
+    const p = panState.current;
+    if (!el || !p) return;
+    el.scrollLeft = p.left - (e.clientX - p.x);
+    el.scrollTop = p.top - (e.clientY - p.y);
+  }
+
+  function onPanUp() {
+    panState.current = null;
+    setPanning(false);
+  }
 
   async function load() {
     if (sheet !== undefined) return;
@@ -531,8 +556,13 @@ function ApprovalSheetPanel({ taskId, taskStatus, onRespond }: { taskId: string;
 
           {/* Scrollable / zoomable document area */}
           <div
-            className="flex-1 overflow-auto p-6 flex justify-center items-start"
+            ref={panRef}
+            className={`flex-1 overflow-auto p-6 flex justify-center items-start ${panning ? "cursor-grabbing" : "cursor-grab"}`}
             onClick={(e) => e.stopPropagation()}
+            onPointerDown={onPanDown}
+            onPointerMove={onPanMove}
+            onPointerUp={onPanUp}
+            onPointerLeave={onPanUp}
           >
             <div className="space-y-6" style={{ width: DOC_W * zoom }}>
               {sheet.data.pages?.map((page, idx) => (
