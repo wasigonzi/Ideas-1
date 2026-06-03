@@ -316,6 +316,39 @@ function ApprovalSheetPanel({ taskId, taskStatus, onRespond }: { taskId: string;
     setPanning(false);
   }
 
+  // Zoom con Ctrl + rueda del mouse (listener no pasivo para poder bloquear
+  // el zoom del navegador). Hace zoom hacia la posición del cursor.
+  useEffect(() => {
+    const el = panRef.current;
+    if (!zoomOpen || !el) return;
+    function onWheel(e: WheelEvent) {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      const container = panRef.current;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      // Posición del cursor relativa al contenido (incluye el scroll actual).
+      const px = e.clientX - rect.left + container.scrollLeft;
+      const py = e.clientY - rect.top + container.scrollTop;
+      setZoom((prev) => {
+        const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+        const next = Math.min(3, Math.max(0.4, Math.round(prev * factor * 100) / 100));
+        if (next === prev) return prev;
+        const ratio = next / prev;
+        // Reposicionar el scroll para mantener el punto bajo el cursor.
+        requestAnimationFrame(() => {
+          const c = panRef.current;
+          if (!c) return;
+          c.scrollLeft = px * ratio - (e.clientX - rect.left);
+          c.scrollTop = py * ratio - (e.clientY - rect.top);
+        });
+        return next;
+      });
+    }
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [zoomOpen]);
+
   async function load() {
     if (sheet !== undefined) return;
     const res = await fetch(`/api/tareas/${taskId}/hoja`);
