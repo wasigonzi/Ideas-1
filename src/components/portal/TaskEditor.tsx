@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, Trash2, Loader2, Save, Plus, Image as ImageIcon, Star, StarOff, Upload, Users, Search, MessageSquare, Activity, Send, Paperclip, AtSign, Play, Pause, CheckCircle, Clock, Timer, FileCheck, CheckSquare, Square } from "lucide-react";
+import { X, Trash2, Loader2, Save, Plus, Image as ImageIcon, Star, StarOff, Upload, Users, Search, MessageSquare, Activity, Send, Paperclip, AtSign, Play, Pause, CheckCircle, Clock, Timer, FileCheck, CheckSquare, Square, Printer } from "lucide-react";
 import type { TaskCard } from "./TaskBoard";
 import { MemberAvatar } from "./Avatar";
 import { ApprovalSheet } from "./ApprovalSheet";
@@ -200,6 +200,151 @@ export function TaskEditor({
     }
   }
 
+  async function handlePrint() {
+    const statusLabel =
+      statusOptions.find((o) => o.value === status)?.label ?? status;
+    const priorityLabel =
+      PRIORITY_OPTIONS.find((o) => o.value === priority)?.label ?? priority;
+    const memberNames = memberIds
+      .map((id) => users.find((u) => u.id === id))
+      .filter(Boolean)
+      .map((u) => u!.name ?? u!.email)
+      .join(", ");
+
+    // Fetch checklist and comments in parallel (best-effort).
+    let checkItems: { text: string; done: boolean }[] = [];
+    let comments: { actor: string; createdAt: string; body: string }[] = [];
+
+    if (task?.id) {
+      const [clRes, cmRes] = await Promise.allSettled([
+        fetch(`/api/tareas/${task.id}/checklist`).then((r) => r.ok ? r.json() : []),
+        fetch(`/api/tareas/${task.id}/comments`).then((r) => r.ok ? r.json() : null),
+      ]);
+      if (clRes.status === "fulfilled" && Array.isArray(clRes.value)) {
+        checkItems = clRes.value;
+      }
+      if (cmRes.status === "fulfilled" && cmRes.value?.feed) {
+        comments = (cmRes.value.feed as { kind: string; actor: { name: string }; createdAt: string; body: string }[])
+          .filter((e) => e.kind === "comment")
+          .sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt))
+          .map((e) => ({
+            actor: e.actor?.name ?? "—",
+            createdAt: new Date(e.createdAt).toLocaleString("es-PR"),
+            body: e.body,
+          }));
+      }
+    }
+
+    const imagesHtml = attachments
+      .map(
+        (url) =>
+          `<img src="${url}" style="max-width:100%;max-height:220px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;" />`
+      )
+      .join("\n");
+
+    const checklistHtml =
+      checkItems.length > 0
+        ? `<section>
+            <h2>Checklist</h2>
+            <ul style="list-style:none;padding:0;margin:0;">
+              ${checkItems
+                .map(
+                  (i) =>
+                    `<li style="display:flex;align-items:center;gap:8px;padding:4px 0;${i.done ? "opacity:.55;" : ""}">
+                      <span style="display:inline-block;width:14px;height:14px;border:2px solid #6b7280;border-radius:3px;background:${i.done ? "#22c55e" : "transparent"};flex-shrink:0;"></span>
+                      <span style="${i.done ? "text-decoration:line-through;" : ""}">${escHtml(i.text)}</span>
+                    </li>`
+                )
+                .join("")}
+            </ul>
+          </section>`
+        : "";
+
+    const commentsHtml =
+      comments.length > 0
+        ? `<section>
+            <h2>Comentarios</h2>
+            ${comments
+              .map(
+                (c) =>
+                  `<div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:10px;">
+                    <div style="font-weight:600;font-size:13px;">${escHtml(c.actor)} <span style="font-weight:400;color:#6b7280;font-size:12px;">&bull; ${c.createdAt}</span></div>
+                    <div style="margin-top:6px;white-space:pre-wrap;font-size:13px;">${escHtml(c.body)}</div>
+                  </div>`
+              )
+              .join("")}
+          </section>`
+        : "";
+
+    const orderLine =
+      task?.orderNumber
+        ? `<div><strong>Orden:</strong> #${escHtml(task.orderNumber)}${task.clientName ? ` — ${escHtml(task.clientName)}` : ""}</div>`
+        : "";
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Tarea: ${escHtml(title)}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; font-size: 14px; color: #111; margin: 0; padding: 28px 36px; line-height: 1.5; }
+    h1 { font-size: 22px; margin: 0 0 6px; }
+    h2 { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #4b5563; margin: 20px 0 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+    section { margin-bottom: 18px; }
+    .meta { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px 24px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; margin-bottom: 18px; font-size: 13px; }
+    .meta strong { color: #374151; }
+    .description { white-space: pre-wrap; font-size: 13px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px; }
+    .images { display: flex; flex-wrap: wrap; gap: 10px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .priority-urgent { background: #fef2f2; color: #dc2626; }
+    .priority-high { background: #fff7ed; color: #ea580c; }
+    .priority-normal { background: #eff6ff; color: #2563eb; }
+    .priority-low { background: #f0fdf4; color: #16a34a; }
+    @media print {
+      body { padding: 0; }
+      @page { margin: 15mm 15mm 15mm 15mm; }
+    }
+    .footer { margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 10px; font-size: 11px; color: #9ca3af; display: flex; justify-content: space-between; }
+  </style>
+</head>
+<body>
+  <h1>${escHtml(title)}</h1>
+  ${orderLine}
+
+  <div class="meta">
+    <div><strong>Estado:</strong> ${escHtml(statusLabel)}</div>
+    <div><strong>Prioridad:</strong> <span class="badge priority-${priority}">${escHtml(priorityLabel)}</span></div>
+    <div><strong>Horas estimadas:</strong> ${hours}h</div>
+    <div><strong>Fecha límite:</strong> ${dueDate ? new Date(dueDate + "T00:00:00").toLocaleDateString("es-PR") : "—"}</div>
+    ${memberNames ? `<div style="grid-column:1/-1"><strong>Asignado a:</strong> ${escHtml(memberNames)}</div>` : ""}
+  </div>
+
+  ${description ? `<section><h2>Descripción</h2><div class="description">${escHtml(description)}</div></section>` : ""}
+
+  ${attachments.length > 0 ? `<section><h2>Imágenes</h2><div class="images">${imagesHtml}</div></section>` : ""}
+
+  ${checklistHtml}
+
+  ${commentsHtml}
+
+  <div class="footer">
+    <span>IDEAS PR · Tarea impresa el ${new Date().toLocaleString("es-PR")}</span>
+    ${task?.id ? `<span>ID: ${task.id}</span>` : ""}
+  </div>
+</body>
+</html>`;
+
+    const win = window.open("", "_blank", "width=900,height=700");
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    win.onload = () => win.print();
+    // Fallback in case onload already fired.
+    setTimeout(() => { if (!win.closed) win.print(); }, 600);
+  }
+
   async function handleUploadFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
     setUploading(true);
@@ -268,13 +413,25 @@ export function TaskEditor({
                   {mode === "create" ? "Nueva tarea" : "Editar tarea"}
                 </h2>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 -m-2 rounded-lg hover:bg-white/5 text-white/60 hover:text-white"
-                aria-label="Cerrar"
-              >
-                <X size={18} />
-              </button>
+              <div className="flex items-center gap-1">
+                {mode === "edit" && task && (
+                  <button
+                    onClick={handlePrint}
+                    className="p-2 rounded-lg hover:bg-white/5 text-white/60 hover:text-white"
+                    aria-label="Imprimir tarea"
+                    title="Imprimir tarea"
+                  >
+                    <Printer size={18} />
+                  </button>
+                )}
+                <button
+                  onClick={onClose}
+                  className="p-2 -m-2 rounded-lg hover:bg-white/5 text-white/60 hover:text-white"
+                  aria-label="Cerrar"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
             <div className="px-5 py-5 space-y-4">
@@ -525,6 +682,14 @@ export function TaskEditor({
 
 const inputCls =
   "w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[var(--color-brand-500)]/60 focus:ring-1 focus:ring-[var(--color-brand-500)]/40";
+
+function escHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
