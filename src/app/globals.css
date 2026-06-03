@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+/* ───── Adelle Condensed — fuente oficial de la Hoja de Aprobacion ─────
+   Archivo real en public/fonts/. Solo se tiene la variante Bold, que se
+   mapea a los pesos 400/700/900 porque la hoja usa texto en negrita. */
+@font-face {
+  font-family: "Adelle Condensed";
+  src: url("/fonts/AdelleCondensed-Bold.ttf") format("truetype");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   /* Marca Ideas, LLC — amarillo característico */
   --color-brand-50:  #fff8e6;

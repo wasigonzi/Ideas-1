@@ -48,8 +48,11 @@ interface Props {
   onClose: () => void;
 }
 
-const DOC_W = 1056;   // letter landscape width  @ 96 dpi
-const DOC_H = 816;    // letter landscape height @ 96 dpi
+export const DOC_W = 1056;   // letter landscape width  @ 96 dpi
+export const DOC_H = 816;    // letter landscape height @ 96 dpi
+
+// Fuente oficial de la hoja de aprobacion (con respaldos condensados)
+export const SHEET_FONT = '"Adelle Condensed", "Archivo Narrow", "Arial Narrow", Arial, sans-serif';
 const IMG_AREA_H = 430;
 const BOX_W = DOC_W - 48;  // 1008 — doc padding 24px each side
 const BOX_H = IMG_AREA_H;
@@ -723,7 +726,7 @@ interface DocProps {
   onBoxPointerUp?: (e: React.PointerEvent<HTMLDivElement>) => void;
 }
 
-function ApprovalDocument({
+export function ApprovalDocument({
   numero, cliente, fecha, material, terminacion, nota, page, taskTitle,
   interactive = false, selectedId, boxRef, onImgLoad, onImgPointerDown, onResizeHandlePointerDown, onBoxPointerMove, onBoxPointerUp,
 }: DocProps) {
@@ -732,7 +735,7 @@ function ApprovalDocument({
       className="approval-doc"
       style={{
         width: DOC_W, minHeight: DOC_H, background: "#fff", color: "#000",
-        fontFamily: "Arial, Helvetica, sans-serif", fontSize: "12px",
+        fontFamily: SHEET_FONT, fontSize: "12px",
         padding: "20px 24px", boxSizing: "border-box",
         pageBreakAfter: "always", breakAfter: "page", display: "flex", flexDirection: "column",
       }}

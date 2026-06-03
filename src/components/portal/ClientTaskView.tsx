@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import type { SheetData } from "./ApprovalSheet";
+import { ApprovalDocument, DOC_W, DOC_H } from "./ApprovalSheet";
 
 export type ClientTask = {
   id: string;
@@ -268,10 +269,6 @@ export function ClientTaskView({ tasks, currentUserId }: { tasks: ClientTask[]; 
 
 // ── Approval Sheet Panel (client view) ──────────────────────────────────
 
-const DOC_W = 816;
-const IMG_AREA_H = 460;
-const LOGO_URL = "https://static.showit.co/1200/DCkf9Lq274roW0gXPzSgJg/shared/ideas_logo-01.png";
-
 const STATUS_META: Record<string, { label: string; cls: string }> = {
   pending:           { label: "Pendiente de aprobacion", cls: "text-yellow-300 border-yellow-500/40 bg-yellow-500/10" },
   approved:          { label: "Aprobado",                cls: "text-green-300  border-green-500/40  bg-green-500/10"  },
@@ -440,8 +437,17 @@ function ApprovalSheetPanel({ taskId, taskStatus, onRespond }: { taskId: string;
                         {sheet.data.pages.length > 1 && (
                           <p className="text-[10px] font-bold uppercase tracking-wider text-white/35 mb-1 text-left">Pagina {idx + 1}</p>
                         )}
-                        <div className="overflow-hidden rounded-lg border border-white/10" style={{ transform: "scale(0.6)", transformOrigin: "top left", width: DOC_W, marginBottom: `-${Math.round(736 * 0.4)}px` }}>
-                          <ClientDocPreview data={sheet.data} page={page} />
+                        <div className="overflow-hidden rounded-lg border border-white/10" style={{ transform: "scale(0.5)", transformOrigin: "top left", width: DOC_W, height: DOC_H, marginBottom: `-${Math.round(DOC_H * 0.5)}px`, marginRight: `-${Math.round(DOC_W * 0.5)}px` }}>
+                          <ApprovalDocument
+                            numero={sheet.data.numero}
+                            cliente={sheet.data.cliente}
+                            fecha={sheet.data.fecha}
+                            material={sheet.data.material}
+                            terminacion={sheet.data.terminacion}
+                            nota={sheet.data.nota}
+                            page={page}
+                            taskTitle=""
+                          />
                         </div>
                       </div>
                     ))}
@@ -572,9 +578,18 @@ function ApprovalSheetPanel({ taskId, taskStatus, onRespond }: { taskId: string;
                   )}
                   <div
                     className="overflow-hidden rounded-lg shadow-2xl"
-                    style={{ transform: `scale(${zoom})`, transformOrigin: "top left", width: DOC_W, height: `${Math.round(1056 * zoom)}px` }}
+                    style={{ transform: `scale(${zoom})`, transformOrigin: "top left", width: DOC_W, height: `${Math.round(DOC_H * zoom)}px` }}
                   >
-                    <ClientDocPreview data={sheet.data} page={page} />
+                    <ApprovalDocument
+                      numero={sheet.data.numero}
+                      cliente={sheet.data.cliente}
+                      fecha={sheet.data.fecha}
+                      material={sheet.data.material}
+                      terminacion={sheet.data.terminacion}
+                      nota={sheet.data.nota}
+                      page={page}
+                      taskTitle=""
+                    />
                   </div>
                 </div>
               ))}
@@ -626,50 +641,5 @@ function ApprovalSheetPanel({ taskId, taskStatus, onRespond }: { taskId: string;
       )}
     </AnimatePresence>
     </>
-  );
-}
-
-function ClientDocPreview({ data, page }: { data: SheetData; page: SheetData["pages"][0] }) {
-  return (
-    <div style={{ width: DOC_W, background: "#fff", color: "#000", fontFamily: "Arial, Helvetica, sans-serif", fontSize: "12px", padding: "24px 28px", boxSizing: "border-box" }}>
-      <div style={{ display: "flex", alignItems: "stretch", borderBottom: "2px solid #000" }}>
-        <div style={{ flex: 1, textAlign: "center", padding: "8px 0", borderRight: "2px solid #000" }}>
-          <div style={{ fontSize: "20px", fontWeight: 900, letterSpacing: "2px" }}>HOJA DE APROBACION</div>
-        </div>
-        <div style={{ width: "120px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "6px 10px" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700 }}>No:</div>
-          <div style={{ fontSize: "22px", fontWeight: 900, color: "#c00" }}>{data.numero || "____"}</div>
-        </div>
-      </div>
-      <div style={{ display: "flex", alignItems: "stretch", border: "2px solid #000", borderTop: "none" }}>
-        <div style={{ width: "130px", borderRight: "2px solid #000", padding: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO_URL} alt="Ideas" style={{ width: "100px", objectFit: "contain" }} />
-        </div>
-        <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", padding: "8px 12px", gap: "2px 20px" }}>
-          {[["Cliente", data.cliente], ["Material", data.material], ["Fecha", data.fecha], ["Terminacion", data.terminacion]].map(([l, v]) => (
-            <div key={l} style={{ display: "flex", gap: "6px", paddingBottom: "2px", borderBottom: "1px solid #ccc" }}>
-              <span style={{ fontWeight: 700, fontSize: "11px" }}>{l}:</span>
-              <span style={{ fontSize: "13px", fontWeight: 600 }}>{v || "\u00a0"}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div style={{ border: "2px solid #000", borderTop: "none", display: "flex", alignItems: "center", padding: "6px 12px", marginBottom: "12px", background: "#f0f0f0" }}>
-        <span style={{ fontWeight: 900, fontSize: "13px", marginRight: "10px", background: "#333", color: "#fff", padding: "2px 8px", borderRadius: "3px" }}>NOTA:</span>
-        <span style={{ fontWeight: 700, fontSize: "13px" }}>{data.nota}</span>
-      </div>
-      <div style={{ border: "2px solid #ccc", borderRadius: "16px", overflow: "hidden", height: IMG_AREA_H, position: "relative", background: "#f8f8f8" }}>
-        {page.images?.map((img) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={img.id} src={img.url} alt="Arte" draggable={false}
-            style={{ position: "absolute", left: `${img.x}%`, top: `${img.y}%`, transform: `translate(-50%,-50%) scale(${img.scale})`, maxWidth: "none", touchAction: "none" }}
-          />
-        ))}
-        {(!page.images || page.images.length === 0) && (
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#aaa", fontSize: "14px" }}>Sin imagen</div>
-        )}
-      </div>
-    </div>
   );
 }
