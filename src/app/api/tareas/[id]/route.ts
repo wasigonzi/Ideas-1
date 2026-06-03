@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { sendTaskAssignedEmail } from "@/lib/mailer";
+import { enforceTaskCompletionRules, safeStringArray } from "@/lib/workflow";
 
 const ALLOWED_FIELDS = [
   "status", "priority", "title", "description", "assigneeId", "hours", "dueDate", "position", "coverImage", "attachments", "members", "orderId"
@@ -49,7 +50,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   // Regla de oro: una tarea no puede marcarse "done" sin evidencia (foto),
   // sin el checklist completo, y —si pertenece a un proyecto— sin aprobación.
   if ("status" in data && data.status === "done" && before.status !== "done") {
-    const guard = await enforceCompletionRules(id, before.attachments, before.coverImage, before.workProjectId);
+    const guard = await enforceTaskCompletionRules(id, before);
     if (guard) return guard;
   }
 
@@ -77,16 +78,16 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
       events.push({ type: "due_changed", data: { from: before.dueDate, to: task.dueDate } });
     }
     if ("members" in data && (before.members ?? null) !== (task.members ?? null)) {
-      const prev: string[] = safeArr(before.members);
-      const next: string[] = safeArr(task.members);
+      const prev: string[] = safeStringArray(before.members);
+      const next: string[] = safeStringArray(task.members);
       const added = next.filter((x) => !prev.includes(x));
       const removed = prev.filter((x) => !next.includes(x));
       if (added.length) events.push({ type: "members_added", data: { ids: added } });
       if (removed.length) events.push({ type: "members_removed", data: { ids: removed } });
     }
     if ("attachments" in data && (before.attachments ?? null) !== (task.attachments ?? null)) {
-      const prev: string[] = safeArr(before.attachments);
-      const next: string[] = safeArr(task.attachments);
+      const prev: string[] = safeStringArray(before.attachments);
+      const next: string[] = safeStringArray(task.attachments);
       const added = next.filter((x) => !prev.includes(x));
       const removed = prev.filter((x) => !next.includes(x));
       if (added.length) events.push({ type: "attachments_added", data: { urls: added } });
@@ -131,75 +132,6 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   }
 
   return NextResponse.json(task);
-}
-
-function safeArr(raw: string | null): string[] {
-  if (!raw) return [];
-  try {
-    const v = JSON.parse(raw);
-    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
-// Regla de oro: valida que una tarea cumpla los requisitos antes de completarse.
-// Devuelve una NextResponse de error si no cumple, o null si todo está en orden.
-async function enforceCompletionRules(
-  taskId: string,
-  legacyAttachments: string | null,
-  coverImage: string | null,
-  workProjectId: string | null
-): Promise<NextResponse | null> {
-  // 1. Checklist completo (si tiene items, todos deben estar hechos).
-  const items = await prisma.taskChecklistItem.findMany({
-    where: { taskId },
-    select: { done: true },
-  });
-  if (items.length > 0 && items.some((i) => !i.done)) {
-    const pending = items.filter((i) => !i.done).length;
-    return NextResponse.json(
-      {
-        error: "checklist_incomplete",
-        message: `No puedes completar la tarea: faltan ${pending} elemento(s) del checklist.`,
-      },
-      { status: 400 }
-    );
-  }
-
-  // 2. Evidencia: al menos una foto/adjunto (relacional, legado JSON o portada).
-  const attachmentCount = await prisma.taskAttachment.count({ where: { taskId } });
-  const hasEvidence =
-    attachmentCount > 0 || safeArr(legacyAttachments).length > 0 || Boolean(coverImage);
-  if (!hasEvidence) {
-    return NextResponse.json(
-      {
-        error: "evidence_required",
-        message: "No puedes completar la tarea: adjunta al menos una foto de evidencia.",
-      },
-      { status: 400 }
-    );
-  }
-
-  // 3. Si la tarea pertenece a un proyecto, requiere hoja de aprobación aprobada.
-  if (workProjectId) {
-    const approval = await prisma.approvalSheet.findUnique({
-      where: { taskId },
-      select: { status: true },
-    });
-    if (!approval || approval.status !== "approved") {
-      return NextResponse.json(
-        {
-          error: "approval_required",
-          message:
-            "No puedes completar la tarea: el cliente debe aprobar la hoja de aprobación primero.",
-        },
-        { status: 400 }
-      );
-    }
-  }
-
-  return null;
 }
 
 export async function DELETE(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {

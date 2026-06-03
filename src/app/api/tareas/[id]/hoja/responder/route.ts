@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { safeStringArray } from "@/lib/workflow";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -9,19 +10,25 @@ export async function POST(req: NextRequest, ctx: Ctx) {
   const session = await auth();
   const user = session?.user as { id?: string; role?: string } | undefined;
   if (!user?.id) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (user.role !== "client") return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const { id } = await ctx.params;
 
-  // Verify task access for client
-  const task = await prisma.task.findUnique({ where: { id }, select: { assigneeId: true, members: true } });
+  const task = await prisma.task.findUnique({
+    where: { id },
+    select: {
+      assigneeId: true,
+      members: true,
+      taskMembers: { select: { userId: true } },
+    },
+  });
   if (!task) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  const members: string[] = task.members ? JSON.parse(task.members) : [];
+  const legacyMembers = safeStringArray(task.members);
   const hasAccess =
-    user.role === "admin" ||
-    user.role === "employee" ||
     task.assigneeId === user.id ||
-    members.includes(user.id);
+    legacyMembers.includes(user.id) ||
+    task.taskMembers.some((member) => member.userId === user.id);
 
   if (!hasAccess) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 

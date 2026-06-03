@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { randomUUID } from "crypto";
+import { safeStringArray } from "@/lib/workflow";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -24,16 +25,25 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
 
   // Verify task exists and the user has access
-  const task = await prisma.task.findUnique({ where: { id }, select: { id: true, assigneeId: true, members: true } });
+  const task = await prisma.task.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      assigneeId: true,
+      members: true,
+      taskMembers: { select: { userId: true } },
+    },
+  });
   if (!task) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  let members: string[] = [];
+  let members = safeStringArray(task.members);
   try { members = task.members ? JSON.parse(task.members) : []; } catch { /* corrupt JSON — treat as empty */ }
   const hasAccess =
     user.role === "admin" ||
     user.role === "employee" ||
     task.assigneeId === user.id ||
-    members.includes(user.id ?? "");
+    members.includes(user.id ?? "") ||
+    task.taskMembers.some((member) => member.userId === user.id);
 
   if (!hasAccess) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 

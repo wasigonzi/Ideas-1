@@ -28,6 +28,7 @@ export default async function ClienteTareas() {
       OR: [
         { assigneeId: userId },
         { members: { contains: userId } },
+        { taskMembers: { some: { userId } } },
       ]
     },
     orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],

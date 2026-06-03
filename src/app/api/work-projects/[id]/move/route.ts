@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireApiRole } from "@/lib/auth-helpers";
 import { logAudit } from "@/lib/audit";
+import { loadProjectStages } from "@/lib/project-stages";
+import { validateProjectStageMove } from "@/lib/workflow";
 import { z } from "zod";
 
 const MoveSchema = z.object({
@@ -38,6 +40,20 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
 
   const project = await prisma.workProject.findUnique({ where: { id }, select: { stage: true } });
   if (!project) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+  const stages = await loadProjectStages();
+  const stageGuard = validateProjectStageMove({
+    fromStage: project.stage,
+    toStage,
+    role: auth.role,
+    stages,
+  });
+  if (!stageGuard.ok) {
+    return NextResponse.json(
+      { error: stageGuard.error, message: stageGuard.message },
+      { status: stageGuard.status },
+    );
+  }
 
   const [, updated] = await prisma.$transaction([
     prisma.workProjectStageEvent.create({

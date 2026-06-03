@@ -6,12 +6,12 @@ Recreación de [printingideaspr.com](https://printingideaspr.com) con backend, p
 
 - **Next.js 15** (App Router, React 19) + **TypeScript**
 - **TailwindCSS v4** + animaciones con **Framer Motion**
-- **Prisma + SQLite** (cambia a Postgres/MySQL editando `prisma/schema.prisma`)
+- **Prisma + PostgreSQL** (Supabase/Neon/Vercel Postgres)
 - **NextAuth (Auth.js v5)** con credenciales + bcrypt
 - **next-intl** para multi-idioma (Español / English)
 - **Nodemailer** para notificación de cotizaciones por email
 - **Zod** para validación de inputs
-- Subida de imágenes a `/public/uploads`
+- Subida de archivos a Supabase Storage (`uploads`)
 
 ## Funcionalidades
 
@@ -81,7 +81,7 @@ Antes de ejecutar `npm run db:seed`, define contraseÃ±as privadas: `ADMIN_PASS
 ### Recomendado: Vercel (gratis, 1 click)
 1. Sube el repo a GitHub
 2. Conecta a Vercel
-3. Cambia `DATABASE_URL` a Postgres (Vercel Postgres / Neon / Supabase) y en `schema.prisma` pon `provider = "postgresql"`
+3. Configura `DATABASE_URL`, `DIRECT_URL` y las variables públicas/privadas de Supabase Storage
 4. Define todas las variables de `.env.example`
 
 ### VPS / Docker

@@ -24,10 +24,16 @@ export default async function EmpleadoTareas() {
         OR: [
           { assigneeId: userId },
           { members: { contains: userId } },
+          { taskMembers: { some: { userId } } },
         ],
       },
       include: {
         assignee: true,
+        taskMembers: {
+          include: {
+            user: { select: { id: true, name: true, email: true, avatar: true, role: true } },
+          },
+        },
         workSessions: {
           where: { userId },
           select: { id: true, startedAt: true, endedAt: true },
@@ -74,9 +80,12 @@ export default async function EmpleadoTareas() {
       assigneeName: t.assignee?.name ?? null,
       coverImage: t.coverImage ?? null,
       attachments: parseStringArray(t.attachments),
-      members: parseStringArray(t.members)
+      members: Array.from(new Set([
+        ...parseStringArray(t.members),
+        ...t.taskMembers.map((member) => member.userId),
+      ]))
         .map((id) => {
-          const u = userMap.get(id);
+          const u = userMap.get(id) ?? t.taskMembers.find((member) => member.userId === id)?.user;
           if (!u) return null;
           return { id: u.id, name: u.name ?? u.email, avatar: u.avatar ?? null, role: u.role };
         })

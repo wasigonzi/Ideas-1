@@ -10,7 +10,6 @@ const ALLOWED_IMAGES = new Set([
   "image/webp",
   "image/avif",
   "image/gif",
-  "image/svg+xml",
   "image/x-icon",
   "image/vnd.microsoft.icon",
   "image/heic",
@@ -38,7 +37,8 @@ const ALLOWED_VIDEO = new Set([
   "video/x-msvideo",
   "video/x-ms-wmv",
 ]);
-// Common document / archive types accepted as comment/task attachments.
+// Common document types accepted as comment/task attachments.
+// Archives, JSON, and SVG are intentionally excluded because uploads are public.
 const ALLOWED_FILES = new Set([
   "application/pdf",
   "application/msword",
@@ -48,12 +48,7 @@ const ALLOWED_FILES = new Set([
   "application/vnd.ms-powerpoint",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   "text/plain",
-  "text/csv",
-  "application/zip",
-  "application/x-zip-compressed",
-  "application/x-rar-compressed",
-  "application/x-7z-compressed",
-  "application/json"
+  "text/csv"
 ]);
 const MAX_BYTES = 30 * 1024 * 1024; // 30 MB
 const MAX_VIDEO_BYTES = 200 * 1024 * 1024; // 200 MB for video backgrounds
