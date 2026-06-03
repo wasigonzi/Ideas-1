@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import crypto from "node:crypto";
 import { createAdminClient } from "@/lib/supabase-admin";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const ALLOWED_IMAGES = new Set([
   "image/jpeg",
@@ -62,6 +63,11 @@ const BUCKET = "uploads";
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const ip = await getClientIp();
+  const userId = (session.user as { id?: string }).id ?? ip;
+  const limited = checkRateLimit(`upload:${userId}`, 60, 60 * 1000); // 60 archivos/min por usuario
+  if (limited) return limited;
 
   const form = await req.formData();
   const file = form.get("file");

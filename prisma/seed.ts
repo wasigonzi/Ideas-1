@@ -238,6 +238,66 @@ async function main() {
     ]
   });
 
+  // ---- Etapa 0/3: Materiales (costo por pie²)
+  const materiales = [
+    { name: "D-Board 3mm", category: "d-board", thickness: "3mm", costPerSqFt: 1.85, unit: "ft2" },
+    { name: "D-Board 5mm", category: "d-board", thickness: "5mm", costPerSqFt: 2.40, unit: "ft2" },
+    { name: "PVC Sintra 3mm", category: "pvc", thickness: "3mm", costPerSqFt: 2.10, unit: "ft2" },
+    { name: "Acrílico transparente 1/8\"", category: "acrilico", thickness: "1/8\"", costPerSqFt: 5.50, unit: "ft2" },
+    { name: "Banner 13oz", category: "banner", thickness: null, costPerSqFt: 0.65, unit: "ft2" },
+    { name: "Banner mesh", category: "mesh", thickness: null, costPerSqFt: 0.80, unit: "ft2" },
+    { name: "Vinil adhesivo brillante", category: "vinil", thickness: null, costPerSqFt: 0.95, unit: "ft2" },
+    { name: "Vinil microperforado", category: "microperforado", thickness: null, costPerSqFt: 1.20, unit: "ft2" },
+    { name: "Static cling", category: "static-cling", thickness: null, costPerSqFt: 1.40, unit: "ft2" },
+  ];
+  for (const m of materiales) {
+    const existing = await prisma.material.findFirst({ where: { name: m.name } });
+    if (!existing) await prisma.material.create({ data: m });
+  }
+
+  // ---- Etapa 0/3: Tarifas por rol (costo/hora). El `role` coincide con el
+  // `position` de los empleados para que el cálculo de mano de obra funcione.
+  const tarifas = [
+    { role: "Instalador Sr.", hourlyCost: 28, notes: "Instalación y rotulación en sitio" },
+    { role: "Operador Impresión", hourlyCost: 24, notes: "Impresión digital y laminado" },
+    { role: "Diseñadora", hourlyCost: 26, notes: "Arte y preprensa" },
+    { role: "Técnico de manufactura", hourlyCost: 22, notes: "Corte, ensamblaje y terminaciones" },
+    { role: "Wrapper", hourlyCost: 30, notes: "Vehicle wraps" },
+  ];
+  for (const t of tarifas) {
+    await prisma.roleRate.upsert({
+      where: { role: t.role },
+      update: { hourlyCost: t.hourlyCost, notes: t.notes },
+      create: t,
+    });
+  }
+
+  // ---- Etapa 0: Capacidad del taller (unidades por día)
+  const capacidades = [
+    { process: "Impresión D-Board 3mm", unitsPerDay: 300, unitLabel: "planchas", notes: "Ejemplo de la visión: 300 planchas/día" },
+    { process: "Laminado", unitsPerDay: 250, unitLabel: "planchas" },
+    { process: "Corte CNC", unitsPerDay: 120, unitLabel: "piezas" },
+    { process: "Instalación en flota", unitsPerDay: 8, unitLabel: "unidades" },
+  ];
+  for (const c of capacidades) {
+    const existing = await prisma.shopCapacity.findFirst({ where: { process: c.process } });
+    if (!existing) await prisma.shopCapacity.create({ data: c });
+  }
+
+  // ---- Etapa 3/6: Parámetros globales (precio y meta de ventas)
+  const settings = [
+    { key: "pricing.markup", value: "2.5" },
+    { key: "pricing.inkCostPerSqFt", value: "0.35" },
+    { key: "intel.monthlyGoal", value: "300000" },
+  ];
+  for (const s of settings) {
+    await prisma.siteSetting.upsert({
+      where: { key: s.key },
+      update: {},
+      create: s,
+    });
+  }
+
   console.log("Seed listo.");
   console.log(`Admin:    ${adminEmail} / [contraseña configurada en ADMIN_PASSWORD]`);
   console.log("Empleado: empleado@printingideaspr.com / [configurada en SEED_EMPLOYEE_PASSWORD]");

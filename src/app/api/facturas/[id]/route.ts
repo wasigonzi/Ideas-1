@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { logAudit } from "@/lib/audit";
 
 async function requireAdmin() {
   const session = await auth();
@@ -34,12 +35,28 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     data,
     include: invoiceInclude,
   });
+  await logAudit({
+    actor: { role: "admin" },
+    action: "update",
+    entity: "Invoice",
+    entityId: id,
+    summary: `Editó la factura ${invoice.number}`,
+    metadata: data,
+  });
   return NextResponse.json(invoice);
 }
 
 export async function DELETE(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { id } = await ctx.params;
+  const existing = await prisma.invoice.findUnique({ where: { id }, select: { number: true, amount: true } });
   await prisma.invoice.delete({ where: { id } });
+  await logAudit({
+    actor: { role: "admin" },
+    action: "delete",
+    entity: "Invoice",
+    entityId: id,
+    summary: existing ? `Borró la factura ${existing.number} ($${existing.amount.toFixed(2)})` : `Borró la factura ${id}`,
+  });
   return NextResponse.json({ ok: true });
 }

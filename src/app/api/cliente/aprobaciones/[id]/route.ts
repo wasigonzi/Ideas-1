@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireApiRole } from "@/lib/auth-helpers";
+import { logAudit } from "@/lib/audit";
 import { z } from "zod";
 
 const DecisionSchema = z.object({
@@ -26,6 +27,15 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   const updated = await prisma.workProjectApproval.update({
     where: { id },
     data: { status: decision, clientNote: note ?? null, decidedAt: new Date() },
+  });
+  await logAudit({
+    actor: auth,
+    action: decision === "approved" ? "approve" : "reject",
+    entity: "WorkProjectApproval",
+    entityId: id,
+    summary: decision === "approved"
+      ? `Cliente aprobó "${approval.title}"`
+      : `Cliente pidió cambios en "${approval.title}"`,
   });
   return NextResponse.json(updated);
 }

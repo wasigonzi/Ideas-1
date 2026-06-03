@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, Wrench, Image as ImageIcon, Users, ClipboardList, Receipt, Clock, NotebookPen, Settings, MessageSquareText, LayoutGrid, Layers, DollarSign, FolderKanban, CalendarOff, Calculator } from "lucide-react";
+import { LayoutDashboard, FileText, Wrench, Image as ImageIcon, Users, ClipboardList, Receipt, Clock, NotebookPen, Settings, MessageSquareText, LayoutGrid, Layers, DollarSign, FolderKanban, CalendarOff, Calculator, LineChart, ShieldCheck } from "lucide-react";
 import { unstable_cache } from "next/cache";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { requireRole } from "@/lib/auth-helpers";
@@ -32,6 +32,7 @@ export default async function AdminLayout({
 
   const links = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/inteligencia", label: "Inteligencia", icon: LineChart },
     { href: "/admin/proyectos-taller", label: "Proyectos", icon: FolderKanban },
     { href: "/admin/cotizaciones", label: "Cotizaciones", icon: FileText },
     { href: "/admin/tareas", label: "Tareas", icon: ClipboardList },
@@ -41,6 +42,7 @@ export default async function AdminLayout({
     { href: "/admin/dias-libres", label: "Días libres", icon: CalendarOff },
     { href: "/admin/instrucciones", label: "Instrucciones", icon: NotebookPen },
     { href: "/admin/usuarios", label: "Usuarios", icon: Users },
+    { href: "/admin/auditoria", label: "Auditoría", icon: ShieldCheck },
     { href: "/admin/servicios", label: "Sortafolio", icon: Wrench },
     { href: "/admin/proyectos", label: "Proyectos", icon: ImageIcon },
     { href: "/admin/materiales", label: "Materiales", icon: Layers },

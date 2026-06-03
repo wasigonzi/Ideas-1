@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireApiRole } from "@/lib/auth-helpers";
 import { nextProjectNumber } from "@/lib/project-stages";
+import { logAudit } from "@/lib/audit";
 import { z } from "zod";
 
 const CreateSchema = z.object({
@@ -62,6 +63,13 @@ export async function POST(req: Request) {
       quoted: data.quoted,
       dueDate: data.dueDate || null,
     },
+  });
+  await logAudit({
+    actor: auth,
+    action: "create",
+    entity: "WorkProject",
+    entityId: created.id,
+    summary: `Creó el proyecto ${created.number} — ${created.title}`,
   });
   return NextResponse.json(created);
 }

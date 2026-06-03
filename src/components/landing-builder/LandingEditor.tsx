@@ -29,6 +29,21 @@ const VIEWPORTS = [
 ] as const;
 type ViewportKey = (typeof VIEWPORTS)[number]["key"];
 
+// Normaliza los bloques cargados: descarta entradas malformadas o de tipos que
+// ya no existen en el registro, para que datos corruptos no rompan el editor.
+function sanitizeBlocks(raw: unknown): LandingBlock[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((b): b is LandingBlock => {
+    if (!b || typeof b !== "object") return false;
+    const block = b as Partial<LandingBlock>;
+    return (
+      typeof block.id === "string" &&
+      typeof block.type === "string" &&
+      Boolean(BLOCK_REGISTRY[block.type as BlockType])
+    );
+  });
+}
+
 // ── Corner handle for selected blocks ────────────────────────────────────
 function CornerHandle({ pos }: { pos: "tl" | "tr" | "bl" | "br" }) {
   const cls: Record<string, string> = {
@@ -518,7 +533,8 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
       .then((data: { blocks: LandingBlock[] }) => {
         if (controller.signal.aborted) return;
         const fallback = PAGE_DEFAULTS[pageKey] ?? [];
-        setBlocks(data.blocks?.length ? data.blocks : fallback);
+        const clean = sanitizeBlocks(data.blocks);
+        setBlocks(clean.length ? clean : fallback);
       })
       .catch(() => {
         if (controller.signal.aborted) return;

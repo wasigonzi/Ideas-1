@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireApiRole } from "@/lib/auth-helpers";
+import { logAudit } from "@/lib/audit";
 import { z } from "zod";
 
 const UpdateSchema = z.object({
@@ -42,6 +43,13 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
   const { id } = await ctx.params;
   const data = UpdateSchema.parse(await req.json());
   const updated = await prisma.workProject.update({ where: { id }, data });
+  await logAudit({
+    actor: auth,
+    action: "update",
+    entity: "WorkProject",
+    entityId: id,
+    summary: `Editó el proyecto ${updated.number} — ${updated.title}`,
+  });
   return NextResponse.json(updated);
 }
 
@@ -49,6 +57,14 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
   const auth = await requireApiRole(["admin"]);
   if (auth instanceof NextResponse) return auth;
   const { id } = await ctx.params;
+  const existing = await prisma.workProject.findUnique({ where: { id }, select: { number: true, title: true } });
   await prisma.workProject.delete({ where: { id } });
+  await logAudit({
+    actor: auth,
+    action: "delete",
+    entity: "WorkProject",
+    entityId: id,
+    summary: existing ? `Borró el proyecto ${existing.number} — ${existing.title}` : `Borró el proyecto ${id}`,
+  });
   return NextResponse.json({ ok: true });
 }

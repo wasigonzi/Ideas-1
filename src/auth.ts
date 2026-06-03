@@ -2,6 +2,8 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { logAudit } from "@/lib/audit";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
@@ -17,6 +19,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const email = String(credentials?.email ?? "").toLowerCase();
         const password = String(credentials?.password ?? "");
         if (!email || !password) return null;
+        // Anti fuerza bruta: máximo 10 intentos por IP cada 5 minutos.
+        let ip: string | null = null;
+        try {
+          ip = await getClientIp();
+        } catch {
+          ip = null;
+        }
+        if (ip && checkRateLimit(`login:${ip}`, 10, 5 * 60 * 1000)) {
+          throw new Error("Demasiados intentos. Espera unos minutos.");
+        }
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) return null;
         if (!user.active) return null;
@@ -41,5 +53,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     }
+  },
+  events: {
+    async signIn({ user }) {
+      const u = user as { id?: string; email?: string; role?: string };
+      await logAudit({
+        actor: { id: u.id, email: u.email ?? undefined, role: u.role },
+        action: "login",
+        entity: "User",
+        entityId: u.id,
+        summary: `Inició sesión ${u.email ?? ""}`.trim(),
+      });
+    },
   }
 });

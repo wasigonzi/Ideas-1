@@ -41,6 +41,7 @@ model User {
   timeOffRequests TimeOffRequest[] @relation("TimeOffRequester")
   reviewedTimeOff TimeOffRequest[] @relation("TimeOffReviewer")
   projectApprovals WorkProjectApproval[] @relation("ApprovalClient")
+  auditLogs      AuditLog[] @relation("AuditActor")
 }
 
 model Service {
@@ -662,4 +663,27 @@ model WorkProjectApproval {
 
   @@index([projectId])
   @@index([clientId, status])
+}
+
+// ── Endurecimiento de seguridad: registro de auditoría ───────────────────────
+
+// Bitácora de acciones sensibles (crear/editar/borrar) realizadas por usuarios
+// admin/empleado. Permite rastrear quién cambió qué y cuándo.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorEmail String? // snapshot por si se borra el usuario
+  actorRole  String? // admin | employee | client
+  action     String // ej. "create" | "update" | "delete" | "login" | "export"
+  entity     String // ej. "WorkProject" | "Invoice" | "Material" | "User"
+  entityId   String? // id del registro afectado
+  summary    String?  @db.Text // descripción legible, ej. "Cambió etapa a producción"
+  metadata   String?  @db.Text // JSON con datos extra
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([actorId, createdAt])
+  @@index([createdAt])
 }

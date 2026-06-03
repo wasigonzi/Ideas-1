@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireApiRole } from "@/lib/auth-helpers";
+import { logAudit } from "@/lib/audit";
 import { z } from "zod";
 
 const MoveSchema = z.object({
@@ -58,6 +59,14 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
       },
     }),
   ]);
+
+  await logAudit({
+    actor: auth,
+    action: "move",
+    entity: "WorkProject",
+    entityId: id,
+    summary: `Movió el proyecto de "${project.stage}" a "${toStage}"`,
+  });
 
   return NextResponse.json(updated);
 }

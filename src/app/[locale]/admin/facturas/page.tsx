@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Pencil, Trash2, FileText, X, Loader2, Check } from "lucide-react";
+import { Plus, Pencil, Trash2, FileText, X, Loader2, Check, Download } from "lucide-react";
 import { StatusPill } from "@/components/portal/ui";
 
 type Invoice = {
@@ -141,9 +141,18 @@ export default function AdminFacturas() {
           <h1 className="heading-lg">Facturas</h1>
           <p className="text-white/65 mt-1">Gestión de cobros y cuentas por cobrar.</p>
         </div>
-        <button onClick={openCreate} className="btn btn-primary shrink-0 flex items-center gap-2">
-          <Plus size={16} /> Nueva factura
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <a
+            href={`/api/facturas/export${statusFilter !== "all" ? `?status=${statusFilter}` : ""}`}
+            className="btn btn-outline flex items-center gap-2"
+            title="Exportar a QuickBooks (CSV)"
+          >
+            <Download size={16} /> Exportar QuickBooks
+          </a>
+          <button onClick={openCreate} className="btn btn-primary flex items-center gap-2">
+            <Plus size={16} /> Nueva factura
+          </button>
+        </div>
       </header>
 
       {/* Stats */}

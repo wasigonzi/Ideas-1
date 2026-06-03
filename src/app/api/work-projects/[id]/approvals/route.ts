@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireApiRole } from "@/lib/auth-helpers";
+import { logAudit } from "@/lib/audit";
 import { z } from "zod";
 
 // GET → aprobaciones de un proyecto (admin/empleado).
@@ -46,6 +47,13 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
       description: data.description ?? null,
       files: data.files.length ? JSON.stringify(data.files) : null,
     },
+  });
+  await logAudit({
+    actor: auth,
+    action: "create",
+    entity: "WorkProjectApproval",
+    entityId: created.id,
+    summary: `Solicitó aprobación al cliente: "${data.title}"`,
   });
   return NextResponse.json(created);
 }

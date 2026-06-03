@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireApiRole } from "@/lib/auth-helpers";
+import { logAudit } from "@/lib/audit";
 import { z } from "zod";
 
 const MaterialSchema = z.object({
@@ -19,6 +20,13 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
   const { id } = await ctx.params;
   const data = MaterialSchema.parse(await req.json());
   const updated = await prisma.material.update({ where: { id }, data });
+  await logAudit({
+    actor: auth,
+    action: "update",
+    entity: "Material",
+    entityId: id,
+    summary: `Editó el material ${updated.name} ($${updated.costPerSqFt}/ft²)`,
+  });
   return NextResponse.json(updated);
 }
 
@@ -26,6 +34,14 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
   const auth = await requireApiRole(["admin"]);
   if (auth instanceof NextResponse) return auth;
   const { id } = await ctx.params;
+  const existing = await prisma.material.findUnique({ where: { id }, select: { name: true } });
   await prisma.material.delete({ where: { id } });
+  await logAudit({
+    actor: auth,
+    action: "delete",
+    entity: "Material",
+    entityId: id,
+    summary: existing ? `Borró el material ${existing.name}` : `Borró el material ${id}`,
+  });
   return NextResponse.json({ ok: true });
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { logAudit } from "@/lib/audit";
 import { z } from "zod";
 
 async function requireAdmin() {
@@ -74,6 +75,13 @@ export async function PUT(
     data: updateData,
     select: userSelect,
   });
+  await logAudit({
+    actor: admin,
+    action: "update",
+    entity: "User",
+    entityId: id,
+    summary: `Editó la cuenta ${user.email} (${user.role})`,
+  });
   return NextResponse.json(user);
 }
 
@@ -89,6 +97,14 @@ export async function DELETE(
     return NextResponse.json({ error: "No puedes eliminar tu propia cuenta." }, { status: 400 });
   }
 
+  const existing = await prisma.user.findUnique({ where: { id }, select: { email: true, role: true } });
   await prisma.user.delete({ where: { id } });
+  await logAudit({
+    actor: admin,
+    action: "delete",
+    entity: "User",
+    entityId: id,
+    summary: existing ? `Borró la cuenta ${existing.email} (${existing.role})` : `Borró la cuenta ${id}`,
+  });
   return NextResponse.json({ ok: true });
 }

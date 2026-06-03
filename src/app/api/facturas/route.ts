@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { logAudit } from "@/lib/audit";
 
 async function getUser() {
   const session = await auth();
@@ -61,6 +62,14 @@ export async function POST(req: NextRequest) {
       notes:   body.notes ?? null,
     },
     include: invoiceInclude,
+  });
+
+  await logAudit({
+    actor: { id: user.id, role: user.role },
+    action: "create",
+    entity: "Invoice",
+    entityId: invoice.id,
+    summary: `Creó la factura ${invoice.number} por $${invoice.amount.toFixed(2)}`,
   });
 
   return NextResponse.json(invoice, { status: 201 });
