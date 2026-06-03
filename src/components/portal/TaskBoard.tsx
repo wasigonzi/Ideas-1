@@ -78,18 +78,35 @@ export function TaskBoard({
   const [active, setActive] = useState<TaskCard | null>(null);
   const [defaultStatus, setDefaultStatus] = useState<string>("todo");
 
+  // Optimistic local copy of tasks — updated immediately on save so the board
+  // reflects changes without waiting for router.refresh() to complete.
+  const [liveTasks, setLiveTasks] = useState<TaskCard[]>(tasks);
+  // Keep in sync when the server-refresh eventually delivers new props.
+  useEffect(() => { setLiveTasks(tasks); }, [tasks]);
+
   // ─ View & filters (persisted in localStorage) ─
   const LS_KEY = "taskboard_filters";
-  function loadFilters() {
-    if (typeof window === "undefined") return {};
-    try { return JSON.parse(localStorage.getItem(LS_KEY) ?? "{}"); } catch { return {}; }
-  }
-  const saved = loadFilters();
-  const [viewMode, setViewMode] = useState<"board" | "calendar">(saved.viewMode ?? "board");
-  const [filterAssignee, setFilterAssignee] = useState<string>(saved.filterAssignee ?? "");
-  const [filterPriority, setFilterPriority] = useState<string>(saved.filterPriority ?? "");
-  const [filterDue, setFilterDue] = useState<"all" | "overdue" | "week">(saved.filterDue ?? "all");
-  const [search, setSearch] = useState<string>(saved.search ?? "");
+
+  // Always start with defaults so SSR and first client render match (no hydration mismatch).
+  // localStorage values are applied after mount in a useEffect.
+  const [viewMode, setViewMode] = useState<"board" | "calendar">("board");
+  const [filterAssignee, setFilterAssignee] = useState<string>("");
+  const [filterPriority, setFilterPriority] = useState<string>("");
+  const [filterDue, setFilterDue] = useState<"all" | "overdue" | "week">("all");
+  const [search, setSearch] = useState<string>("");
+
+  // Restore persisted filters after hydration, then keep them in sync.
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(LS_KEY) ?? "{}");
+      if (saved.viewMode) setViewMode(saved.viewMode);
+      if (saved.filterAssignee) setFilterAssignee(saved.filterAssignee);
+      if (saved.filterPriority) setFilterPriority(saved.filterPriority);
+      if (saved.filterDue) setFilterDue(saved.filterDue);
+      if (saved.search) setSearch(saved.search);
+    } catch { /* ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Persist filters whenever they change
   useEffect(() => {
@@ -129,7 +146,7 @@ export function TaskBoard({
     const weekEnd = new Date(now);
     weekEnd.setDate(now.getDate() + 7);
     const q = search.trim().toLowerCase();
-    return tasks.filter((t) => {
+    return liveTasks.filter((t) => {
       if (q && !t.title.toLowerCase().includes(q)) return false;
       if (filterAssignee && t.assigneeId !== filterAssignee && !(t.members ?? []).some((m) => m.id === filterAssignee)) return false;
       if (filterPriority && t.priority !== filterPriority) return false;
@@ -439,6 +456,13 @@ export function TaskBoard({
         defaultOrderId={defaultOrderId}
         columns={cols}
         onClose={() => setEditorOpen(false)}
+        onSaved={(updated) => {
+          // Update the board card immediately (optimistic)
+          setLiveTasks((prev) =>
+            prev.map((t) => (t.id === updated.id ? updated : t))
+          );
+          setActive(updated);
+        }}
       />
     </>
   );

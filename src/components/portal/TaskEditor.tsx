@@ -65,6 +65,7 @@ export function TaskEditor({
   defaultOrderId?: string;
   columns?: { key: string; label: string }[];
   onClose: () => void;
+  onSaved?: (updated: TaskCard) => void;
 }) {
   const router = useRouter();
   const statusOptions = (columns && columns.length > 0)
@@ -88,9 +89,30 @@ export function TaskEditor({
   const [approvalStatus, setApprovalStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Reset form whenever the editor (re)opens
+  // Track the last (open, taskId) pair we initialised for, so that a
+  // server re-render while the modal is already open (e.g. from realtime
+  // fallback polling) does NOT reset the user's in-progress edits.
+  const lastInitRef = useRef<{ open: boolean; taskId: string | null }>({
+    open: false,
+    taskId: null,
+  });
+
+  // Reset form whenever the editor opens for the first time, or opens for a
+  // different task. Does NOT reset while the same task is already open.
   useEffect(() => {
-    if (!open) return;
+    const currentTaskId = mode === "edit" && task ? task.id : null;
+    const prev = lastInitRef.current;
+
+    if (!open) {
+      // Reset tracking when closed so the next open always re-initialises.
+      lastInitRef.current = { open: false, taskId: null };
+      return;
+    }
+
+    // Skip re-initialisation if the same task is still open.
+    if (prev.open && prev.taskId === currentTaskId) return;
+
+    lastInitRef.current = { open: true, taskId: currentTaskId };
     setError(null);
     if (mode === "edit" && task) {
       setTitle(task.title);
@@ -121,7 +143,8 @@ export function TaskEditor({
       setMemberIds([]);
       setOrderId(defaultOrderId ?? "");
     }
-  }, [open, mode, task, defaultStatus]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, mode, task?.id, defaultStatus]);
 
   // Load approval status when editing a task
   useEffect(() => {
@@ -174,6 +197,26 @@ export function TaskEditor({
       if (!res.ok) {
         const info = await res.json().catch(() => null);
         throw new Error(info?.message || `Error al guardar (${res.status})`);
+      }
+      // Update the active task in the parent with fresh values so that
+      // re-opening the modal before router.refresh() completes shows correct data.
+      if (mode === "edit" && task && onSaved) {
+        onSaved({
+          ...task,
+          title: title.trim(),
+          description: description.trim() || null,
+          status,
+          priority,
+          hours: Number(hours) || 0,
+          dueDate: dueDate ? new Date(dueDate + "T00:00:00").toISOString() : null,
+          assigneeId: memberIds[0] || null,
+          coverImage: coverImage || null,
+          attachments,
+          members: memberIds
+            .map((id) => users.find((u) => u.id === id))
+            .filter((u): u is EditorUser => !!u)
+            .map((u) => ({ id: u.id, name: u.name ?? u.email, avatar: u.avatar ?? null, role: u.role })),
+        });
       }
       router.refresh();
       onClose();

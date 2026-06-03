@@ -74,7 +74,13 @@ export function TrelloBoard<T extends BoardItem>({
     const any = i as any;
     const cover: string = any.coverImage ?? "";
     const attachLen: number = (any.attachments as string[] | undefined)?.length ?? 0;
-    return `${i.id}:${i.status}:${i.position ?? ""}:${cover}:${attachLen}`;
+    const title: string = any.title ?? "";
+    const priority: string = any.priority ?? "";
+    const hasDesc: 0 | 1 = any.description ? 1 : 0;
+    const hours: number = any.hours ?? 0;
+    const due: string = any.dueDate ?? "";
+    const memberCount: number = (any.members as unknown[] | undefined)?.length ?? 0;
+    return `${i.id}:${i.status}:${i.position ?? ""}:${cover}:${attachLen}:${title}:${priority}:${hasDesc}:${hours}:${due}:${memberCount}`;
   }).join("|");
   const [lastSig, setLastSig] = useState(sig);
   if (sig !== lastSig) {
