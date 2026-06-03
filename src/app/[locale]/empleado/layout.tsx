@@ -1,4 +1,4 @@
-import { LayoutDashboard, ListChecks, Calendar, Fingerprint, MessageSquareText, FileCheck, UserCog } from "lucide-react";
+import { LayoutDashboard, ListChecks, Calendar, Fingerprint, MessageSquareText, FileCheck, UserCog, CalendarOff } from "lucide-react";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { requireRole } from "@/lib/auth-helpers";
 
@@ -10,6 +10,7 @@ export default async function EmpleadoLayout({
   const links = [
     { href: "/empleado", label: "Panel", icon: LayoutDashboard },
     { href: "/empleado/ponche", label: "Ponche", icon: Fingerprint },
+    { href: "/empleado/dias-libres", label: "Días libres", icon: CalendarOff },
     { href: "/empleado/tareas", label: "Mis tareas", icon: ListChecks },
     { href: "/empleado/chat", label: "Chat", icon: MessageSquareText },
     { href: "/empleado/hojas", label: "Hojas", icon: FileCheck },

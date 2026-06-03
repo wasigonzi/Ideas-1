@@ -1,4 +1,4 @@
-import { ListChecks, User } from "lucide-react";
+import { ListChecks, User, FolderKanban } from "lucide-react";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { requireRole } from "@/lib/auth-helpers";
 
@@ -8,6 +8,7 @@ export default async function ClienteLayout({
   const user = await requireRole(["client"]);
 
   const links = [
+    { href: "/cliente/proyectos", label: "Mis proyectos", icon: FolderKanban },
     { href: "/cliente/tareas", label: "Mis tareas", icon: ListChecks },
     { href: "/cliente/perfil", label: "Mi perfil", icon: User }
   ];

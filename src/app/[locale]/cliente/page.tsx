@@ -8,5 +8,5 @@ export default async function ClientePage({
   const session = await auth();
   const role = (session?.user as { role?: string })?.role;
   if (role === "admin") redirect(`/${locale}/admin`);
-  redirect(`/${locale}/cliente/tareas`);
+  redirect(`/${locale}/cliente/proyectos`);
 }

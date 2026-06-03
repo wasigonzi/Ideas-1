@@ -36,6 +36,11 @@ model User {
   workSessions   WorkSession[]
   orders         Order[]  @relation("ClientOrders")
   taskMemberships TaskMember[]
+  clientWorkProjects WorkProject[]      @relation("ClientWorkProjects")
+  workProjectMemberships WorkProjectMember[]
+  timeOffRequests TimeOffRequest[] @relation("TimeOffRequester")
+  reviewedTimeOff TimeOffRequest[] @relation("TimeOffReviewer")
+  projectApprovals WorkProjectApproval[] @relation("ApprovalClient")
 }
 
 model Service {
@@ -99,6 +104,8 @@ model Order {
   completedAt DateTime?
   clientId    String
   client      User      @relation("ClientOrders", fields: [clientId], references: [id])
+  workProjectId String?
+  workProject   WorkProject? @relation(fields: [workProjectId], references: [id], onDelete: SetNull)
   tasks       Task[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -127,6 +134,8 @@ model Task {
   completedAt  DateTime?
   orderId      String?
   order        Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  workProjectId String?
+  workProject   WorkProject? @relation(fields: [workProjectId], references: [id], onDelete: SetNull)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -142,6 +151,7 @@ model Task {
 
   @@index([status, position])
   @@index([orderId])
+  @@index([workProjectId])
   @@index([archived])
 }
 
@@ -428,4 +438,228 @@ model SiteSetting {
   key       String   @id
   value     String   @db.Text
   updatedAt DateTime @updatedAt
+}
+
+// ── Etapa 0: Fundación (datos base de contabilidad de costos) ────────────────
+
+// Catálogo de materiales con su costo por pie². Es la base del motor de
+// precios/costos (Etapa 3). Ej.: D-Board 3mm, PVC 1/8", Acrílico, Banner, Vinil.
+model Material {
+  id         String   @id @default(cuid())
+  name       String // ej. "D-Board"
+  category   String // ej. "d-board" | "pvc" | "acrilico" | "banner" | "vinil" | "mesh" | "microperforado" | "static-cling"
+  thickness  String? // ej. "3mm", "1/8\"", "1\""
+  costPerSqFt Float  @default(0) // costo por pie²
+  unit       String   @default("ft2")
+  notes      String?  @db.Text
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([category])
+}
+
+// Costo de hora-hombre por cada rol del taller. Alimenta el cálculo del costo
+// real por proyecto (horas-hombre).
+model RoleRate {
+  id         String   @id @default(cuid())
+  role       String   @unique // ej. "Artista Gráfico", "Rotulista", "Wrapper"
+  hourlyCost Float    @default(0) // costo por hora-hombre
+  notes      String?  @db.Text
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// Capacidad real del taller por proceso/máquina (ej. 300 planchas de D-Board
+// 3mm al día). Limita las promesas de venta a la capacidad real (Etapa 6).
+model ShopCapacity {
+  id          String   @id @default(cuid())
+  process     String // ej. "Impresión D-Board 3mm"
+  unitsPerDay Int      @default(0)
+  unitLabel   String   @default("unidades") // ej. "planchas", "pies²"
+  notes       String?  @db.Text
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ── Etapa 1: Núcleo de Proyectos ─────────────────────────────────────────────
+
+// El Proyecto es el centro de toda la operación. Nace de un estimado y toma su
+// número de él. De aquí cuelgan horas, materiales, fotos, hojas y pagos.
+// (Se llama WorkProject para no chocar con el modelo Project del portafolio.)
+model WorkProject {
+  id             String   @id @default(cuid())
+  number         String   @unique // número de proyecto (= número del estimado)
+  estimateNumber String? // número del estimado de origen
+  title          String
+  description    String?  @db.Text
+  // Etapa actual del tablero (key de ProjectStage). Fallback a "intake".
+  stage          String   @default("intake")
+  priority       String   @default("normal") // low | normal | high | urgent
+  clientId       String?
+  client         User?    @relation("ClientWorkProjects", fields: [clientId], references: [id], onDelete: SetNull)
+  // Snapshot de datos del cliente cuando no hay cuenta registrada.
+  clientName     String?
+  clientEmail    String?
+  clientPhone    String?
+  quoted         Float    @default(0) // monto facturado/cotizado
+  startDate      DateTime?
+  dueDate        DateTime?
+  completedAt    DateTime?
+  archived       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  members     WorkProjectMember[]
+  documents   WorkProjectDocument[]
+  stageEvents WorkProjectStageEvent[]
+  orders      Order[]
+  tasks       Task[]
+  techSheet   WorkProjectTechSheet?
+  approvals   WorkProjectApproval[]
+
+  @@index([stage])
+  @@index([clientId])
+  @@index([archived])
+}
+
+// Etapas editables del tablero de proyectos (estilo TaskColumn). Si la tabla
+// está vacía, el servidor usa las etapas por defecto del flujo del taller.
+model ProjectStage {
+  id        String   @id @default(cuid())
+  key       String   @unique // valor guardado en WorkProject.stage
+  label     String
+  accent    String? // clase tailwind, ej. "bg-amber-500"
+  position  Float    @default(0)
+  archived  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([position])
+}
+
+// Responsables asignados a un proyecto.
+model WorkProjectMember {
+  id        String   @id @default(cuid())
+  projectId String
+  project   WorkProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleLabel String? // rol en el proyecto, ej. "PM", "Artista Gráfico"
+  addedAt   DateTime @default(now())
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+}
+
+// Documentos / hojas del expediente del proyecto (estimado, factura,
+// confirmación de pago, hoja de aprobación, site inspection, entrega, etc.).
+model WorkProjectDocument {
+  id        String   @id @default(cuid())
+  projectId String
+  project   WorkProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // estimate | invoice | payment | approval | site_inspection |
+  // delivery_shop | delivery_final | vehicle_review | tech_sheet | other
+  type      String   @default("other")
+  name      String
+  url       String
+  mimeType  String?
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+}
+
+// Registro de cada cambio de etapa con su evidencia (regla de oro: ninguna
+// etapa avanza sin foto + checklist).
+model WorkProjectStageEvent {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    WorkProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  actorId    String
+  fromStage  String?
+  toStage    String
+  note       String?  @db.Text
+  // JSON array de URLs de fotos de evidencia.
+  photos     String?  @db.Text
+  // JSON array de items de checklist: [{ text, done }]
+  checklist  String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([projectId, createdAt])
+}
+
+// ── Etapa 2: Solicitud y aprobación de días libres ───────────────────────────
+
+// Solicitud de días libres de un colaborador, aprobada o denegada por el PM.
+model TimeOffRequest {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation("TimeOffRequester", fields: [userId], references: [id], onDelete: Cascade)
+  startDate   DateTime  // día inicial (inclusive)
+  endDate     DateTime  // día final (inclusive)
+  type        String    @default("vacation") // vacation | sick | personal | unpaid | other
+  reason      String?   @db.Text
+  status      String    @default("pending") // pending | approved | denied | cancelled
+  reviewerId  String?
+  reviewer    User?     @relation("TimeOffReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  reviewNote  String?   @db.Text
+  reviewedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId, status])
+  @@index([status, startDate])
+}
+
+// ── Etapa 3: Motor de costos y precios ───────────────────────────────────────
+
+// Ficha técnica de cierre de producción. Guarda lo necesario para repetir el
+// trabajo igual y congela el costo real calculado al cerrar el proyecto.
+model WorkProjectTechSheet {
+  id           String      @id @default(cuid())
+  projectId    String      @unique
+  project      WorkProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // Datos de producción para repetir el trabajo.
+  materialName String?
+  printType    String? // tipo de impresión
+  rip          String?
+  machine      String?
+  materialQty  Float? // cantidad de material (pies²)
+  notes        String?     @db.Text
+  // Costos congelados al cierre.
+  materialCost Float       @default(0)
+  inkCost      Float       @default(0)
+  laborCost    Float       @default(0)
+  otherCost    Float       @default(0)
+  totalCost    Float       @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+// ── Etapa 4: Portal del cliente — aprobaciones ───────────────────────────────
+
+// Solicitud de aprobación enviada al cliente (diseño/arte o cotización). El
+// cliente aprueba o pide cambios desde su portal.
+model WorkProjectApproval {
+  id          String      @id @default(cuid())
+  projectId   String
+  project     WorkProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  clientId    String?
+  client      User?       @relation("ApprovalClient", fields: [clientId], references: [id], onDelete: SetNull)
+  type        String      @default("design") // design | quote
+  title       String
+  description String?     @db.Text
+  // JSON array de URLs (arte/cotización a revisar).
+  files       String?     @db.Text
+  status      String      @default("pending") // pending | approved | changes
+  clientNote  String?     @db.Text
+  decidedAt   DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([projectId])
+  @@index([clientId, status])
 }
