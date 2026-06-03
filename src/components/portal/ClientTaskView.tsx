@@ -16,6 +16,10 @@ import {
   CheckCircle2,
   MessageSquareDiff,
   Loader2,
+  Maximize2,
+  ZoomIn,
+  ZoomOut,
+  X,
 } from "lucide-react";
 import type { SheetData } from "./ApprovalSheet";
 
@@ -287,6 +291,8 @@ function ApprovalSheetPanel({ taskId, taskStatus, onRespond }: { taskId: string;
   const [responding, setResponding] = useState(false);
   const [note, setNote] = useState("");
   const [showNoteBox, setShowNoteBox] = useState(false);
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const [zoom, setZoom] = useState(1);
 
   async function load() {
     if (sheet !== undefined) return;
@@ -338,6 +344,7 @@ function ApprovalSheetPanel({ taskId, taskStatus, onRespond }: { taskId: string;
   const meta = sheet ? STATUS_META[sheet.status] : null;
 
   return (
+    <>
     <div className="card overflow-hidden">
       {/* Toggle header */}
       <button
@@ -390,17 +397,30 @@ function ApprovalSheetPanel({ taskId, taskStatus, onRespond }: { taskId: string;
                 )}
 
                 {/* Document preview (all pages) */}
-                <div className="overflow-x-auto">
-                  {sheet.data.pages?.map((page, idx) => (
-                    <div key={page.id ?? idx} className="mb-4">
-                      {sheet.data.pages.length > 1 && (
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-white/35 mb-1">Pagina {idx + 1}</p>
-                      )}
-                      <div className="overflow-hidden rounded-lg border border-white/10" style={{ transform: "scale(0.6)", transformOrigin: "top left", width: DOC_W, marginBottom: `-${Math.round(736 * 0.4)}px` }}>
-                        <ClientDocPreview data={sheet.data} page={page} />
+                <div className="space-y-2">
+                  <button
+                    onClick={() => { setZoom(1); setZoomOpen(true); }}
+                    className="w-full inline-flex items-center justify-center gap-2 text-xs font-semibold py-2 rounded-lg bg-white/5 border border-white/15 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <Maximize2 size={13} /> Ampliar y dar zoom
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setZoom(1); setZoomOpen(true); }}
+                    className="block w-full overflow-x-auto cursor-zoom-in"
+                    title="Clic para ampliar"
+                  >
+                    {sheet.data.pages?.map((page, idx) => (
+                      <div key={page.id ?? idx} className="mb-4">
+                        {sheet.data.pages.length > 1 && (
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-white/35 mb-1 text-left">Pagina {idx + 1}</p>
+                        )}
+                        <div className="overflow-hidden rounded-lg border border-white/10" style={{ transform: "scale(0.6)", transformOrigin: "top left", width: DOC_W, marginBottom: `-${Math.round(736 * 0.4)}px` }}>
+                          <ClientDocPreview data={sheet.data} page={page} />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </button>
                 </div>
 
                 {/* Actions — only if still pending */}
@@ -448,6 +468,134 @@ function ApprovalSheetPanel({ taskId, taskStatus, onRespond }: { taskId: string;
         )}
       </AnimatePresence>
     </div>
+
+    {/* Zoom modal — fullscreen preview with controls and approve/changes actions */}
+    <AnimatePresence>
+      {zoomOpen && sheet && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm flex flex-col"
+          onClick={() => setZoomOpen(false)}
+        >
+          {/* Header */}
+          <div
+            className="flex items-center gap-3 px-4 py-3 border-b border-white/10 bg-[#0a0f1a]/80 shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <FileCheck size={18} className="text-[#ffae00] shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate">Hoja de Aprobacion</p>
+              {meta && (
+                <span className={`text-[11px] font-medium border rounded-full px-2 py-0.5 ${meta.cls}`}>
+                  {meta.label}
+                </span>
+              )}
+            </div>
+            {/* Zoom controls */}
+            <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-lg p-1">
+              <button
+                onClick={() => setZoom((z) => Math.max(0.4, Math.round((z - 0.2) * 10) / 10))}
+                className="w-8 h-8 grid place-items-center rounded-md hover:bg-white/10 text-white/70"
+                title="Reducir"
+              >
+                <ZoomOut size={16} />
+              </button>
+              <span className="text-xs font-semibold text-white/60 w-12 text-center tabular-nums">
+                {Math.round(zoom * 100)}%
+              </span>
+              <button
+                onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.2) * 10) / 10))}
+                className="w-8 h-8 grid place-items-center rounded-md hover:bg-white/10 text-white/70"
+                title="Ampliar"
+              >
+                <ZoomIn size={16} />
+              </button>
+              <button
+                onClick={() => setZoom(1)}
+                className="px-2 h-8 grid place-items-center rounded-md hover:bg-white/10 text-white/60 text-xs font-semibold"
+                title="Restablecer"
+              >
+                100%
+              </button>
+            </div>
+            <button
+              onClick={() => setZoomOpen(false)}
+              className="w-9 h-9 grid place-items-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-white/70"
+              title="Cerrar"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Scrollable / zoomable document area */}
+          <div
+            className="flex-1 overflow-auto p-6 flex justify-center items-start"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-6" style={{ width: DOC_W * zoom }}>
+              {sheet.data.pages?.map((page, idx) => (
+                <div key={page.id ?? idx}>
+                  {sheet.data.pages.length > 1 && (
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-white/40 mb-2">Pagina {idx + 1}</p>
+                  )}
+                  <div
+                    className="overflow-hidden rounded-lg shadow-2xl"
+                    style={{ transform: `scale(${zoom})`, transformOrigin: "top left", width: DOC_W, height: `${Math.round(1056 * zoom)}px` }}
+                  >
+                    <ClientDocPreview data={sheet.data} page={page} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer actions — only if still pending */}
+          {sheet.status === "pending" && (
+            <div
+              className="border-t border-white/10 bg-[#0a0f1a]/80 p-4 shrink-0 space-y-3"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {showNoteBox && (
+                <div className="space-y-2 max-w-2xl mx-auto">
+                  <p className="text-xs text-white/60">Describe los cambios que necesitas:</p>
+                  <textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    rows={2}
+                    placeholder="Ej. Cambiar el color del texto a rojo..."
+                    className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 resize-none focus:outline-none focus:border-red-400/50"
+                  />
+                </div>
+              )}
+              <div className="flex gap-2 max-w-2xl mx-auto">
+                <button
+                  onClick={() => respond("approved")}
+                  disabled={responding}
+                  className="flex-1 inline-flex items-center justify-center gap-2 text-sm font-bold py-2.5 rounded-xl bg-green-500/20 border border-green-500/40 text-green-300 hover:bg-green-500/30 disabled:opacity-50"
+                >
+                  {responding ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                  Aprobar
+                </button>
+                <button
+                  onClick={() => {
+                    if (!showNoteBox) { setShowNoteBox(true); return; }
+                    respond("changes_requested");
+                  }}
+                  disabled={responding}
+                  className="flex-1 inline-flex items-center justify-center gap-2 text-sm font-bold py-2.5 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 hover:bg-red-500/30 disabled:opacity-50"
+                >
+                  {responding ? <Loader2 size={14} className="animate-spin" /> : <MessageSquareDiff size={14} />}
+                  Pedir cambios
+                </button>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 }
 
