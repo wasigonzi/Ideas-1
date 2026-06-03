@@ -316,13 +316,12 @@ function ApprovalSheetPanel({ taskId, taskStatus, onRespond }: { taskId: string;
     setPanning(false);
   }
 
-  // Zoom con Ctrl + rueda del mouse (listener no pasivo para poder bloquear
-  // el zoom del navegador). Hace zoom hacia la posición del cursor.
+  // Zoom con la rueda del mouse (con o sin Ctrl). Listener no pasivo para
+  // poder bloquear el scroll/zoom del navegador. Hace zoom hacia el cursor.
   useEffect(() => {
     const el = panRef.current;
     if (!zoomOpen || !el) return;
     function onWheel(e: WheelEvent) {
-      if (!e.ctrlKey) return;
       e.preventDefault();
       const container = panRef.current;
       if (!container) return;
