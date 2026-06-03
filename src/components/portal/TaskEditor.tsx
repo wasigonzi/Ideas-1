@@ -52,7 +52,8 @@ export function TaskEditor({
   orders,
   defaultOrderId,
   columns,
-  onClose
+  onClose,
+  onSaved,
 }: {
   open: boolean;
   mode: Mode;
