@@ -51,3 +51,6 @@ CREATE INDEX IF NOT EXISTS "TaskChecklistItem_taskId_position_idx" ON "TaskCheck
 ALTER TABLE "TaskChecklistItem" DROP CONSTRAINT IF EXISTS "TaskChecklistItem_taskId_fkey";
 ALTER TABLE "TaskChecklistItem" ADD CONSTRAINT "TaskChecklistItem_taskId_fkey"
   FOREIGN KEY ("taskId") REFERENCES "Task"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Add installationType to WorkProject (mezcla 70/30: sin instalación vs con instalación)
+ALTER TABLE "WorkProject" ADD COLUMN IF NOT EXISTS "installationType" TEXT NOT NULL DEFAULT 'no_install';

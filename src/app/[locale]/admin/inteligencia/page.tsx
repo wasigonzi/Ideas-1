@@ -1,6 +1,6 @@
 import { buildPresidentDashboard } from "@/lib/intelligence";
 import { GoalEditor } from "./GoalEditor";
-import { TrendingUp, Target, AlertTriangle, CheckCircle2, DollarSign, Layers, Trophy } from "lucide-react";
+import { TrendingUp, Target, AlertTriangle, CheckCircle2, DollarSign, Layers, Trophy, Package, Wrench } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -129,6 +129,76 @@ export default async function InteligenciaPage() {
           </ul>
         )}
       </section>
+
+      {/* Mezcla de trabajos: meta 70% sin instalar / 30% con instalación */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <section className="card p-6">
+          <h2 className="font-semibold mb-4 flex items-center gap-2">
+            <Package size={18} /> Mezcla de trabajos
+            <span className="text-xs text-white/40 font-normal ml-1">meta: 70% / 30%</span>
+          </h2>
+          {d.activeProjects === 0 ? (
+            <p className="text-sm text-white/50">Sin proyectos activos.</p>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-slate-300">Sin instalación (impreso)</span>
+                  <span className="font-semibold">{d.installMix.noInstallPct}%</span>
+                </div>
+                <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
+                  <div className="h-full bg-slate-400" style={{ width: `${d.installMix.noInstallPct}%` }} />
+                </div>
+                <div className="flex justify-between text-xs text-white/45 mt-1">
+                  <span>{d.installMix.noInstall} proyectos</span>
+                  <span>{money(d.installMix.noInstallValue)}</span>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-sky-300">Con instalación</span>
+                  <span className="font-semibold">{d.installMix.withInstallPct}%</span>
+                </div>
+                <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
+                  <div className="h-full bg-sky-500" style={{ width: `${d.installMix.withInstallPct}%` }} />
+                </div>
+                <div className="flex justify-between text-xs text-white/45 mt-1">
+                  <span>{d.installMix.withInstall} proyectos</span>
+                  <span>{money(d.installMix.withInstallValue)}</span>
+                </div>
+              </div>
+              <p className="text-xs text-white/35 mt-2">
+                Referencia: 70% sin instalar · 30% con instalación
+              </p>
+            </div>
+          )}
+        </section>
+
+        {/* Capacidad del taller */}
+        <section className="card p-6">
+          <h2 className="font-semibold mb-4 flex items-center gap-2"><Wrench size={18} /> Capacidad del taller</h2>
+          {d.capacityLoad.length === 0 ? (
+            <p className="text-sm text-white/50">
+              Sin procesos configurados.{" "}
+              <a href="/admin/costos" className="text-[var(--color-brand-400)] hover:underline">Configura la capacidad.</a>
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {d.capacityLoad.map((c) => (
+                <div key={c.process}>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="truncate">{c.process}</span>
+                    <span className="text-white/55 text-xs shrink-0 ml-2">{c.unitsPerDay} {c.unitLabel}/día</span>
+                  </div>
+                  <div className="text-xs text-white/40 mt-0.5">
+                    {c.activeProductionProjects} proyecto{c.activeProductionProjects === 1 ? "" : "s"} en producción ahora
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

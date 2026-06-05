@@ -429,3 +429,17 @@ select { background: #0e1a2c; color: white; color-scheme: dark; }
 ::-webkit-scrollbar-track { background: var(--color-ink-950); }
 ::-webkit-scrollbar-thumb { background: var(--color-ink-700); border-radius: 9999px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-brand-600); }
+
+/* ───── Product description prose ───── */
+.prose-product {
+  color: rgba(255,255,255,.75);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+.prose-product p { margin-bottom: 1em; }
+.prose-product strong { color: white; font-weight: 700; }
+.prose-product h3 { color: white; font-size: 1.05rem; font-weight: 800; margin-top: 1.5em; margin-bottom: .5em; letter-spacing: .01em; }
+.prose-product hr { border-color: rgba(255,255,255,.1); margin: 1.25em 0; }
+.prose-product ul, .prose-product ol { padding-left: 1.25em; margin-bottom: 1em; }
+.prose-product li { margin-bottom: .25em; }
+.prose-product br { line-height: 1.75; }

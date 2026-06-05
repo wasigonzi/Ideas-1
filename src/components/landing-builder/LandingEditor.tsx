@@ -497,6 +497,9 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
     pageServiciosJson: "/servicios",
     pageProyectosJson: "/proyectos",
     pageNosotrosJson: "/nosotros",
+    pageTiendaJson: "/tienda",
+    pageProductoTemplateJson: "/tienda/stickers-full-color",
+    pageCotizacionJson: "/cotizacion",
   };
   const previewUrl = PAGE_URLS[pageKey] ?? "/";
 

@@ -59,6 +59,7 @@ export function Navbar({ whatsapp = "19393264007" }: { whatsapp?: string }) {
     { href: "/", label: "Inicio", exact: true },
     { href: "/servicios", label: "Servicios" },
     { href: "/proyectos", label: "Proyectos" },
+    { href: "/tienda", label: "Tienda" },
     { href: "/nosotros", label: "Nosotros" }
   ];
 

@@ -499,6 +499,8 @@ model WorkProject {
   // Etapa actual del tablero (key de ProjectStage). Fallback a "intake".
   stage          String   @default("intake")
   priority       String   @default("normal") // low | normal | high | urgent
+  // Tipo de trabajo: sin instalación (impreso) o con instalación. Define la mezcla 70/30.
+  installationType String @default("no_install") // no_install | with_install
   clientId       String?
   client         User?    @relation("ClientWorkProjects", fields: [clientId], references: [id], onDelete: SetNull)
   // Snapshot de datos del cliente cuando no hay cuenta registrada.
@@ -663,6 +665,29 @@ model WorkProjectApproval {
 
   @@index([projectId])
   @@index([clientId, status])
+}
+
+// ── Tienda de productos (Store) ──────────────────────────────────────────────
+
+// Productos que se muestran en la página pública /tienda. Las variantes y las
+// imágenes se guardan como JSON para mantener la estructura flexible.
+model StoreProduct {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String?  @db.Text // HTML o texto plano
+  category    String?  // ej. "Stickers", "Banners", "D-Boards"
+  image       String?  // URL imagen principal
+  images      String?  @db.Text // JSON: string[]
+  // JSON: [{ id, title, option1, option2, price, compareAtPrice, available }]
+  variants    String?  @db.Text
+  priceFrom   Float    @default(0) // precio mínimo para mostrar "Desde $X"
+  active      Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active, order])
 }
 
 // ── Endurecimiento de seguridad: registro de auditoría ───────────────────────

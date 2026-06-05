@@ -13,6 +13,7 @@ type Project = {
   title: string;
   stage: string;
   priority: string;
+  installationType: string;
   quoted: number;
   dueDate: string | null;
   clientName: string | null;
@@ -27,6 +28,7 @@ type CreateForm = {
   title: string;
   description: string;
   priority: string;
+  installationType: string;
   clientName: string;
   quoted: number;
 };
@@ -37,6 +39,7 @@ const emptyCreate: CreateForm = {
   title: "",
   description: "",
   priority: "normal",
+  installationType: "no_install",
   clientName: "",
   quoted: 0,
 };
@@ -125,6 +128,11 @@ export default function ProyectosBoard() {
                       </div>
                       <div className="text-xs text-white/55 mt-1 truncate">
                         {p.client?.name ?? p.clientName ?? "Sin cliente"}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${p.installationType === "with_install" ? "bg-sky-500/20 text-sky-300" : "bg-slate-500/20 text-slate-300"}`}>
+                          {p.installationType === "with_install" ? "Con instalación" : "Sin instalación"}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between mt-3 text-xs text-white/45">
                         <span>${p.quoted.toFixed(0)}</span>
@@ -228,6 +236,12 @@ function CreateModal({
               <option value="normal">Normal</option>
               <option value="high">Alta</option>
               <option value="urgent">Urgente</option>
+            </select>
+          </Field>
+          <Field label="Tipo de trabajo">
+            <select className="select" value={form.installationType} onChange={(e) => setForm({ ...form, installationType: e.target.value })}>
+              <option value="no_install">Sin instalación (impreso)</option>
+              <option value="with_install">Con instalación</option>
             </select>
           </Field>
           <Field label="Monto cotizado ($)">

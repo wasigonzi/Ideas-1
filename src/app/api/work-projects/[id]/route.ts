@@ -9,6 +9,7 @@ const UpdateSchema = z.object({
   description: z.string().max(5000).optional().nullable(),
   estimateNumber: z.string().max(40).optional().nullable(),
   priority: z.enum(["low", "normal", "high", "urgent"]).optional(),
+  installationType: z.enum(["no_install", "with_install"]).optional(),
   clientId: z.string().optional().nullable(),
   clientName: z.string().max(160).optional().nullable(),
   clientEmail: z.string().max(160).optional().nullable(),

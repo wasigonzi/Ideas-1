@@ -1,6 +1,22 @@
 import { QuoteForm } from "@/components/QuoteForm";
+import { prisma } from "@/lib/prisma";
+import { LandingRenderer } from "@/components/landing-builder/LandingRenderer";
+import type { LandingBlock } from "@/components/landing-builder/types";
 
-export default function CotizacionPage() {
+export const revalidate = 60;
+
+export default async function CotizacionPage() {
+  const blocksRow = await prisma.siteSetting
+    .findUnique({ where: { key: "pageCotizacionJson" } })
+    .catch(() => null);
+
+  if (blocksRow?.value) {
+    try {
+      const blocks: LandingBlock[] = JSON.parse(blocksRow.value);
+      if (blocks.length > 0) return <LandingRenderer blocks={blocks} />;
+    } catch { /* fall through */ }
+  }
+
   return (
     <section className="pt-[120px] pb-24">
       <div className="container-x grid lg:grid-cols-5 gap-12">

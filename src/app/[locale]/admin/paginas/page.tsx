@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileText, Wrench, Image, Users, ArrowRight } from "lucide-react";
+import { FileText, Wrench, Image, Users, ShoppingBag, Package, ArrowRight, MessageSquare } from "lucide-react";
 
 const PAGES = [
   {
@@ -33,6 +33,30 @@ const PAGES = [
     icon: Users,
     href: "/admin/paginas/nosotros",
     color: "#f59e0b",
+  },
+  {
+    key: "tienda",
+    label: "Tienda",
+    description: "Página de la tienda de productos. Personaliza el encabezado y secciones adicionales del catálogo.",
+    icon: ShoppingBag,
+    href: "/admin/paginas/tienda",
+    color: "#ec4899",
+  },
+  {
+    key: "producto-template",
+    label: "Producto (template)",
+    description: "Bloques que se muestran en todas las páginas de producto de la tienda. Úsalo para CTAs, banners o secciones relacionadas.",
+    icon: Package,
+    href: "/admin/paginas/producto-template",
+    color: "#f97316",
+  },
+  {
+    key: "cotizacion",
+    label: "Cotización",
+    description: "Página de solicitud de cotización. Edita el encabezado, información de contacto y secciones adicionales.",
+    icon: MessageSquare,
+    href: "/admin/paginas/cotizacion",
+    color: "#14b8a6",
   },
 ];
 

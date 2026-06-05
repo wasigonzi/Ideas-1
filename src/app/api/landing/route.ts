@@ -12,6 +12,9 @@ const ALLOWED_KEYS = new Set([
   "pageServiciosJson",
   "pageProyectosJson",
   "pageNosotrosJson",
+  "pageTiendaJson",
+  "pageProductoTemplateJson",
+  "pageCotizacionJson",
 ]);
 
 function resolveKey(raw: string | null | undefined): string {
@@ -27,11 +30,12 @@ export async function GET(req: Request) {
       const blocks: LandingBlock[] = JSON.parse(row.value);
       return NextResponse.json({ blocks });
     }
-    const fallback = PAGE_DEFAULTS[key] ?? DEFAULT_BLOCKS;
+    // Use page-specific defaults; only fall back to DEFAULT_BLOCKS for the home landing
+    const fallback = PAGE_DEFAULTS[key] ?? (key === "landingJson" ? DEFAULT_BLOCKS : []);
     return NextResponse.json({ blocks: fallback });
   } catch (err) {
     console.error("[api/landing GET] DB error:", err);
-    const fallback = PAGE_DEFAULTS[key] ?? DEFAULT_BLOCKS;
+    const fallback = PAGE_DEFAULTS[key] ?? (key === "landingJson" ? DEFAULT_BLOCKS : []);
     return NextResponse.json({ blocks: fallback });
   }
 }
@@ -65,6 +69,9 @@ export async function POST(req: Request) {
   if (key === "pageServiciosJson") revalidatePath("/servicios", "page");
   if (key === "pageProyectosJson") revalidatePath("/proyectos", "page");
   if (key === "pageNosotrosJson") revalidatePath("/nosotros", "page");
+  if (key === "pageTiendaJson") revalidatePath("/tienda", "page");
+  if (key === "pageProductoTemplateJson") revalidatePath("/tienda/[slug]", "page");
+  if (key === "pageCotizacionJson") revalidatePath("/cotizacion", "page");
 
   return NextResponse.json({ ok: true });
 }
