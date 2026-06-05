@@ -140,7 +140,25 @@ export const PAGE_DEFAULTS: Record<string, LandingBlock[]> = {
     { id: "tienda-cta", type: "CtaBandBlock" as BlockType, props: {} },
   ],
 
-  pageProductoTemplateJson: [],
+  pageProductoTemplateJson: [
+    {
+      id: "prod-tpl-cta",
+      type: "CtaBandBlock" as BlockType,
+      props: {
+        bgType: "gradient",
+        padTop: 56,
+        padBottom: 56,
+        maxWidth: "1200px",
+        title: "Solicita tu cotización sin costo",
+        subtitle:
+          "Nuestro equipo te responde en menos de 24 horas con precios, tiempos de entrega y opciones de personalización.",
+        btnText: "Solicitar cotización",
+        btnUrl: "/cotizacion",
+        btn2Text: "Hablar por WhatsApp",
+        btn2Url: "https://wa.me/19393563399",
+      },
+    },
+  ],
 
   pageCotizacionJson: [
     {
