@@ -9,6 +9,7 @@ interface LandingRendererProps {
   services?: unknown[];
   projects?: unknown[];
   employees?: unknown[];
+  storeProducts?: unknown[];
 }
 
 function injectData(
@@ -16,15 +17,17 @@ function injectData(
   type: string,
   services: unknown[],
   projects: unknown[],
-  employees: unknown[]
+  employees: unknown[],
+  storeProducts: unknown[]
 ): Record<string, unknown> {
   if (type === "ServicesBlock") return { ...props, services };
   if (type === "ProjectsBlock") return { ...props, projects };
   if (type === "TeamBlock") return { ...props, employees };
+  if (type === "StoreProductsBlock") return { ...props, storeProducts };
   return props;
 }
 
-export function LandingRenderer({ blocks, services = [], projects = [], employees = [] }: LandingRendererProps) {
+export function LandingRenderer({ blocks, services = [], projects = [], employees = [], storeProducts = [] }: LandingRendererProps) {
   return (
     <>
       {blocks.map((block) => {
@@ -34,7 +37,7 @@ export function LandingRenderer({ blocks, services = [], projects = [], employee
         const Comp = meta.component;
         const desktopProps = injectData(
           { ...meta.defaultProps, ...block.props },
-          block.type, services, projects, employees
+          block.type, services, projects, employees, storeProducts
         );
 
         const hasTablet = block.propsTablet && Object.keys(block.propsTablet).length > 0;
@@ -46,10 +49,10 @@ export function LandingRenderer({ blocks, services = [], projects = [], employee
         }
 
         const tabletProps = hasTablet
-          ? injectData({ ...meta.defaultProps, ...block.props, ...block.propsTablet }, block.type, services, projects, employees)
+          ? injectData({ ...meta.defaultProps, ...block.props, ...block.propsTablet }, block.type, services, projects, employees, storeProducts)
           : desktopProps;
         const mobileProps = hasMobile
-          ? injectData({ ...meta.defaultProps, ...block.props, ...block.propsMobile }, block.type, services, projects, employees)
+          ? injectData({ ...meta.defaultProps, ...block.props, ...block.propsMobile }, block.type, services, projects, employees, storeProducts)
           : desktopProps;
 
         // Render 3 versions shown/hidden via CSS breakpoints

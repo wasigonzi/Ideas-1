@@ -15,7 +15,9 @@ export type BlockType =
   | "SpacerBlock"
   | "DividerBlock"
   | "TeamBlock"
-  | "ContactFormBlock";
+  | "ContactFormBlock"
+  | "StoreProductsBlock"
+  | "QuoteFormBlock";
 
 export interface LandingBlock {
   id: string;

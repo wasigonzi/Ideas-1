@@ -514,6 +514,7 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
   const [services, setServices] = useState<unknown[]>([]);
   const [projects, setProjects] = useState<unknown[]>([]);
   const [employees, setEmployees] = useState<unknown[]>([]);
+  const [storeProducts, setStoreProducts] = useState<unknown[]>([]);
   const [previewMode, setPreviewMode] = useState(false);
   const canvasRef = useRef<HTMLElement>(null);
 
@@ -550,6 +551,7 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
     fetch("/api/servicios", { signal: controller.signal }).then((r) => r.json()).then((d) => { if (!controller.signal.aborted) setServices(d.services ?? d ?? []); }).catch(() => {});
     fetch("/api/proyectos", { signal: controller.signal }).then((r) => r.json()).then((d) => { if (!controller.signal.aborted) setProjects(d.projects ?? d ?? []); }).catch(() => {});
     fetch("/api/empleados", { signal: controller.signal }).then((r) => r.json()).then((d) => { if (!controller.signal.aborted) setEmployees(d.employees ?? d ?? []); }).catch(() => {});
+    fetch("/api/tienda", { signal: controller.signal }).then((r) => r.json()).then((d) => { if (!controller.signal.aborted) setStoreProducts(Array.isArray(d) ? d : []); }).catch(() => {});
 
     return () => controller.abort();
   }, [pageKey]);
@@ -733,8 +735,24 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
                 <p className="text-sm">Cargando configuración…</p>
               </div>
             ) : blocks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-96 gap-4 text-white/20">
-                <p className="text-sm">No hay módulos. Agrega uno desde el panel izquierdo.</p>
+              <div className="flex flex-col" style={{ minHeight: "100vh" }}>
+                {/* iframe of the real live page — pointer-events:none so editor interactions still work */}
+                <div className="relative" style={{ height: "100vh", minHeight: 600 }}>
+                  <iframe
+                    key={previewUrl}
+                    src={previewUrl}
+                    className="w-full border-0"
+                    style={{ height: "100%", pointerEvents: "none" }}
+                    title="Vista previa de la página"
+                  />
+                  {/* Transparent click-catcher to ensure no iframe interaction */}
+                  <div className="absolute inset-0" style={{ cursor: "default" }} />
+                </div>
+                {/* Overlay banner */}
+                <div className="sticky bottom-0 left-0 right-0 flex items-center justify-center gap-3 px-4 py-3 bg-ink-900/95 backdrop-blur border-t border-white/10 text-xs text-white/60">
+                  <LayoutGrid size={14} className="text-brand-400 shrink-0" />
+                  <span>Estás viendo la página actual. Agrega módulos desde el panel izquierdo para personalizarla — los módulos se mostrarán <strong className="text-white">en lugar</strong> del contenido estático.</span>
+                </div>
               </div>
             ) : previewMode ? (
               // ── Clean preview: no rings, no drag handles, full fidelity ──
@@ -748,6 +766,8 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
                   if (block.type === "ServicesBlock") merged.services = services;
                   if (block.type === "ProjectsBlock") merged.projects = projects;
                   if (block.type === "TeamBlock") merged.employees = employees;
+                  if (block.type === "StoreProductsBlock") merged.storeProducts = storeProducts;
+                  if (block.type === "QuoteFormBlock") merged.__editorMode = true;
                   return <Comp key={block.id} {...merged} />;
                 })}
               </div>
@@ -771,6 +791,8 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
                     if (block.type === "ServicesBlock") mergedProps.services = services;
                     if (block.type === "ProjectsBlock") mergedProps.projects = projects;
                     if (block.type === "TeamBlock")     mergedProps.employees = employees;
+                    if (block.type === "StoreProductsBlock") mergedProps.storeProducts = storeProducts;
+                    if (block.type === "QuoteFormBlock") mergedProps.__editorMode = true;
                     return (
                       <SortableDragWrapper
                         key={block.id}

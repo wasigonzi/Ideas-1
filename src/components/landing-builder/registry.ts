@@ -19,6 +19,8 @@ import { SpacerBlock, SpacerSettings, spacerDefaults } from "./blocks/SpacerBloc
 import { DividerBlock, DividerSettings, dividerDefaults } from "./blocks/DividerBlock";
 import { TeamBlock, TeamSettings, teamDefaults } from "./blocks/TeamBlock";
 import { ContactFormBlock, ContactFormSettings, contactFormDefaults } from "./blocks/ContactFormBlock";
+import { StoreProductsBlock, StoreProductsSettings, storeProductsDefaults } from "./blocks/StoreProductsBlock";
+import { QuoteFormBlock, QuoteFormSettings, quoteFormDefaults } from "./blocks/QuoteFormBlock";
 
 export const BLOCK_REGISTRY: BlockRegistry = {
   HeroBlock: {
@@ -157,12 +159,30 @@ export const BLOCK_REGISTRY: BlockRegistry = {
     component: ContactFormBlock,
     settingsComponent: ContactFormSettings,
   },
+  StoreProductsBlock: {
+    label: "Productos (tienda)",
+    emoji: "🛒",
+    category: "store",
+    defaultProps: storeProductsDefaults,
+    component: StoreProductsBlock,
+    settingsComponent: StoreProductsSettings,
+  },
+  QuoteFormBlock: {
+    label: "Formulario de cotización",
+    emoji: "📝",
+    category: "form",
+    defaultProps: quoteFormDefaults,
+    component: QuoteFormBlock,
+    settingsComponent: QuoteFormSettings,
+  },
 };
 
 export const CATEGORY_LABELS: Record<string, string> = {
   hero: "Hero / Banner",
   content: "Contenido",
   data: "Datos dinámicos",
+  store: "Tienda",
+  form: "Formularios",
   media: "Media",
   layout: "Layout",
   interactive: "Interactivo",

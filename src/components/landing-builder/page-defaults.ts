@@ -131,9 +131,22 @@ export const PAGE_DEFAULTS: Record<string, LandingBlock[]> = {
     { id: "nos-cta", type: "CtaBandBlock" as BlockType, props: {} },
   ],
 
-  pageTiendaJson: [],
+  pageTiendaJson: [
+    {
+      id: "tienda-products",
+      type: "StoreProductsBlock" as BlockType,
+      props: {},
+    },
+    { id: "tienda-cta", type: "CtaBandBlock" as BlockType, props: {} },
+  ],
 
   pageProductoTemplateJson: [],
 
-  pageCotizacionJson: [],
+  pageCotizacionJson: [
+    {
+      id: "cotizacion-form",
+      type: "QuoteFormBlock" as BlockType,
+      props: {},
+    },
+  ],
 };
