@@ -30,7 +30,7 @@ export interface LandingBlock {
 export interface BlockMeta {
   label: string;
   emoji: string;
-  category: "hero" | "content" | "data" | "media" | "layout" | "interactive";
+  category: "hero" | "content" | "data" | "store" | "form" | "media" | "layout" | "interactive";
   defaultProps: Record<string, unknown>;
   component: React.ComponentType<Record<string, unknown>>;
   settingsComponent: React.ComponentType<{
