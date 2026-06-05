@@ -1,4 +1,4 @@
-import { BlockShell } from "../shared";
+import { BlockShell, Field, TextField, SelectField, ToggleField, SectionTitle, SpacingSettings } from "../shared";
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag, Tag } from "lucide-react";
@@ -19,7 +19,7 @@ function parseVariants(raw?: string | null): { price: string }[] {
 
 export const storeProductsDefaults: Record<string, unknown> = {
   bgType: "none",
-  padTop: 48,
+  padTop: 120,
   padBottom: 80,
   maxWidth: "1200px",
   eyebrow: "Tienda",
@@ -131,30 +131,18 @@ export function StoreProductsBlock(props: Record<string, any>) {
 export function StoreProductsSettings({ props, onChange }: { props: Record<string, unknown>; onChange: (u: Record<string, unknown>) => void }) {
   return (
     <div className="space-y-3">
-      <div>
-        <label className="text-xs text-white/50 uppercase tracking-widest font-bold">Eyebrow</label>
-        <input className="input mt-1" value={(props.eyebrow as string) ?? ""} onChange={(e) => onChange({ eyebrow: e.target.value })} />
-      </div>
-      <div>
-        <label className="text-xs text-white/50 uppercase tracking-widest font-bold">Título</label>
-        <input className="input mt-1" value={(props.title as string) ?? ""} onChange={(e) => onChange({ title: e.target.value })} />
-      </div>
-      <div>
-        <label className="text-xs text-white/50 uppercase tracking-widest font-bold">Subtítulo</label>
-        <input className="input mt-1" value={(props.subtitle as string) ?? ""} onChange={(e) => onChange({ subtitle: e.target.value })} />
-      </div>
-      <div>
-        <label className="text-xs text-white/50 uppercase tracking-widest font-bold">Columnas</label>
-        <select className="select mt-1" value={(props.columns as string) ?? "3"} onChange={(e) => onChange({ columns: e.target.value })}>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-        </select>
-      </div>
-      <div className="flex items-center justify-between">
-        <label className="text-xs text-white/50 uppercase tracking-widest font-bold">Mostrar categorías</label>
-        <input type="checkbox" checked={!!(props.showCategories)} onChange={(e) => onChange({ showCategories: e.target.checked })} className="size-4" />
-      </div>
+      <Field label="Eyebrow"><TextField value={(props.eyebrow as string) ?? ""} onChange={(v) => onChange({ eyebrow: v })} /></Field>
+      <Field label="Título"><TextField value={(props.title as string) ?? ""} onChange={(v) => onChange({ title: v })} multiline /></Field>
+      <Field label="Subtítulo"><TextField value={(props.subtitle as string) ?? ""} onChange={(v) => onChange({ subtitle: v })} multiline /></Field>
+      <Field label="Columnas">
+        <SelectField value={(props.columns as string) ?? "3"} onChange={(v) => onChange({ columns: v })}
+          options={[{ value: "2", label: "2" }, { value: "3", label: "3" }, { value: "4", label: "4" }]} />
+      </Field>
+      <Field label="Mostrar categorías" horizontal>
+        <ToggleField value={!!(props.showCategories)} onChange={(v) => onChange({ showCategories: v })} />
+      </Field>
+      <SectionTitle>Espaciado</SectionTitle>
+      <SpacingSettings props={props} onChange={onChange} />
     </div>
   );
 }

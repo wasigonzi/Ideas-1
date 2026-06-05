@@ -1,10 +1,10 @@
 "use client";
-import { BlockShell } from "../shared";
+import { BlockShell, Field, TextField, SectionTitle, SpacingSettings, BgSettings } from "../shared";
 import { QuoteForm } from "../../QuoteForm";
 
 export const quoteFormDefaults: Record<string, unknown> = {
   bgType: "none",
-  padTop: 80,
+  padTop: 120,
   padBottom: 80,
   maxWidth: "1200px",
   eyebrow: "Cotización",
@@ -63,30 +63,16 @@ export function QuoteFormBlock(props: Record<string, any>) {
 export function QuoteFormSettings({ props, onChange }: { props: Record<string, unknown>; onChange: (u: Record<string, unknown>) => void }) {
   return (
     <div className="space-y-3">
-      <div>
-        <label className="text-xs text-white/50 uppercase tracking-widest font-bold">Eyebrow</label>
-        <input className="input mt-1" value={(props.eyebrow as string) ?? ""} onChange={(e) => onChange({ eyebrow: e.target.value })} />
-      </div>
-      <div>
-        <label className="text-xs text-white/50 uppercase tracking-widest font-bold">Título</label>
-        <input className="input mt-1" value={(props.title as string) ?? ""} onChange={(e) => onChange({ title: e.target.value })} />
-      </div>
-      <div>
-        <label className="text-xs text-white/50 uppercase tracking-widest font-bold">Subtítulo</label>
-        <textarea className="textarea mt-1 h-20" value={(props.subtitle as string) ?? ""} onChange={(e) => onChange({ subtitle: e.target.value })} />
-      </div>
-      <div>
-        <label className="text-xs text-white/50 uppercase tracking-widest font-bold">Teléfono</label>
-        <input className="input mt-1" value={(props.phone as string) ?? ""} onChange={(e) => onChange({ phone: e.target.value })} />
-      </div>
-      <div>
-        <label className="text-xs text-white/50 uppercase tracking-widest font-bold">Email</label>
-        <input className="input mt-1" value={(props.email as string) ?? ""} onChange={(e) => onChange({ email: e.target.value })} />
-      </div>
-      <div>
-        <label className="text-xs text-white/50 uppercase tracking-widest font-bold">Dirección</label>
-        <input className="input mt-1" value={(props.address as string) ?? ""} onChange={(e) => onChange({ address: e.target.value })} />
-      </div>
+      <Field label="Eyebrow"><TextField value={(props.eyebrow as string) ?? ""} onChange={(v) => onChange({ eyebrow: v })} /></Field>
+      <Field label="Título"><TextField value={(props.title as string) ?? ""} onChange={(v) => onChange({ title: v })} multiline /></Field>
+      <Field label="Subtítulo"><TextField value={(props.subtitle as string) ?? ""} onChange={(v) => onChange({ subtitle: v })} multiline /></Field>
+      <Field label="Teléfono"><TextField value={(props.phone as string) ?? ""} onChange={(v) => onChange({ phone: v })} /></Field>
+      <Field label="Email"><TextField value={(props.email as string) ?? ""} onChange={(v) => onChange({ email: v })} /></Field>
+      <Field label="Dirección"><TextField value={(props.address as string) ?? ""} onChange={(v) => onChange({ address: v })} /></Field>
+      <SectionTitle>Espaciado</SectionTitle>
+      <SpacingSettings props={props} onChange={onChange} />
+      <SectionTitle>Fondo</SectionTitle>
+      <BgSettings props={props} onChange={onChange} />
     </div>
   );
 }

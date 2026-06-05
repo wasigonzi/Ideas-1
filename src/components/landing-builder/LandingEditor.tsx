@@ -757,6 +757,22 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
             ) : previewMode ? (
               // ── Clean preview: no rings, no drag handles, full fidelity ──
               <div>
+                {/* Navbar simulation */}
+                <div className="sticky top-0 z-30 h-[80px] bg-ink-950/90 backdrop-blur border-b border-white/8 flex items-center px-6 gap-3 pointer-events-none select-none">
+                  <div className="w-24 h-6 rounded bg-white/10" />
+                  <div className="flex-1 flex gap-6 justify-center">
+                    {["Inicio","Servicios","Tienda","Nosotros"].map(l => <div key={l} className="w-14 h-4 rounded bg-white/8" />)}
+                  </div>
+                  <div className="w-20 h-8 rounded-full bg-brand-500/30" />
+                </div>
+                {/* Product section stub for template page */}
+                {pageKey === "pageProductoTemplateJson" && (
+                  <div className="flex items-center justify-center py-10 bg-white/3 border-b border-white/8 text-white/25 text-xs gap-2 select-none">
+                    <span>↑</span>
+                    <span>Aquí aparece la sección del producto (imagen, variantes, precio…)</span>
+                    <span>↑</span>
+                  </div>
+                )}
                 {blocks.map((block) => {
                   const meta = BLOCK_REGISTRY[block.type];
                   if (!meta) return null;
@@ -772,6 +788,23 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
                 })}
               </div>
             ) : (
+              <div>
+                {/* Navbar simulation bar — shows the ~80px fixed navbar space */}
+                <div className="sticky top-0 z-30 h-[80px] bg-ink-950/90 backdrop-blur border-b border-white/8 flex items-center px-6 gap-3 pointer-events-none select-none">
+                  <div className="w-24 h-6 rounded bg-white/10" />
+                  <div className="flex-1 flex gap-6 justify-center">
+                    {["Inicio","Servicios","Tienda","Nosotros"].map(l => <div key={l} className="w-14 h-4 rounded bg-white/8" />)}
+                  </div>
+                  <div className="w-20 h-8 rounded-full bg-brand-500/30" />
+                </div>
+                {/* Product section stub for template page */}
+                {pageKey === "pageProductoTemplateJson" && (
+                  <div className="flex items-center justify-center py-10 bg-white/3 border-b border-white/8 text-white/25 text-xs gap-2 select-none pointer-events-none">
+                    <span>↑</span>
+                    <span>Aquí aparece la sección del producto (imagen, variantes, precio…)</span>
+                    <span>↑</span>
+                  </div>
+                )}
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
                   {blocks.map((block) => {
@@ -811,6 +844,7 @@ export function LandingEditor({ pageKey = "landingJson", pageLabel = "Landing" }
                   })}
                 </SortableContext>
               </DndContext>
+              </div>
             )}
 
             {/* Add block button at bottom */}

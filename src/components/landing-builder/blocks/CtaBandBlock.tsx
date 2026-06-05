@@ -77,6 +77,8 @@ export function CtaBandSettings({
         <SelectField value={(props.alignment as string) || "center"} onChange={(v) => onChange({ alignment: v })}
           options={[{ value: "center", label: "Centro" }, { value: "left", label: "Izquierda" }]} />
       </Field>
+      <SectionTitle>Espaciado</SectionTitle>
+      <SpacingSettings props={props} onChange={onChange} />
       <SectionTitle>Botón principal</SectionTitle>
       <Field label="Texto"><TextField value={(props.btnText as string) || ""} onChange={(v) => onChange({ btnText: v })} /></Field>
       <Field label="URL"><UrlField value={(props.btnUrl as string) || ""} onChange={(v) => onChange({ btnUrl: v })} /></Field>
@@ -87,8 +89,6 @@ export function CtaBandSettings({
       <Field label="URL"><UrlField value={(props.btn2Url as string) || ""} onChange={(v) => onChange({ btn2Url: v })} /></Field>
       <SectionTitle>Fondo</SectionTitle>
       <BgSettings props={props} onChange={onChange} />
-      <SectionTitle>Espaciado</SectionTitle>
-      <SpacingSettings props={props} onChange={onChange} />
     </div>
   );
 }
