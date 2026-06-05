@@ -19,7 +19,7 @@ function parseVariants(raw?: string | null): { price: string }[] {
 
 export const storeProductsDefaults: Record<string, unknown> = {
   bgType: "none",
-  padTop: 120,
+  padTop: 140,
   padBottom: 80,
   maxWidth: "1200px",
   eyebrow: "Tienda",

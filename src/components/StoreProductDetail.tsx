@@ -28,8 +28,22 @@ interface Props {
   };
 }
 
+function normalizeProductDescription(html?: string | null) {
+  if (!html) return "";
+  return html.replace(/<p>\s*•\s*([\s\S]*?)<\/p>/g, (_match, content: string) => {
+    const items = content
+      .split(/<br\s*\/?>\s*•\s*/i)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (items.length === 0) return "";
+    return `<ul>${items.map((item) => `<li>${item}</li>`).join("")}</ul>`;
+  });
+}
+
 export function StoreProductDetail({ product }: Props) {
   const { allImages, variants, title, description, category } = product;
+  const formattedDescription = normalizeProductDescription(description);
 
   // Gallery state
   const [activeImg, setActiveImg] = useState(0);
@@ -54,7 +68,7 @@ export function StoreProductDetail({ product }: Props) {
   return (
     <div className="min-h-screen">
       {/* Breadcrumb */}
-      <div className="container-x pt-[100px] pb-4">
+      <div className="container-x pt-[140px] pb-4">
         <Link href="/tienda" className="inline-flex items-center gap-1.5 text-sm text-white/50 hover:text-brand-400 transition-colors">
           <ArrowLeft className="size-3.5" />
           Tienda
@@ -218,14 +232,24 @@ export function StoreProductDetail({ product }: Props) {
         </div>
 
         {/* ── Description ── */}
-        {description && (
-          <div className="mt-12 pt-10 border-t border-white/10">
-            <h2 className="text-xl font-black text-white mb-6">Descripción del producto</h2>
-            <div
-              className="prose-product max-w-3xl"
-              dangerouslySetInnerHTML={{ __html: description }}
-            />
-          </div>
+        {formattedDescription && (
+          <section className="mt-12 rounded-2xl border border-white/10 bg-white/[0.035] overflow-hidden shadow-2xl shadow-black/20">
+            <div className="grid lg:grid-cols-[0.34fr_0.66fr]">
+              <div className="p-6 sm:p-8 lg:p-10 border-b lg:border-b-0 lg:border-r border-white/10 bg-gradient-to-br from-white/[0.07] to-transparent">
+                <span className="eyebrow">Detalles</span>
+                <h2 className="text-2xl sm:text-3xl font-black text-white mt-3 leading-tight">
+                  Descripción del producto
+                </h2>
+                <p className="mt-4 text-sm sm:text-base text-white/55 leading-relaxed">
+                  Información clave, tamaños disponibles, calidad de impresión y recomendaciones para este producto.
+                </p>
+              </div>
+              <div
+                className="prose-product p-6 sm:p-8 lg:p-10"
+                dangerouslySetInnerHTML={{ __html: formattedDescription }}
+              />
+            </div>
+          </section>
         )}
       </section>
     </div>

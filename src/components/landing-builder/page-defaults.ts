@@ -135,7 +135,7 @@ export const PAGE_DEFAULTS: Record<string, LandingBlock[]> = {
     {
       id: "tienda-products",
       type: "StoreProductsBlock" as BlockType,
-      props: {},
+      props: { padTop: 140 },
     },
     { id: "tienda-cta", type: "CtaBandBlock" as BlockType, props: {} },
   ],
@@ -164,7 +164,7 @@ export const PAGE_DEFAULTS: Record<string, LandingBlock[]> = {
     {
       id: "cotizacion-form",
       type: "QuoteFormBlock" as BlockType,
-      props: {},
+      props: { padTop: 140 },
     },
   ],
 };
