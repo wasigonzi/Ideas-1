@@ -8,13 +8,13 @@ export default async function ClienteLayout({
   const user = await requireRole(["client"]);
 
   const links = [
-    { href: "/cliente/proyectos", label: "Mis proyectos", icon: FolderKanban },
-    { href: "/cliente/cotizar", label: "Cotizar trabajo", icon: Calculator },
-    { href: "/cliente/tareas", label: "Mis tareas", icon: ListChecks },
-    { href: "/cliente/ordenes", label: "Órdenes", icon: ClipboardList },
-    { href: "/cliente/facturas", label: "Facturas", icon: Receipt },
-    { href: "/cliente/mensajes", label: "Mensajes", icon: MessageSquareText },
-    { href: "/cliente/perfil", label: "Mi perfil", icon: User }
+    { href: "/cliente/proyectos", label: "Mis proyectos", icon: FolderKanban, iconName: "FolderKanban" },
+    { href: "/cliente/cotizar", label: "Cotizar trabajo", icon: Calculator, iconName: "Calculator" },
+    { href: "/cliente/tareas", label: "Mis tareas", icon: ListChecks, iconName: "ListChecks" },
+    { href: "/cliente/ordenes", label: "Órdenes", icon: ClipboardList, iconName: "ClipboardList" },
+    { href: "/cliente/facturas", label: "Facturas", icon: Receipt, iconName: "Receipt" },
+    { href: "/cliente/mensajes", label: "Mensajes", icon: MessageSquareText, iconName: "MessageSquareText" },
+    { href: "/cliente/perfil", label: "Mi perfil", icon: User, iconName: "User" }
   ];
 
   return (

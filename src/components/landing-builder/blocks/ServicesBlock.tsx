@@ -17,7 +17,7 @@ export const servicesDefaults: Record<string, unknown> = {
   subtitleColor: "rgba(255,255,255,0.6)",
   accentColor: "#ffae00",
   moreLabel: "Ver todos los servicios",
-  moreUrl: "/es/servicios",
+  moreUrl: "/servicios",
 };
 
 export function ServicesBlock(props: Record<string, any>) {

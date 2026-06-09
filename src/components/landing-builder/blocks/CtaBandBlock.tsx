@@ -14,11 +14,11 @@ export const ctaBandDefaults: Record<string, unknown> = {
   subtitleColor: "rgba(10,20,34,0.75)",
   alignment: "center",
   btnText: "Cotizar ahora",
-  btnUrl: "/es/cotizacion",
+  btnUrl: "/cotizacion",
   btnBg: "#0a1422",
   btnColor: "#ffffff",
   btn2Text: "Ver servicios",
-  btn2Url: "/es/servicios",
+  btn2Url: "/servicios",
 };
 
 export function CtaBandBlock(props: Record<string, any>) {

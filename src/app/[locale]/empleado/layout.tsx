@@ -8,14 +8,14 @@ export default async function EmpleadoLayout({
   const user = await requireRole(["employee"]);
 
   const links = [
-    { href: "/empleado", label: "Panel", icon: LayoutDashboard },
-    { href: "/empleado/ponche", label: "Ponche", icon: Fingerprint },
-    { href: "/empleado/dias-libres", label: "Días libres", icon: CalendarOff },
-    { href: "/empleado/tareas", label: "Mis tareas", icon: ListChecks },
-    { href: "/empleado/chat", label: "Chat", icon: MessageSquareText },
-    { href: "/empleado/hojas", label: "Hojas", icon: FileCheck },
-    { href: "/empleado/horario", label: "Horario", icon: Calendar },
-    { href: "/empleado/perfil", label: "Mi perfil", icon: UserCog },
+    { href: "/empleado", label: "Panel", icon: LayoutDashboard, iconName: "LayoutDashboard" },
+    { href: "/empleado/ponche", label: "Ponche", icon: Fingerprint, iconName: "Fingerprint" },
+    { href: "/empleado/dias-libres", label: "Días libres", icon: CalendarOff, iconName: "CalendarOff" },
+    { href: "/empleado/tareas", label: "Mis tareas", icon: ListChecks, iconName: "ListChecks" },
+    { href: "/empleado/chat", label: "Chat", icon: MessageSquareText, iconName: "MessageSquareText" },
+    { href: "/empleado/hojas", label: "Hojas", icon: FileCheck, iconName: "FileCheck" },
+    { href: "/empleado/horario", label: "Horario", icon: Calendar, iconName: "Calendar" },
+    { href: "/empleado/perfil", label: "Mi perfil", icon: UserCog, iconName: "UserCog" },
   ];
 
   return (

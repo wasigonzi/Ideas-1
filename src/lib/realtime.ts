@@ -58,12 +58,6 @@ export function useRealtimeRefresh({
   useEffect(() => {
     const tableList = tableKey.split(",").filter(Boolean) as RealtimeTable[];
     if (!enabled || tableList.length === 0) return;
-    // Skip WebSocket subscription when Supabase URL is misconfigured (prevents 404 spam).
-    if (!isSupabaseConfigured) return;
-
-    let channel: RealtimeChannel | null = null;
-    let fallback: ReturnType<typeof setInterval> | null = null;
-    let cancelled = false;
 
     const refresh = () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -72,6 +66,22 @@ export function useRealtimeRefresh({
         router.refresh();
       }, debounceMs);
     };
+
+    // Skip WebSocket subscription when Supabase URL is misconfigured (prevents 404 spam).
+    if (!isSupabaseConfigured) {
+      let fallback: ReturnType<typeof setInterval> | null = null;
+      if (fallbackMs) {
+        fallback = setInterval(refresh, fallbackMs);
+      }
+      return () => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        if (fallback) clearInterval(fallback);
+      };
+    }
+
+    let channel: RealtimeChannel | null = null;
+    let fallback: ReturnType<typeof setInterval> | null = null;
+    let cancelled = false;
 
     try {
       const supabase = getSupabaseBrowserClient();

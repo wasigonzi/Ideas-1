@@ -13,7 +13,7 @@ export const projectsDefaults: Record<string, unknown> = {
   textColor: "#ffffff",
   subtitleColor: "rgba(255,255,255,0.6)",
   viewAllLabel: "Ver todos los proyectos",
-  viewAllUrl: "/es/proyectos",
+  viewAllUrl: "/proyectos",
 };
 
 interface Project {

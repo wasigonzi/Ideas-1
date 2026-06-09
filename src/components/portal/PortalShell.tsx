@@ -7,7 +7,7 @@ import { LogoutButton } from "./LogoutButton";
 // Re-export pure UI pieces so existing imports keep working.
 export { StatCard, StatusPill, PriorityPill, ProgressBar } from "./ui";
 
-export type PortalLink = { href: string; label: string; icon: LucideIcon };
+export type PortalLink = { href: string; label: string; icon: LucideIcon; iconName?: string };
 
 export function PortalShell({
   title,
@@ -97,6 +97,7 @@ export function PortalShell({
           href: l.href,
           label: l.label,
           iconName:
+            l.iconName ??
             (l.icon as unknown as { displayName?: string; name?: string }).displayName ??
             (l.icon as unknown as { name?: string }).name ??
             "Circle"

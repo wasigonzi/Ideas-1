@@ -35,7 +35,7 @@ export default function LandingEditorError({
             Reintentar
           </button>
           <Link
-            href="/es/admin"
+            href="/admin"
             className="btn btn-outline inline-flex items-center justify-center px-4 py-2 rounded-lg border border-white/20"
           >
             Volver al panel

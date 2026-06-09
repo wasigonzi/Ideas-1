@@ -215,7 +215,7 @@ export function ServiceModal({
               style={{ background: "rgba(255,174,0,0.06)", border: "1px solid rgba(255,174,0,0.15)" }}>
               <p className="text-sm text-white/60">¿Interesado en este servicio?</p>
               <a
-                href="/es/cotizacion"
+                href="/cotizacion"
                 className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all active:scale-95 hover:brightness-110"
                 style={{ background: "var(--color-brand-500)", color: "var(--color-ink-950)" }}
               >

@@ -15,7 +15,7 @@ export const textImageDefaults: Record<string, unknown> = {
   body: "Ideas, LLC es tu aliado de confianza para impresión digital, rotulación vehicular y todo tipo de señalización comercial. Contamos con equipo de última generación y un equipo de diseñadores e impresores especializados.",
   textColor: "rgba(255,255,255,0.75)",
   ctaText: "Conócenos mejor",
-  ctaUrl: "/es/nosotros",
+  ctaUrl: "/nosotros",
   ctaBg: "#ffae00",
   ctaColor: "#0a1422",
   gap: "16",
