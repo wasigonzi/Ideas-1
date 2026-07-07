@@ -31,29 +31,33 @@ export default async function AdminLayout({
   if (urgentCount > 0) badges["/admin/tareas"] = urgentCount;
 
   const links = [
-    { href: "/admin", label: "Dashboard", icon: LayoutDashboard, iconName: "LayoutDashboard" },
-    { href: "/admin/inteligencia", label: "Inteligencia", icon: LineChart, iconName: "LineChart" },
-    { href: "/admin/proyectos-taller", label: "Tablero Proyectos", icon: FolderKanban, iconName: "FolderKanban" },
-    { href: "/admin/cotizaciones", label: "Cotizaciones", icon: FileText, iconName: "FileText" },
-    { href: "/admin/ordenes", label: "Órdenes", icon: Briefcase, iconName: "Briefcase" },
-    { href: "/admin/tareas", label: "Tareas", icon: ClipboardList, iconName: "ClipboardList" },
-    { href: "/admin/chat", label: "Chat", icon: MessageSquareText, iconName: "MessageSquareText" },
-    { href: "/admin/facturas", label: "Facturas", icon: Receipt, iconName: "Receipt" },
-    { href: "/admin/horas", label: "Horas y Ponche", icon: Timer, iconName: "Timer" },
-    { href: "/admin/horarios", label: "Horarios", icon: Clock, iconName: "Clock" },
-    { href: "/admin/dias-libres", label: "Días libres", icon: CalendarOff, iconName: "CalendarOff" },
-    { href: "/admin/instrucciones", label: "Instrucciones", icon: NotebookPen, iconName: "NotebookPen" },
-    { href: "/admin/usuarios", label: "Usuarios", icon: Users, iconName: "Users" },
-    { href: "/admin/auditoria", label: "Auditoría", icon: ShieldCheck, iconName: "ShieldCheck" },
-    { href: "/admin/servicios", label: "Portafolio Web", icon: Wrench, iconName: "Wrench" },
-    { href: "/admin/proyectos", label: "Proyectos Web", icon: ImageIcon, iconName: "Image" },
-    { href: "/admin/tienda", label: "Tienda", icon: ShoppingBag, iconName: "ShoppingBag" },
-    { href: "/admin/inventario", label: "Inventario", icon: Package, iconName: "Package" },
-    { href: "/admin/materiales", label: "Materiales", icon: Layers, iconName: "Layers" },
-    { href: "/admin/costos", label: "Costos y capacidad", icon: DollarSign, iconName: "DollarSign" },
-    { href: "/admin/calculadora", label: "Calculadora", icon: Calculator, iconName: "Calculator" },
-    { href: "/admin/paginas", label: "Páginas", icon: LayoutGrid, iconName: "LayoutGrid" },
-    { href: "/admin/settings", label: "Configuración", icon: Settings, iconName: "Settings" }
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard, iconName: "LayoutDashboard", category: "General" },
+    { href: "/admin/inteligencia", label: "Inteligencia", icon: LineChart, iconName: "LineChart", category: "General" },
+    { href: "/admin/chat", label: "Chat", icon: MessageSquareText, iconName: "MessageSquareText", category: "General" },
+    { href: "/admin/instrucciones", label: "Instrucciones", icon: NotebookPen, iconName: "NotebookPen", category: "General" },
+
+    { href: "/admin/tareas", label: "Tareas", icon: ClipboardList, iconName: "ClipboardList", category: "Taller y Producción" },
+    { href: "/admin/inventario", label: "Inventario", icon: Package, iconName: "Package", category: "Taller y Producción" },
+    { href: "/admin/materiales", label: "Materiales", icon: Layers, iconName: "Layers", category: "Taller y Producción" },
+    { href: "/admin/costos", label: "Costos y capacidad", icon: DollarSign, iconName: "DollarSign", category: "Taller y Producción" },
+
+    { href: "/admin/cotizaciones", label: "Cotizaciones", icon: FileText, iconName: "FileText", category: "Ventas y Facturas" },
+    { href: "/admin/ordenes", label: "Órdenes", icon: Briefcase, iconName: "Briefcase", category: "Ventas y Facturas" },
+    { href: "/admin/facturas", label: "Facturas", icon: Receipt, iconName: "Receipt", category: "Ventas y Facturas" },
+    { href: "/admin/calculadora", label: "Calculadora", icon: Calculator, iconName: "Calculator", category: "Ventas y Facturas" },
+
+    { href: "/admin/horas", label: "Horas y Ponche", icon: Timer, iconName: "Timer", category: "Equipo y Horarios" },
+    { href: "/admin/horarios", label: "Horarios", icon: Clock, iconName: "Clock", category: "Equipo y Horarios" },
+    { href: "/admin/dias-libres", label: "Días libres", icon: CalendarOff, iconName: "CalendarOff", category: "Equipo y Horarios" },
+
+    { href: "/admin/servicios", label: "Portafolio Web", icon: Wrench, iconName: "Wrench", category: "Sitio Web y Tienda" },
+    { href: "/admin/proyectos", label: "Proyectos Web", icon: ImageIcon, iconName: "Image", category: "Sitio Web y Tienda" },
+    { href: "/admin/tienda", label: "Tienda", icon: ShoppingBag, iconName: "ShoppingBag", category: "Sitio Web y Tienda" },
+    { href: "/admin/paginas", label: "Páginas", icon: LayoutGrid, iconName: "LayoutGrid", category: "Sitio Web y Tienda" },
+
+    { href: "/admin/usuarios", label: "Usuarios", icon: Users, iconName: "Users", category: "Configuración y Seguridad" },
+    { href: "/admin/auditoria", label: "Auditoría", icon: ShieldCheck, iconName: "ShieldCheck", category: "Configuración y Seguridad" },
+    { href: "/admin/settings", label: "Configuración", icon: Settings, iconName: "Settings", category: "Configuración y Seguridad" }
   ];
 
   return (
