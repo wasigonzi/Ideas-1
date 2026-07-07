@@ -125,6 +125,7 @@ export function PortalShell({
         items={links.map((l) => ({
           href: l.href,
           label: l.label,
+          category: l.category,
           iconName:
             l.iconName ??
             (l.icon as unknown as { displayName?: string; name?: string }).displayName ??
