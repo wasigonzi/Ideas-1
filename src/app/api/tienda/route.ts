@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 
 const ProductSchema = z.object({
   slug: z.string().min(2).max(120).regex(/^[a-z0-9-]+$/),
@@ -35,5 +36,19 @@ export async function POST(req: Request) {
   const body = await req.json();
   const data = ProductSchema.parse(body);
   const created = await prisma.storeProduct.create({ data });
+
+  // Revalidate tienda pages
+  try {
+    revalidatePath("/tienda", "page");
+    revalidatePath("/es/tienda", "page");
+    revalidatePath("/en/tienda", "page");
+    revalidatePath(`/tienda/${created.slug}`, "page");
+    revalidatePath(`/es/tienda/${created.slug}`, "page");
+    revalidatePath(`/en/tienda/${created.slug}`, "page");
+  } catch (err) {
+    console.error("Failed to revalidate cache:", err);
+  }
+
   return NextResponse.json(created, { status: 201 });
 }
+
