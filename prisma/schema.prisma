@@ -712,3 +712,42 @@ model AuditLog {
   @@index([actorId, createdAt])
   @@index([createdAt])
 }
+
+model InventoryItem {
+  id           String    @id @default(cuid())
+  sku          String?   @unique
+  name         String
+  description  String?   @db.Text
+  category     String    // e.g. "Tintas", "Vinilos", "Rígidos", "Laminados", "Herramientas", "Otros"
+  stock        Float     @default(0)
+  minStock     Float     @default(0) // threshold for alerts
+  unit         String    @default("unidades") // e.g. "rollos", "yardas", "lts", "unidades"
+  unitCost     Float     @default(0)
+  supplier     String?
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  movements    InventoryMovement[]
+
+  @@index([category])
+  @@index([active])
+}
+
+model InventoryMovement {
+  id              String        @id @default(cuid())
+  itemId          String
+  item            InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  type            String        // "in" (entrada), "out" (salida), "adjustment" (ajuste)
+  quantity        Float
+  prevStock       Float         // Stock before movement
+  newStock        Float         // Stock after movement
+  note            String?       @db.Text // e.g. "Proyecto #3168", "Compra"
+  userId          String?
+  userEmail       String?       // Snapshot of user email
+  createdAt       DateTime      @default(now())
+
+  @@index([itemId])
+  @@index([createdAt])
+}
+

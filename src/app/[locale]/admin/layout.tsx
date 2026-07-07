@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, Wrench, Image as ImageIcon, Users, ClipboardList, Receipt, Clock, NotebookPen, Settings, MessageSquareText, LayoutGrid, Layers, DollarSign, FolderKanban, CalendarOff, Calculator, LineChart, ShieldCheck, Briefcase, Timer, ShoppingBag } from "lucide-react";
+import { LayoutDashboard, FileText, Wrench, Image as ImageIcon, Users, ClipboardList, Receipt, Clock, NotebookPen, Settings, MessageSquareText, LayoutGrid, Layers, DollarSign, FolderKanban, CalendarOff, Calculator, LineChart, ShieldCheck, Briefcase, Timer, ShoppingBag, Package } from "lucide-react";
 import { unstable_cache } from "next/cache";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { requireRole } from "@/lib/auth-helpers";
@@ -48,6 +48,7 @@ export default async function AdminLayout({
     { href: "/admin/servicios", label: "Portafolio Web", icon: Wrench, iconName: "Wrench" },
     { href: "/admin/proyectos", label: "Proyectos Web", icon: ImageIcon, iconName: "Image" },
     { href: "/admin/tienda", label: "Tienda", icon: ShoppingBag, iconName: "ShoppingBag" },
+    { href: "/admin/inventario", label: "Inventario", icon: Package, iconName: "Package" },
     { href: "/admin/materiales", label: "Materiales", icon: Layers, iconName: "Layers" },
     { href: "/admin/costos", label: "Costos y capacidad", icon: DollarSign, iconName: "DollarSign" },
     { href: "/admin/calculadora", label: "Calculadora", icon: Calculator, iconName: "Calculator" },
