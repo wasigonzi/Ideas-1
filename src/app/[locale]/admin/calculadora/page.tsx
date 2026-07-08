@@ -96,37 +96,37 @@ export default function CalculadoraPrecios() {
       </div>
 
       {/* Parámetros globales */}
-      <section className="rounded-xl border border-gray-200 bg-white p-4">
-        <h2 className="mb-3 text-sm font-semibold text-gray-700">
+      <section className="card p-5">
+        <h2 className="mb-3 text-sm font-semibold text-white/90">
           Parámetros globales
         </h2>
         <div className="flex flex-wrap items-end gap-4">
           <label className="text-sm">
-            <span className="block text-gray-600">Margen (multiplicador)</span>
+            <span className="block text-white/70">Margen (multiplicador)</span>
             <input
               type="number"
               step="0.1"
               min="1"
               value={markup}
               onChange={(e) => setMarkup(parseFloat(e.target.value) || 0)}
-              className="mt-1 w-32 rounded-lg border border-gray-300 px-3 py-2"
+              className="input mt-1 w-32"
             />
           </label>
           <label className="text-sm">
-            <span className="block text-gray-600">Costo tinta por pie²</span>
+            <span className="block text-white/70">Costo tinta por pie²</span>
             <input
               type="number"
               step="0.01"
               min="0"
               value={ink}
               onChange={(e) => setInk(parseFloat(e.target.value) || 0)}
-              className="mt-1 w-32 rounded-lg border border-gray-300 px-3 py-2"
+              className="input mt-1 w-32"
             />
           </label>
           <button
             onClick={saveParams}
             disabled={savingParams}
-            className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="btn btn-primary flex items-center gap-2 text-sm py-2 px-4 disabled:opacity-50"
           >
             <Save className="h-4 w-4" />
             Guardar
@@ -136,13 +136,13 @@ export default function CalculadoraPrecios() {
 
       {/* Calculadora */}
       <section className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-4">
+        <div className="space-y-4 card p-5">
           <label className="block text-sm">
-            <span className="text-gray-600">Material</span>
+            <span className="text-white/70">Material</span>
             <select
               value={materialId}
               onChange={(e) => setMaterialId(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              className="select mt-1 w-full"
             >
               <option value="">— Selecciona —</option>
               {materials.map((m) => (
@@ -154,53 +154,53 @@ export default function CalculadoraPrecios() {
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm">
-              <span className="text-gray-600">Ancho (pulg)</span>
+              <span className="text-white/70">Ancho (pulg)</span>
               <input
                 type="number"
                 min="0"
                 value={width}
                 onChange={(e) => setWidth(parseFloat(e.target.value) || 0)}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                className="input mt-1 w-full"
               />
             </label>
             <label className="block text-sm">
-              <span className="text-gray-600">Alto (pulg)</span>
+              <span className="text-white/70">Alto (pulg)</span>
               <input
                 type="number"
                 min="0"
                 value={height}
                 onChange={(e) => setHeight(parseFloat(e.target.value) || 0)}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                className="input mt-1 w-full"
               />
             </label>
             <label className="block text-sm">
-              <span className="text-gray-600">Cantidad</span>
+              <span className="text-white/70">Cantidad</span>
               <input
                 type="number"
                 min="1"
                 value={qty}
                 onChange={(e) => setQty(parseInt(e.target.value) || 1)}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                className="input mt-1 w-full"
               />
             </label>
             <label className="block text-sm">
-              <span className="text-gray-600">Terminación $/ft²</span>
+              <span className="text-white/70">Terminación $/ft²</span>
               <input
                 type="number"
                 step="0.01"
                 min="0"
                 value={finishing}
                 onChange={(e) => setFinishing(parseFloat(e.target.value) || 0)}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                className="input mt-1 w-full"
               />
             </label>
           </div>
-          <p className="text-sm text-gray-500">
-            Área total: <strong>{totalSqft.toFixed(2)} ft²</strong>
+          <p className="text-sm text-white/50">
+            Área total: <strong className="text-white">{totalSqft.toFixed(2)} ft²</strong>
           </p>
           <button
             onClick={calc}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white"
+            className="btn btn-primary flex items-center gap-2 text-sm py-2 px-4"
           >
             <Calculator className="h-4 w-4" />
             Calcular precio
@@ -208,23 +208,23 @@ export default function CalculadoraPrecios() {
         </div>
 
         {/* Resultado */}
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <h2 className="mb-3 text-sm font-semibold text-gray-700">Resultado</h2>
+        <div className="card p-5">
+          <h2 className="mb-3 text-sm font-semibold text-white/90">Resultado</h2>
           {quote ? (
             <dl className="space-y-2 text-sm">
               <Row label="Material" value={money(quote.materialCost)} />
               <Row label="Tinta" value={money(quote.inkCost)} />
               <Row label="Costo base" value={money(quote.baseCost)} />
               <Row label="Margen" value={`×${quote.markup}`} />
-              <div className="mt-3 flex items-center justify-between border-t border-gray-200 pt-3">
-                <dt className="font-semibold">Precio sugerido</dt>
-                <dd className="text-xl font-bold text-green-600">
+              <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
+                <dt className="font-semibold text-white">Precio sugerido</dt>
+                <dd className="text-xl font-bold text-green-400">
                   {money(quote.price)}
                 </dd>
               </div>
             </dl>
           ) : (
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-white/40">
               Completa los datos y calcula el precio.
             </p>
           )}
@@ -237,8 +237,8 @@ export default function CalculadoraPrecios() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
-      <dt className="text-gray-600">{label}</dt>
-      <dd className="font-medium">{value}</dd>
+      <dt className="text-white/60">{label}</dt>
+      <dd className="font-medium text-white">{value}</dd>
     </div>
   );
 }
