@@ -19,6 +19,8 @@ export async function POST(
   const { id: taskId } = await params;
   const body = await req.json().catch(() => ({}));
   const submitForReview: boolean = body?.submitForReview === true;
+  const materialId: string | null = body?.materialId ?? null;
+  const materialQty: number = Number(body?.materialQty ?? 0);
 
   const now = new Date();
 
@@ -35,6 +37,59 @@ export async function POST(
     where: { id: ws.id },
     data: { endedAt: now },
   });
+
+  // Handle inventory and project cost updates if material was consumed
+  if (materialId && materialQty > 0) {
+    const item = await prisma.inventoryItem.findUnique({ where: { id: materialId } });
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
+      include: { workProject: true }
+    });
+
+    if (item && task) {
+      const prevStock = item.stock;
+      const newStock = prevStock - materialQty;
+      
+      // Update inventory stock
+      await prisma.inventoryItem.update({
+        where: { id: materialId },
+        data: { stock: newStock }
+      });
+
+      // Create movement audit log
+      await prisma.inventoryMovement.create({
+        data: {
+          itemId: materialId,
+          type: "out",
+          quantity: materialQty,
+          prevStock,
+          newStock,
+          note: `Consumo en la tarea "${task.title}" para el proyecto ${task.workProject?.number ?? 'Sin proyecto'}`,
+          userId,
+          userEmail: session.user.email ?? null,
+        }
+      });
+
+      // If linked to a project, register the cost on the project's tech sheet
+      if (task.workProjectId) {
+        const addedCost = materialQty * item.unitCost;
+        await prisma.workProjectTechSheet.upsert({
+          where: { projectId: task.workProjectId },
+          create: {
+            projectId: task.workProjectId,
+            materialName: item.name,
+            materialQty,
+            materialCost: addedCost,
+            totalCost: addedCost,
+          },
+          update: {
+            materialCost: { increment: addedCost },
+            totalCost: { increment: addedCost },
+          }
+        });
+      }
+    }
+  }
 
   const elapsedMs = now.getTime() - ws.startedAt.getTime();
   const elapsedSeconds = Math.round(elapsedMs / 1000);

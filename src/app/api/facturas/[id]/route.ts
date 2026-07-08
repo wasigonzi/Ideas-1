@@ -35,6 +35,40 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     data,
     include: invoiceInclude,
   });
+
+  if (invoice.status === "paid") {
+    // Check if project already exists
+    const existingProject = await prisma.workProject.findFirst({
+      where: {
+        OR: [
+          { estimateNumber: invoice.number },
+          { number: invoice.number.replace("INV-", "P-") }
+        ]
+      }
+    });
+    if (!existingProject) {
+      const projNum = invoice.number.replace("INV-", "P-");
+      const existsNum = await prisma.workProject.findUnique({ where: { number: projNum } });
+      const finalNum = existsNum ? `${projNum}-${Date.now().toString().slice(-4)}` : projNum;
+
+      await prisma.workProject.create({
+        data: {
+          number: finalNum,
+          estimateNumber: invoice.number,
+          title: `Proyecto: ${invoice.clientCompany ?? invoice.clientName ?? 'Cliente'}`,
+          description: `Creado automáticamente al confirmarse el pago de la factura ${invoice.number}.`,
+          quoted: invoice.amount,
+          clientId: invoice.clientId,
+          clientName: invoice.clientName ?? invoice.clientCompany,
+          clientEmail: invoice.clientEmail,
+          clientPhone: invoice.clientPhone,
+          stage: "intake",
+          installationType: "no_install",
+        }
+      });
+    }
+  }
+
   await logAudit({
     actor: { role: "admin" },
     action: "update",

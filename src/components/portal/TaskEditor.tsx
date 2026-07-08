@@ -1625,6 +1625,22 @@ function WorkTimerSection({
   const [totalLogged, setTotalLogged] = useState(loggedSeconds);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Inventory reporting state
+  const [inventory, setInventory] = useState<{ id: string; name: string; unit: string; category: string }[]>([]);
+  const [materialId, setMaterialId] = useState("");
+  const [materialQty, setMaterialQty] = useState("");
+
+  useEffect(() => {
+    fetch("/api/inventario")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setInventory(data.filter((x) => x.active));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Live tick when session is active
   useEffect(() => {
     if (session) {
@@ -1660,7 +1676,11 @@ function WorkTimerSection({
       const res = await fetch(`/api/tareas/${taskId}/work-stop`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ submitForReview }),
+        body: JSON.stringify({
+          submitForReview,
+          materialId: materialId || null,
+          materialQty: materialQty ? parseFloat(materialQty) : 0
+        }),
       });
       if (!res.ok) {
         const info = await res.json().catch(() => null);
@@ -1670,6 +1690,8 @@ function WorkTimerSection({
       const data = await res.json();
       setTotalLogged((prev) => prev + (data.elapsedSeconds ?? 0));
       setSession(null);
+      setMaterialId("");
+      setMaterialQty("");
       router.refresh();
     } catch {
       // silent
@@ -1710,6 +1732,45 @@ function WorkTimerSection({
             </span>
             <span className="text-xs text-white/50 ml-auto">Sesión activa</span>
           </div>
+
+          {/* Material consumption inputs */}
+          {inventory.length > 0 && (
+            <div className="space-y-2 border-t border-white/5 pt-2">
+              <label className="block text-[10px] uppercase font-bold text-white/40 tracking-wider">
+                Registrar consumo de insumos (opcional)
+              </label>
+              <div className="grid grid-cols-[1.5fr_1fr] gap-2">
+                <select
+                  value={materialId}
+                  onChange={(e) => setMaterialId(e.target.value)}
+                  className="select text-xs py-1.5 h-auto bg-[var(--color-ink-850)] border-white/10"
+                >
+                  <option value="">Seleccionar material...</option>
+                  {inventory.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} ({item.category})
+                    </option>
+                  ))}
+                </select>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="Cant."
+                    value={materialQty}
+                    onChange={(e) => setMaterialQty(e.target.value)}
+                    className="input text-xs py-1.5 h-auto bg-[var(--color-ink-850)] border-white/10 w-full"
+                  />
+                  {materialId && (
+                    <span className="text-[10px] text-white/50 shrink-0">
+                      {inventory.find((x) => x.id === materialId)?.unit ?? ""}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-2">
             <button

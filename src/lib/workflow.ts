@@ -59,6 +59,7 @@ export function validateProjectStageMove(input: {
 }
 
 export type TaskCompletionSnapshot = {
+  title: string;
   attachments: string | null;
   coverImage: string | null;
   workProjectId: string | null;
@@ -109,19 +110,22 @@ export async function enforceTaskCompletionRules(
   }
 
   if (task.workProjectId) {
-    const approval = await prisma.approvalSheet.findUnique({
-      where: { taskId },
-      select: { status: true },
-    });
-    if (!approval || approval.status !== "approved") {
-      return NextResponse.json(
-        {
-          error: "approval_required",
-          message:
-            "No puedes completar la tarea: el cliente debe aprobar la hoja de aprobación primero.",
-        },
-        { status: 400 },
-      );
+    const isApprovalTask = /arte|diseño|aprobación|propuesta|approval|mockup/i.test(task.title);
+    if (isApprovalTask) {
+      const approval = await prisma.approvalSheet.findUnique({
+        where: { taskId },
+        select: { status: true },
+      });
+      if (!approval || approval.status !== "approved") {
+        return NextResponse.json(
+          {
+            error: "approval_required",
+            message:
+              "No puedes completar la tarea: el cliente debe aprobar la hoja de aprobación primero.",
+          },
+          { status: 400 },
+        );
+      }
     }
   }
 
