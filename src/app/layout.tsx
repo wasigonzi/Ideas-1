@@ -7,7 +7,11 @@ export const metadata: Metadata = {
   description:
     "Más de 8,500 pies cuadrados de espacio para ofrecer impresiones y rotulación de primera. Manufactura, instalación, rotulación e impresión digital.",
   metadataBase: new URL("https://printingideaspr.com"),
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Ideas, LLC" }
+  manifest: "/manifest.json",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Ideas, LLC" },
+  icons: {
+    apple: "/logos/ideas-pwa-icon.png"
+  }
 };
 
 export const viewport: Viewport = {
