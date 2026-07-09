@@ -57,14 +57,7 @@ export function getPeriodForDate(anchor: Date, ref: Date): PayPeriod {
   const diffMs = r.getTime() - a.getTime();
   const diffDays = Math.floor(diffMs / 86_400_000);
 
-  // Which period index? Periods go: ...-2, -1, 0, 1, 2, ...
-  // Period 0 ends on anchor. Period 1 ends on anchor+14, etc.
-  // For a given diffDays:
-  //   if diffDays in [0..13]  → period 0 (anchor is payday)
-  //   if diffDays in [-14..-1] → period -1 (anchor-14 is payday)
-  const periodIndex = diffDays >= 0
-    ? Math.floor(diffDays / PERIOD_DAYS)
-    : Math.floor((diffDays - (PERIOD_DAYS - 1)) / PERIOD_DAYS);
+  const periodIndex = Math.ceil(diffDays / PERIOD_DAYS);
 
   return buildPeriod(a, periodIndex, r);
 }
