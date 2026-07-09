@@ -59,6 +59,20 @@ export function HorariosManager({
   const [filterTo, setFilterTo] = useState("");
   const [showSummary, setShowSummary] = useState(false);
 
+  // Calculate Sunday to Saturday dates for the current week
+  const weekDates = useMemo(() => {
+    const now = new Date();
+    const dates = [];
+    const sunday = new Date(now);
+    sunday.setDate(now.getDate() - now.getDay());
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(sunday);
+      d.setDate(sunday.getDate() + i);
+      dates.push(d);
+    }
+    return dates;
+  }, []);
+
   // Filtered punches
   const filteredPunches = useMemo(() => {
     return punches.filter((p) => {
@@ -174,11 +188,19 @@ export function HorariosManager({
                   <th className="text-left px-4 py-3 sticky left-0 bg-[#0c1422] z-10 min-w-[180px]">
                     Empleado
                   </th>
-                  {DAYS_SHORT.map((d, i) => (
-                    <th key={i} className="text-left px-3 py-3 min-w-[140px]">
-                      {d}
-                    </th>
-                  ))}
+                  {DAYS_SHORT.map((d, i) => {
+                    const dObj = weekDates[i];
+                    const dateNum = dObj.getDate();
+                    const monthStr = dObj.toLocaleDateString("es-PR", { month: "short" }).replace(".", "");
+                    return (
+                      <th key={i} className="text-left px-3 py-3 min-w-[140px]">
+                        <span className="block text-[10px] text-white/45 font-bold uppercase tracking-wider">{d}</span>
+                        <span className="block text-xs font-extrabold text-[var(--color-brand-400)] mt-0.5 whitespace-nowrap">
+                          {dateNum} {monthStr}
+                        </span>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
