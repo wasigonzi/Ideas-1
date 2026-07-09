@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Loader2, Save, Trash2, ChevronLeft, ChevronRight, ClipboardList } from "lucide-react";
+import { Loader2, Save, Trash2, ChevronLeft, ChevronRight, ClipboardList, ClipboardCheck } from "lucide-react";
 
 type Employee = { id: string; name: string | null; email: string; avatar: string | null };
 type Note = { id: string; userId: string; content: string; date: string; user: Employee };
@@ -32,6 +32,7 @@ export default function AdminInstruccionesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [notes, setNotes] = useState<Map<string, Note>>(new Map());
   const [drafts, setDrafts] = useState<Map<string, string>>(new Map());
+  const [workReports, setWorkReports] = useState<Map<string, string>>(new Map());
   const [saving, setSaving] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -43,39 +44,40 @@ export default function AdminInstruccionesPage() {
       .then((data: Employee[]) => setEmployees(data.filter((e) => (e as unknown as { role: string }).role !== "client")));
   }, []);
 
-  // Load notes whenever date changes
+  // Load notes and work reports whenever date changes
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/instrucciones?date=${date}`)
-      .then((r) => r.json())
-      .then((data: Note[]) => {
-        const map = new Map<string, Note>();
-        for (const n of data) map.set(n.userId, n);
-        setNotes(map);
+    Promise.all([
+      fetch(`/api/instrucciones?date=${date}`).then((r) => r.json()),
+      fetch(`/api/trabajos?date=${date}`).then((r) => r.json())
+    ])
+      .then(([notesData, reportsData]: [Note[], any[]]) => {
+        const notesMap = new Map<string, Note>();
+        for (const n of notesData) notesMap.set(n.userId, n);
+        setNotes(notesMap);
+
         // Sync drafts to loaded notes
         setDrafts((prev) => {
           const next = new Map(prev);
           for (const emp of employees) {
-            if (!next.has(emp.id)) next.set(emp.id, map.get(emp.id)?.content ?? "");
+            next.set(emp.id, notesMap.get(emp.id)?.content ?? "");
           }
           return next;
         });
+
+        // Set work reports map
+        const reportsMap = new Map<string, string>();
+        for (const report of reportsData) {
+          reportsMap.set(report.userId, report.content);
+        }
+        setWorkReports(reportsMap);
+      })
+      .catch((err) => {
+        console.error("Error loading daily data", err);
       })
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [date]);
-
-  // When employees load, sync drafts
-  useEffect(() => {
-    setDrafts((prev) => {
-      const next = new Map(prev);
-      for (const emp of employees) {
-        if (!next.has(emp.id)) next.set(emp.id, notes.get(emp.id)?.content ?? "");
-      }
-      return next;
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [employees]);
+  }, [date, employees]);
 
   // Clear pending auto-save timers on unmount to prevent state updates after unmount
   useEffect(() => {
@@ -232,6 +234,18 @@ export default function AdminInstruccionesPage() {
                   ) : (
                     <span>Sin instrucciones para este día</span>
                   )}
+                </div>
+
+                {/* Reporte de trabajo del empleado */}
+                <div className="mt-2 pt-2 border-t border-white/5 space-y-1">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-brand-400)] flex items-center gap-1.5">
+                    <ClipboardCheck size={11} /> Trabajos del día
+                  </div>
+                  <div className="bg-white/3 border border-white/5 rounded-xl p-2.5 text-xs text-white/80 whitespace-pre-wrap max-h-[120px] overflow-y-auto custom-scrollbar">
+                    {workReports.get(emp.id) || (
+                      <span className="text-white/30 italic">Sin reporte de trabajo registrado.</span>
+                    )}
+                  </div>
                 </div>
               </div>
             );

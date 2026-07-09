@@ -38,21 +38,42 @@ export async function GET(req: NextRequest) {
     since.setDate(since.getDate() - days);
   }
 
-  const entries = await prisma.timeEntry.findMany({
-    where: {
-      date: {
-        gte: since,
-        ...(until ? { lte: until } : {}),
+  const [entries, punches] = await Promise.all([
+    prisma.timeEntry.findMany({
+      where: {
+        date: {
+          gte: since,
+          ...(until ? { lte: until } : {}),
+        },
       },
-    },
-    include: {
-      user: { select: userSelect },
-      task: { select: taskSelect },
-    },
-    orderBy: { date: "desc" },
-  });
+      include: {
+        user: { select: userSelect },
+        task: { select: taskSelect },
+      },
+      orderBy: { date: "desc" },
+    }),
+    prisma.punch.findMany({
+      where: {
+        in: {
+          gte: since,
+          ...(until ? { lte: until } : {}),
+        },
+      },
+      select: {
+        userId: true,
+        hours: true,
+      },
+    }),
+  ]);
 
-  return NextResponse.json(entries);
+  const punchHoursMap: Record<string, number> = {};
+  for (const p of punches) {
+    if (p.hours) {
+      punchHoursMap[p.userId] = (punchHoursMap[p.userId] || 0) + p.hours;
+    }
+  }
+
+  return NextResponse.json({ entries, punchHours: punchHoursMap });
 }
 
 // POST /api/horas — create a time entry (admin only)

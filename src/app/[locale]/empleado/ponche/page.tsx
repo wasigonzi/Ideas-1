@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { PunchClock } from "@/components/portal/PunchClock";
+import { DailyQuestsBoard } from "@/components/portal/DailyQuestsBoard";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,8 @@ export default async function PonchePage() {
       </header>
 
       <PunchClock schedule={schedule} />
+
+      <DailyQuestsBoard />
 
       <div className="card p-5">
         <h3 className="text-sm font-bold uppercase tracking-widest text-white/65 mb-3">

@@ -53,6 +53,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export default function AdminHorasPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [employees, setEmployees] = useState<UserInfo[]>([]);
+  const [punchHours, setPunchHours] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [periodIdx, setPeriodIdx] = useState(0); // 0 = most recent period
   const [filterUser, setFilterUser] = useState("");
@@ -64,9 +65,15 @@ export default function AdminHorasPage() {
 
   const load = useCallback(async (period: Period) => {
     setLoading(true);
-    const r = await fetch(`/api/horas?from=${period.start}&to=${period.end}`);
-    const data: Entry[] = await r.json();
-    setEntries(data);
+    try {
+      const r = await fetch(`/api/horas?from=${period.start}&to=${period.end}`);
+      const data = await r.json();
+      setEntries(data.entries ?? []);
+      setPunchHours(data.punchHours ?? {});
+    } catch {
+      setEntries([]);
+      setPunchHours({});
+    }
     setLoading(false);
   }, []);
 
@@ -96,15 +103,29 @@ export default function AdminHorasPage() {
 
   // Per-employee breakdown (uses all entries, not filtered)
   const perEmployee = useMemo(() => {
-    const map = new Map<string, { user: UserInfo; hours: number; gross: number }>();
+    const map = new Map<string, { user: UserInfo; hours: number; gross: number; punchHours: number }>();
+    
+    // Add time entry hours
     for (const e of entries) {
-      const ex = map.get(e.userId) ?? { user: e.user, hours: 0, gross: 0 };
+      const pHours = punchHours[e.userId] ?? 0;
+      const ex = map.get(e.userId) ?? { user: e.user, hours: 0, gross: 0, punchHours: pHours };
       ex.hours += e.hours;
       ex.gross += e.hours * (e.user.hourlyRate ?? 0);
       map.set(e.userId, ex);
     }
-    return [...map.values()].sort((a, b) => b.hours - a.hours);
-  }, [entries]);
+
+    // Add employees who have punch hours but no time entries
+    for (const [uId, pHours] of Object.entries(punchHours)) {
+      if (!map.has(uId)) {
+        const emp = employees.find((x) => x.id === uId);
+        if (emp) {
+          map.set(uId, { user: emp, hours: 0, gross: 0, punchHours: pHours });
+        }
+      }
+    }
+
+    return [...map.values()].sort((a, b) => b.hours - a.hours || b.punchHours - a.punchHours);
+  }, [entries, punchHours, employees]);
 
   function exportCSV() {
     const rows: string[][] = [["Período", "Empleado", "Tarifa/hr", "Fecha", "Horas", "Costo", "Tarea", "Orden", "Nota"]];
@@ -273,7 +294,8 @@ export default function AdminHorasPage() {
           </h3>
           <div className="grid gap-2">
             {perEmployee.map((row) => {
-              const pct = totalHours > 0 ? (row.hours / totalHours) * 100 : 0;
+              const ratio = row.punchHours > 0 ? Math.min(100, Math.round((row.hours / row.punchHours) * 100)) : 0;
+              const barColor = ratio >= 90 ? "bg-emerald-500" : ratio >= 70 ? "bg-amber-500" : "bg-rose-500";
               return (
                 <button
                   key={row.user.id}
@@ -285,17 +307,28 @@ export default function AdminHorasPage() {
                   }`}
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-white">{row.user.name ?? row.user.email}</div>
+                    <div className="font-semibold text-white flex items-center gap-1.5">
+                      <span>{row.user.name ?? row.user.email}</span>
+                      {row.punchHours > 0 && (
+                        <span className="text-[10px] text-white/35 font-bold uppercase tracking-wider">
+                          ({ratio}% asignado)
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-white/45 mt-0.5">
                       {row.user.hourlyRate != null ? `$${row.user.hourlyRate.toFixed(2)}/hr` : "Sin tarifa"}
                     </div>
                     <div className="mt-1.5 h-1 rounded-full bg-white/8 overflow-hidden">
-                      <div className="h-full rounded-full bg-[var(--color-brand-500)]" style={{ width: `${pct}%` }} />
+                      <div className={`h-full rounded-full ${barColor}`} style={{ width: `${ratio || 0}%` }} />
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <div className="font-bold text-[var(--color-brand-400)]">{row.hours.toFixed(1)}h</div>
-                    <div className="text-sm font-semibold text-white mt-0.5">${row.gross.toFixed(2)}</div>
+                  <div className="text-right shrink-0 flex flex-col items-end">
+                    <div className="font-bold text-sm text-white">
+                      <span className="text-[var(--color-brand-400)]">{row.hours.toFixed(1)}h</span>
+                      <span className="text-white/35 font-normal mx-1">/</span>
+                      <span className="text-white/60 font-semibold">{row.punchHours.toFixed(1)}h ponchadas</span>
+                    </div>
+                    <div className="text-xs font-semibold text-white/50 mt-0.5">${row.gross.toFixed(2)}</div>
                   </div>
                 </button>
               );

@@ -30,6 +30,7 @@ model User {
   shifts         Shift[]
   punches        Punch[]
   dailyNotes     DailyNote[]
+  workReports    WorkReport[]
   taskViews      TaskView[]
   chatMessages   ChatMessage[]
   chatRooms      ChatRoomMember[]
@@ -421,6 +422,19 @@ model PunchBreak {
 }
 
 model DailyNote {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime // store as start-of-day UTC
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+model WorkReport {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

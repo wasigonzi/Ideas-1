@@ -49,11 +49,66 @@ export async function GET() {
     return sum;
   }, 0);
 
+  // Fetch active tasks assigned to the user or where the user is a member
+  const tasks = await prisma.task.findMany({
+    where: {
+      archived: false,
+      OR: [
+        { assigneeId: userId },
+        { members: { contains: userId } },
+        { taskMembers: { some: { userId } } },
+      ],
+    },
+    include: {
+      workSessions: {
+        where: { userId, endedAt: null },
+        select: { id: true, startedAt: true },
+      }
+    },
+    orderBy: [{ status: "asc" }, { position: "asc" }, { createdAt: "asc" }]
+  });
+
+  const taskList = tasks.map(t => ({
+    id: t.id,
+    title: t.title,
+    status: t.status,
+    priority: t.priority,
+    hours: t.hours,
+    dueDate: t.dueDate ? t.dueDate.toISOString() : null,
+    activeSession: t.workSessions[0]
+      ? { id: t.workSessions[0].id, startedAt: t.workSessions[0].startedAt.toISOString() }
+      : null
+  }));
+
+  // Fetch today's time entries logged on tasks
+  const todayTimeEntries = await prisma.timeEntry.findMany({
+    where: {
+      userId,
+      date: { gte: startOfDay }
+    },
+    include: {
+      task: { select: { id: true, title: true } }
+    },
+    orderBy: { createdAt: "desc" }
+  });
+
+  const todayTaskHours = todayTimeEntries.reduce((sum, entry) => sum + entry.hours, 0);
+
+  const loggedTasks = todayTimeEntries.map(e => ({
+    id: e.id,
+    hours: e.hours,
+    note: e.note,
+    taskTitle: e.task?.title ?? "Sin tarea"
+  }));
+
   return NextResponse.json({
     open: open ? { id: open.id, in: open.in, note: open.note } : null,
     openBreak: openBreak ? { id: openBreak.id, start: openBreak.start } : null,
     today: { date: localDateKey(now), hours: todayHours, count: todayPunches.length },
-    week: { hours: weekHours }
+    week: { hours: weekHours },
+    tasks: taskList,
+    todayTimeEntries: loggedTasks,
+    todayTaskHours: Math.round(todayTaskHours * 100) / 100
   });
 }
 
