@@ -34,6 +34,16 @@ export default async function EmpleadoHorario() {
     return sum + (eh * 60 + em - sh * 60 - sm) / 60;
   }, 0);
 
+  // Calculate Sunday to Saturday dates for the current week
+  const now = new Date();
+  const sunday = new Date(now);
+  sunday.setDate(now.getDate() - now.getDay());
+  const weekDates = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(sunday);
+    d.setDate(sunday.getDate() + i);
+    return d;
+  });
+
   return (
     <div className="space-y-6">
       <header>
@@ -85,9 +95,18 @@ export default async function EmpleadoHorario() {
                         : "border-white/5 opacity-40"
                     }`}
                   >
-                    <div className={`w-24 text-sm font-bold shrink-0 ${isToday ? "text-[var(--color-brand-400)]" : "text-white/75"}`}>
-                      {DAYS[dow]}
-                      {isToday && <span className="ml-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--color-brand-400)]">hoy</span>}
+                    <div className={`w-36 text-sm font-bold shrink-0 ${isToday ? "text-[var(--color-brand-400)]" : "text-white/75"} flex flex-col`}>
+                      <span className="flex items-center gap-1.5 leading-none">
+                        {DAYS[dow]}
+                        {isToday && (
+                          <span className="text-[9px] font-bold uppercase tracking-wider px-1 py-0.5 rounded bg-[var(--color-brand-500)]/15 text-[var(--color-brand-400)]">
+                            hoy
+                          </span>
+                        )}
+                      </span>
+                      <span className="text-[11px] font-medium text-white/40 mt-1">
+                        {weekDates[dow].toLocaleDateString("es-PR", { day: "numeric", month: "short" }).replace(".", "")}
+                      </span>
                     </div>
                     {dayShifts ? (
                       <div className="flex flex-wrap gap-2">
