@@ -43,6 +43,7 @@ model User {
   reviewedTimeOff TimeOffRequest[] @relation("TimeOffReviewer")
   projectApprovals WorkProjectApproval[] @relation("ApprovalClient")
   auditLogs      AuditLog[] @relation("AuditActor")
+  columnOwnerships ColumnOwner[]
 }
 
 model Service {
@@ -196,7 +197,13 @@ model TaskChecklistItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Set when this item was auto-copied from a ColumnChecklistTemplate (null
+  // for manually-added items). Used to scope the per-column completion gate.
+  templateItemId String?
+  templateItem    ColumnChecklistTemplate? @relation(fields: [templateItemId], references: [id], onDelete: SetNull)
+
   @@index([taskId, position])
+  @@index([templateItemId])
 }
 
 model ApprovalSheet {
@@ -274,7 +281,43 @@ model TaskColumn {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  checklistTemplates ColumnChecklistTemplate[]
+  owners             ColumnOwner[]
+
   @@index([position])
+}
+
+// Checklist item template for a column. Copied onto a Task's checklist the
+// moment a card enters that column (see enterColumn() helpers in workflow.ts).
+// Based on the 12-stage flow + 9 production sub-phases from PROP-OPS-001.
+model ColumnChecklistTemplate {
+  id        String   @id @default(cuid())
+  columnId  String
+  column    TaskColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  itemText  String
+  itemOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  checklistItems TaskChecklistItem[]
+
+  @@index([columnId, itemOrder])
+}
+
+// Default responsible user(s) for a column. Auto-assigned (overwriting the
+// current assignee) whenever a card enters that column.
+model ColumnOwner {
+  id        String   @id @default(cuid())
+  columnId  String
+  column    TaskColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleLabel String?
+  createdAt DateTime @default(now())
+
+  @@unique([columnId, userId])
+  @@index([columnId])
+  @@index([userId])
 }
 
 model TimeEntry {

@@ -131,3 +131,96 @@ export async function enforceTaskCompletionRules(
 
   return null;
 }
+
+// ── Checklist automático por columna (PROP-OPS-001) ─────────────────────────
+//
+// Cada TaskColumn puede tener una plantilla de checklist (ColumnChecklistTemplate).
+// Cuando una tarjeta entra a esa columna (creación o movimiento), copiamos los
+// items pendientes a TaskChecklistItem, marcados con su templateItemId de origen
+// para poder aplicar el "gate" por columna más abajo.
+
+// Copies any template items for `columnKey` that this task doesn't already
+// have (idempotent — safe to call every time a card re-enters a column).
+// Returns the number of items actually created.
+export async function copyColumnChecklistTemplates(
+  taskId: string,
+  columnKey: string,
+): Promise<number> {
+  const column = await prisma.taskColumn.findUnique({
+    where: { key: columnKey },
+    include: { checklistTemplates: { orderBy: { itemOrder: "asc" } } },
+  });
+  if (!column || column.checklistTemplates.length === 0) return 0;
+
+  const existing = await prisma.taskChecklistItem.findMany({
+    where: {
+      taskId,
+      templateItemId: { in: column.checklistTemplates.map((t) => t.id) },
+    },
+    select: { templateItemId: true },
+  });
+  const existingIds = new Set(existing.map((e) => e.templateItemId));
+  const toCreate = column.checklistTemplates.filter((t) => !existingIds.has(t.id));
+  if (toCreate.length === 0) return 0;
+
+  const last = await prisma.taskChecklistItem.findFirst({
+    where: { taskId },
+    orderBy: { position: "desc" },
+    select: { position: true },
+  });
+  let pos = last?.position ?? 0;
+  await prisma.taskChecklistItem.createMany({
+    data: toCreate.map((t) => {
+      pos += 10;
+      return { taskId, text: t.itemText, templateItemId: t.id, position: pos };
+    }),
+  });
+  return toCreate.length;
+}
+
+// Hard gate: a card may not leave `fromColumnKey` while any auto-generated
+// checklist item for that column is still incomplete. Columns without a
+// template (e.g. the legacy "Sin Clasificar" bucket) never gate.
+export async function enforceColumnChecklistGate(
+  taskId: string,
+  fromColumnKey: string,
+): Promise<NextResponse | null> {
+  const column = await prisma.taskColumn.findUnique({
+    where: { key: fromColumnKey },
+    include: { checklistTemplates: { select: { id: true } } },
+  });
+  if (!column || column.checklistTemplates.length === 0) return null;
+
+  const templateIds = column.checklistTemplates.map((t) => t.id);
+  const pending = await prisma.taskChecklistItem.count({
+    where: { taskId, templateItemId: { in: templateIds }, done: false },
+  });
+  if (pending > 0) {
+    return NextResponse.json(
+      {
+        error: "column_checklist_incomplete",
+        message: `No puedes avanzar de columna: faltan ${pending} elemento(s) del checklist de "${column.label}".`,
+      },
+      { status: 400 },
+    );
+  }
+  return null;
+}
+
+// ── Responsable por columna (PROP-OPS-001) ──────────────────────────────────
+//
+// Resolves the default owner(s) configured for a column. The first owner
+// (by creation order) becomes the "primary" assignee (Task.assigneeId), and
+// the full set rides along in Task.members — same convention TaskEditor's
+// MembersPicker already uses for multi-assignment.
+export async function resolveColumnOwners(
+  columnKey: string,
+): Promise<{ assigneeId: string | null; memberIds: string[] }> {
+  const column = await prisma.taskColumn.findUnique({
+    where: { key: columnKey },
+    include: { owners: { orderBy: { createdAt: "asc" } } },
+  });
+  if (!column || column.owners.length === 0) return { assigneeId: null, memberIds: [] };
+  const memberIds = column.owners.map((o) => o.userId);
+  return { assigneeId: memberIds[0], memberIds };
+}

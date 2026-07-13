@@ -94,6 +94,19 @@
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
+/* Thicker, more grabbable horizontal scrollbar for the Trello-style board row. */
+.board-hscroll { scrollbar-width: auto; scrollbar-color: rgba(255,255,255,0.35) transparent; }
+.board-hscroll::-webkit-scrollbar { height: 14px; }
+.board-hscroll::-webkit-scrollbar-track { background: transparent; }
+.board-hscroll::-webkit-scrollbar-thumb {
+  background-color: rgba(255,255,255,0.35);
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+.board-hscroll::-webkit-scrollbar-thumb:hover { background-color: rgba(255,255,255,0.55); }
+.board-hscroll.is-panning { cursor: grabbing; user-select: none; }
+
 .snap-x-start { scroll-snap-type: x mandatory; }
 .snap-x-start > * { scroll-snap-align: start; }
 

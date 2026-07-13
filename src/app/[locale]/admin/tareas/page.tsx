@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { TaskBoard, type TaskCard } from "@/components/portal/TaskBoard";
 import type { EditorUser } from "@/components/portal/TaskEditor";
-import { loadTaskColumns } from "@/lib/task-columns";
+import { loadTaskColumns, loadColumnOwners } from "@/lib/task-columns";
 
 function parseStringArray(raw: string | null): string[] {
   if (!raw) return [];
@@ -18,7 +18,7 @@ export default async function AdminTareas() {
   const session = await auth();
   const currentUserId = (session?.user as { id?: string }).id ?? undefined;
 
-  const [tasks, users, columns] = await Promise.all([
+  const [tasks, users, columns, columnOwners] = await Promise.all([
     prisma.task.findMany({
       where: { archived: false },
       include: { assignee: true },
@@ -29,7 +29,8 @@ export default async function AdminTareas() {
       select: { id: true, name: true, email: true, role: true, avatar: true, company: true },
       orderBy: [{ role: "asc" }, { name: "asc" }]
     }),
-    loadTaskColumns()
+    loadTaskColumns(),
+    loadColumnOwners()
   ]);
 
   // Quick lookup for resolving member ids → user info on each card.
@@ -85,7 +86,13 @@ export default async function AdminTareas() {
         </p>
       </header>
 
-      <TaskBoard tasks={cards} users={editorUsers} columns={columns} currentUserId={currentUserId} />
+      <TaskBoard
+        tasks={cards}
+        users={editorUsers}
+        columns={columns}
+        columnOwners={columnOwners}
+        currentUserId={currentUserId}
+      />
     </div>
   );
 }

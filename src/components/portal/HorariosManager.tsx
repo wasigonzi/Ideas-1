@@ -611,18 +611,21 @@ function ShiftEditorModal({
     setBusy(true);
     try {
       const body = { userId, dayOfWeek, start, end, label: label || null, active };
-      if (isEdit) {
-        await fetch(`/api/horarios/${shift.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        });
-      } else {
-        await fetch("/api/horarios", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        });
+      const res = isEdit
+        ? await fetch(`/api/horarios/${shift.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+          })
+        : await fetch("/api/horarios", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+          });
+      if (!res.ok) {
+        const info = await res.json().catch(() => ({}));
+        alert(info?.error || "No se pudo guardar el turno. Intenta de nuevo.");
+        return;
       }
       onSaved();
     } finally {
@@ -634,8 +637,16 @@ function ShiftEditorModal({
     if (!shift.id) return;
     if (!confirm("¿Eliminar este turno?")) return;
     setBusy(true);
-    await fetch(`/api/horarios/${shift.id}`, { method: "DELETE" });
-    onSaved();
+    try {
+      const res = await fetch(`/api/horarios/${shift.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        alert("No se pudo eliminar el turno. Intenta de nuevo.");
+        return;
+      }
+      onSaved();
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -762,19 +773,25 @@ function PunchEditorModal({
         out: outVal ? new Date(outVal).toISOString() : null,
         note: note || null
       };
+      let res: Response;
       if (isNew) {
         body.userId = userId;
-        await fetch("/api/ponche/admin", {
+        res = await fetch("/api/ponche/admin", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body)
         });
       } else {
-        await fetch(`/api/ponche/${punch.id}`, {
+        res = await fetch(`/api/ponche/${punch.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body)
         });
+      }
+      if (!res.ok) {
+        const info = await res.json().catch(() => ({}));
+        alert(info?.error || "No se pudo guardar el ponche. Intenta de nuevo.");
+        return;
       }
       onSaved();
     } finally {
@@ -857,7 +874,7 @@ function AddBreakModal({
   async function save() {
     setBusy(true);
     try {
-      await fetch(`/api/ponche/${punchId}/break`, {
+      const res = await fetch(`/api/ponche/${punchId}/break`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -865,6 +882,11 @@ function AddBreakModal({
           end: endVal ? new Date(endVal).toISOString() : null
         })
       });
+      if (!res.ok) {
+        const info = await res.json().catch(() => ({}));
+        alert(info?.error || "No se pudo guardar el descanso. Intenta de nuevo.");
+        return;
+      }
       onSaved();
     } finally {
       setBusy(false);
@@ -924,7 +946,7 @@ function BreakEditorModal({
   async function save() {
     setBusy(true);
     try {
-      await fetch(`/api/ponche/break/${breakRecord.id}`, {
+      const res = await fetch(`/api/ponche/break/${breakRecord.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -932,6 +954,11 @@ function BreakEditorModal({
           end: endVal ? new Date(endVal).toISOString() : null
         })
       });
+      if (!res.ok) {
+        const info = await res.json().catch(() => ({}));
+        alert(info?.error || "No se pudo guardar el descanso. Intenta de nuevo.");
+        return;
+      }
       onSaved();
     } finally {
       setBusy(false);

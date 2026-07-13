@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { sendTaskAssignedEmail } from "@/lib/mailer";
-import { enforceTaskCompletionRules, safeStringArray } from "@/lib/workflow";
+import {
+  enforceTaskCompletionRules,
+  safeStringArray,
+  enforceColumnChecklistGate,
+  resolveColumnOwners,
+  copyColumnChecklistTemplates,
+} from "@/lib/workflow";
 
 const ALLOWED_FIELDS = [
   "status", "priority", "title", "description", "assigneeId", "hours", "dueDate", "position", "coverImage", "attachments", "members", "orderId"
@@ -47,6 +53,15 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
+  const isColumnMove = "status" in data && data.status !== before.status;
+
+  // Checklist automático por columna: no se puede avanzar de columna mientras
+  // queden items pendientes del checklist auto-generado de la columna actual.
+  if (isColumnMove) {
+    const gate = await enforceColumnChecklistGate(id, before.status);
+    if (gate) return gate;
+  }
+
   // Regla de oro: una tarea no puede marcarse "done" sin evidencia (foto),
   // sin el checklist completo, y —si pertenece a un proyecto— sin aprobación.
   if ("status" in data && data.status === "done" && before.status !== "done") {
@@ -56,7 +71,23 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
   if ("status" in data && data.status === "done") data.completedAt = new Date();
 
+  // Responsable por columna: al entrar a una columna con responsables por
+  // defecto configurados, se reemplaza el asignado actual por ellos.
+  if (isColumnMove) {
+    const owners = await resolveColumnOwners(data.status as string);
+    if (owners.assigneeId) {
+      data.assigneeId = owners.assigneeId;
+      data.members = JSON.stringify(owners.memberIds);
+    }
+  }
+
   const task = await prisma.task.update({ where: { id }, data });
+
+  // Copiar el checklist de la nueva columna (idempotente).
+  let checklistAdded = 0;
+  if (isColumnMove) {
+    checklistAdded = await copyColumnChecklistTemplates(id, task.status);
+  }
 
   // Log activity entries for human-meaningful changes only. Skip noise like
   // pure position reorders (Trello shows those silently too).
@@ -95,6 +126,9 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     }
     if ("coverImage" in data && (before.coverImage ?? null) !== (task.coverImage ?? null)) {
       events.push({ type: "cover_changed", data: { from: before.coverImage, to: task.coverImage } });
+    }
+    if (checklistAdded > 0) {
+      events.push({ type: "checklist_auto_generated", data: { count: checklistAdded, column: task.status } });
     }
     if (events.length) {
       await prisma.taskActivity.createMany({

@@ -1437,6 +1437,13 @@ function describeActivity(
       return <>eliminó {(Array.isArray(d.urls) ? d.urls.length : 0)} adjunto(s).</>;
     case "cover_changed":
       return d.to ? <>actualizó la portada.</> : <>quitó la portada.</>;
+    case "checklist_auto_generated":
+      return (
+        <>
+          se generó el checklist de <em className="not-italic text-white/75">{statusLabel(String(d.column))}</em>{" "}
+          ({String(d.count)} elemento{Number(d.count) === 1 ? "" : "s"}).
+        </>
+      );
     default:
       return <>{e.type}</>;
   }

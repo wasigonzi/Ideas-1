@@ -8,6 +8,7 @@ import { AlignLeft, Calendar, Clock, Plus, X, Loader2, Maximize2, Paperclip, Lay
 import { TaskEditor, type EditorUser } from "./TaskEditor";
 import { TaskCalendar } from "./TaskCalendar";
 import { useRealtimeRefresh } from "@/lib/realtime";
+import type { ColumnOwnerDTO } from "@/lib/task-columns";
 
 export type TaskMember = {
   id: string;
@@ -53,6 +54,7 @@ export function TaskBoard({
   users,
   canEdit = true,
   columns,
+  columnOwners,
   currentUserId,
   orders,
   defaultOrderId,
@@ -61,6 +63,7 @@ export function TaskBoard({
   users: EditorUser[];
   canEdit?: boolean;
   columns?: BoardColumn[];
+  columnOwners?: Record<string, ColumnOwnerDTO[]>;
   currentUserId?: string;
   orders?: import("./TaskEditor").EditorOrder[];
   defaultOrderId?: string;
@@ -122,6 +125,11 @@ export function TaskBoard({
 
   // Keep liveUsers in sync if the prop updates (e.g. router.refresh())
   useEffect(() => { setLiveUsers(users); }, [users]);
+
+  // Default column owners ("Responsable por columna"), updated optimistically
+  // as soon as the picker in ColumnMenu saves, without waiting for router.refresh().
+  const [liveColumnOwners, setLiveColumnOwners] = useState<Record<string, ColumnOwnerDTO[]>>(columnOwners ?? {});
+  useEffect(() => { setLiveColumnOwners(columnOwners ?? {}); }, [columnOwners]);
 
   useEffect(() => {
     if (users.length > 0) return; // already have users from SSR
@@ -379,6 +387,23 @@ export function TaskBoard({
               )
             : undefined
         }
+        renderColumnHeaderExtra={(col) => (
+          <ColumnOwnerAvatars owners={liveColumnOwners[col.key] ?? []} />
+        )}
+        renderColumnMenuExtra={
+          canEdit
+            ? (col) => (
+                <ColumnOwnerPicker
+                  col={col}
+                  users={liveUsers}
+                  owners={liveColumnOwners[col.key] ?? []}
+                  onSaved={(next) =>
+                    setLiveColumnOwners((prev) => ({ ...prev, [col.key]: next }))
+                  }
+                />
+              )
+            : undefined
+        }
         renderCard={(t) => {
           // Trello-style behavior: if no explicit cover is set, use the first
           // image attachment as the cover automatically.
@@ -510,6 +535,107 @@ function MemberStack({
         </span>
       )}
     </span>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// "Responsable por columna": small avatar stack shown in the column header,
+// and the picker rendered inside "Opciones de lista" (ColumnMenu) to manage it.
+// ─────────────────────────────────────────────────────────────────────────────
+function ColumnOwnerAvatars({ owners }: { owners: ColumnOwnerDTO[] }) {
+  if (owners.length === 0) return null;
+  const visible = owners.slice(0, 3);
+  const overflow = owners.length - visible.length;
+  return (
+    <span
+      className="flex items-center -space-x-1.5"
+      title={`Responsable(s) por defecto: ${owners.map((o) => o.name ?? o.email).join(", ")}`}
+    >
+      {visible.map((o) => (
+        <MemberAvatar key={o.id} id={o.id} name={o.name ?? o.email} avatar={o.avatar} size={18} ring />
+      ))}
+      {overflow > 0 && (
+        <span
+          className="inline-flex items-center justify-center rounded-full bg-white/15 text-white text-[9px] font-semibold ring-2 ring-[var(--color-ink-900,#0a1322)]"
+          style={{ width: 18, height: 18 }}
+        >
+          +{overflow}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function ColumnOwnerPicker({
+  col,
+  users,
+  owners,
+  onSaved
+}: {
+  col: BoardColumn;
+  users: EditorUser[];
+  owners: ColumnOwnerDTO[];
+  onSaved: (next: ColumnOwnerDTO[]) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const ownerIds = new Set(owners.map((o) => o.id));
+
+  async function toggle(user: EditorUser) {
+    const nextIds = ownerIds.has(user.id)
+      ? owners.filter((o) => o.id !== user.id).map((o) => o.id)
+      : [...owners.map((o) => o.id), user.id];
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/tareas/columns/${encodeURIComponent(col.key)}/owners`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userIds: nextIds })
+      });
+      if (!res.ok) throw new Error("No se pudo guardar el responsable.");
+      const next: ColumnOwnerDTO[] = await res.json();
+      onSaved(next);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div>
+      <label className="text-[11px] uppercase tracking-wider text-white/50 font-semibold">
+        Responsable(s) por defecto
+      </label>
+      <p className="text-[10px] text-white/40 mt-0.5 mb-1.5">
+        Se asignan automáticamente a cada tarjeta que entre a esta lista.
+      </p>
+      <div className="max-h-40 overflow-y-auto space-y-0.5 pr-0.5">
+        {users.map((u) => {
+          const checked = ownerIds.has(u.id);
+          return (
+            <button
+              key={u.id}
+              type="button"
+              disabled={busy}
+              onClick={() => toggle(u)}
+              className={`w-full flex items-center gap-2 px-1.5 py-1 rounded-md text-left text-xs transition disabled:opacity-50 ${
+                checked ? "bg-[var(--color-brand-500)]/15 text-white" : "text-white/70 hover:bg-white/5"
+              }`}
+            >
+              <MemberAvatar id={u.id} name={u.name ?? u.email} avatar={u.avatar} size={18} />
+              <span className="truncate flex-1">{u.name ?? u.email}</span>
+              {checked && <span className="text-[var(--color-brand-400,#7dd3fc)]">✓</span>}
+            </button>
+          );
+        })}
+        {users.length === 0 && (
+          <div className="text-[11px] text-white/40 py-2">Sin usuarios disponibles.</div>
+        )}
+      </div>
+      {error && <div className="text-[11px] text-red-300 mt-1">{error}</div>}
+    </div>
   );
 }
 
