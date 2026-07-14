@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { PortalRealtime } from "./PortalRealtime";
 import { LogoutButton } from "./LogoutButton";
+import { MobileAccountMenu } from "./MobileAccountMenu";
 
 // Re-export pure UI pieces so existing imports keep working.
 export { StatCard, StatusPill, PriorityPill, ProgressBar } from "./ui";
@@ -49,9 +50,12 @@ export function PortalShell({
       {/* ────────── MOBILE APP BAR ────────── */}
       <header className="app-bar lg:hidden flex items-center justify-between px-4 h-14">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-full bg-[var(--color-brand-500)] grid place-items-center font-black text-[12px] text-[var(--color-ink-950)]">
-            {initials}
-          </div>
+          <MobileAccountMenu
+            initials={initials}
+            name={user.name ?? "Usuario"}
+            email={user.email}
+            profileHref={links.find((l) => l.href.endsWith("/perfil"))?.href}
+          />
           <div className="min-w-0">
             <div className="text-[10px] uppercase tracking-widest text-[var(--color-brand-400)] leading-none">{title}</div>
             <div className="text-sm font-bold truncate leading-tight">{user.name ?? "Usuario"}</div>

@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, Wrench, Image as ImageIcon, Users, ClipboardList, Receipt, Clock, NotebookPen, Settings, MessageSquareText, LayoutGrid, Layers, DollarSign, FolderKanban, CalendarOff, Calculator, LineChart, ShieldCheck, Briefcase, Timer, ShoppingBag, Package } from "lucide-react";
+import { LayoutDashboard, FileText, Wrench, Image as ImageIcon, Users, ClipboardList, Receipt, Clock, NotebookPen, Settings, MessageSquareText, LayoutGrid, Layers, DollarSign, FolderKanban, CalendarOff, Calculator, LineChart, ShieldCheck, Briefcase, Timer, ShoppingBag, Package, UserCog } from "lucide-react";
 import { unstable_cache } from "next/cache";
 import { PortalShell } from "@/components/portal/PortalShell";
 import { requireRole } from "@/lib/auth-helpers";
@@ -57,7 +57,8 @@ export default async function AdminLayout({
 
     { href: "/admin/usuarios", label: "Usuarios", icon: Users, iconName: "Users", category: "Configuración y Seguridad" },
     { href: "/admin/auditoria", label: "Auditoría", icon: ShieldCheck, iconName: "ShieldCheck", category: "Configuración y Seguridad" },
-    { href: "/admin/settings", label: "Configuración", icon: Settings, iconName: "Settings", category: "Configuración y Seguridad" }
+    { href: "/admin/settings", label: "Configuración", icon: Settings, iconName: "Settings", category: "Configuración y Seguridad" },
+    { href: "/admin/perfil", label: "Mi perfil", icon: UserCog, iconName: "UserCog", category: "Configuración y Seguridad" }
   ];
 
   return (
