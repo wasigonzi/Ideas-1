@@ -598,11 +598,6 @@ export function ChatShell({
                         )}
                       </div>
                     </div>
-                    {room.type !== "general" && (
-                      <p className={`text-[10px] font-medium mt-0.5 ${online ? "text-emerald-400" : "text-white/25"}`}>
-                        {online ? "● En línea" : "○ Desconectado"}
-                      </p>
-                    )}
                     {room.lastMessage ? (
                       <p className="text-xs text-white/40 truncate mt-0.5">
                         {room.lastMessage.body ?? "📎 Archivo"}
@@ -681,8 +676,11 @@ export function ChatShell({
                   {messages.map((msg, i) => {
                     const isMe = msg.authorId === currentUser.id;
                     const prevMsg = messages[i - 1];
+                    const nextMsg = messages[i + 1];
                     const showMeta =
                       !prevMsg || prevMsg.authorId !== msg.authorId;
+                    const isLastInGroup =
+                      !nextMsg || nextMsg.authorId !== msg.authorId;
                     return (
                       <div
                         key={msg.id}
@@ -736,14 +734,16 @@ export function ChatShell({
                             )}
                           </div>
 
-                          <span
-                            className={`text-[10px] text-white/30 px-1 ${
-                              isMe ? "text-right" : ""
-                            }`}
-                          >
-                            {formatTime(msg.createdAt)}
-                            {msg.editedAt && " · editado"}
-                          </span>
+                          {isLastInGroup && (
+                            <span
+                              className={`text-[10px] text-white/30 px-1 ${
+                                isMe ? "text-right" : ""
+                              }`}
+                            >
+                              {formatTime(msg.createdAt)}
+                              {msg.editedAt && " · editado"}
+                            </span>
+                          )}
                         </div>
                       </div>
                     );
@@ -884,7 +884,7 @@ export function ChatShell({
                       t.style.height = "auto";
                       t.style.height = Math.min(t.scrollHeight, 128) + "px";
                     }}
-                    placeholder="Escribe un mensaje… (Enter para enviar, Shift+Enter para nueva línea)"
+                    placeholder="Escribe un mensaje…"
                     rows={1}
                     className="flex-1 resize-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-[var(--color-brand-500)]/60 transition-colors overflow-y-auto"
                     style={{ maxHeight: 128 }}
