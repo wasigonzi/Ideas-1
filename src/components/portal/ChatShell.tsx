@@ -121,20 +121,22 @@ function VoicePlayer({ src, isMe }: { src: string; isMe: boolean }) {
 function AttachmentBubble({
   a,
   isMe,
+  onOpenImage,
 }: {
   a: ChatAttachment;
   isMe: boolean;
+  onOpenImage: (a: ChatAttachment) => void;
 }) {
   if (a.kind === "image") {
     return (
-      <a href={a.url} target="_blank" rel="noopener noreferrer" className="block">
+      <button type="button" onClick={() => onOpenImage(a)} className="block cursor-zoom-in">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={a.url}
           alt={a.name ?? "imagen"}
           className="max-w-[200px] max-h-[180px] rounded-lg object-cover"
         />
-      </a>
+      </button>
     );
   }
   return (
@@ -182,6 +184,7 @@ export function ChatShell({
   // presence: { userId -> lastSeenISO }
   const [presence, setPresence] = useState<Record<string, string>>({});
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<ChatAttachment | null>(null);
 
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -319,6 +322,16 @@ export function ChatShell({
   useEffect(() => {
     scrollEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // ── Close lightbox on Escape ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightbox(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightbox]);
 
   // ── Send message ─────────────────────────────────────────────────────────
   async function sendMessage() {
@@ -765,7 +778,7 @@ export function ChatShell({
                                   </div>
                                 )}
                                 {msg.attachments.map((a) => (
-                                  <AttachmentBubble key={a.url} a={a} isMe={isMe} />
+                                  <AttachmentBubble key={a.url} a={a} isMe={isMe} onOpenImage={setLightbox} />
                                 ))}
                               </div>
                             )}
@@ -957,6 +970,45 @@ export function ChatShell({
           </>
         )}
       </div>
+
+      {/* ══ IMAGE LIGHTBOX ═════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {lightbox && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-6"
+            onClick={() => setLightbox(null)}
+          >
+            <button
+              onClick={() => setLightbox(null)}
+              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white grid place-items-center"
+              title="Cerrar"
+            >
+              <X size={18} />
+            </button>
+            <a
+              href={lightbox.url}
+              download={lightbox.name ?? true}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="absolute top-4 right-16 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white grid place-items-center"
+              title="Descargar"
+            >
+              <Download size={16} />
+            </a>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={lightbox.url}
+              alt={lightbox.name ?? "imagen"}
+              onClick={(e) => e.stopPropagation()}
+              className="max-w-full max-h-full rounded-lg object-contain"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
