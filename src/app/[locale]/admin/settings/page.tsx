@@ -25,12 +25,10 @@ const DEFAULTS: Record<string, string> = {
   social_youtube: "",
   social_tiktok: "",
   // SEO
-  meta_title_es: "Ideas, LLC — Impresión y rotulación en Puerto Rico",
-  meta_title_en: "Ideas, LLC — Printing & Signage in Puerto Rico",
-  meta_description_es: "",
-  meta_description_en: "",
-  meta_keywords_es: "",
-  meta_keywords_en: "",
+  meta_title: "Ideas, LLC — Impresión y rotulación en Puerto Rico",
+  meta_description: "Más de 8,500 pies cuadrados de espacio para ofrecer impresiones y rotulación de primera. Manufactura, instalación, rotulación e impresión digital.",
+  meta_keywords: "impresión gran formato, rotulación, rótulos, vinilos, letreros, señalización, imprenta Puerto Rico, printing Puerto Rico",
+  meta_og_image: "",
   // Quotes
   quote_validity_days: "30",
   quote_terms_es: "50% al firmar la propuesta, 50% al completar el trabajo.",
@@ -285,30 +283,27 @@ export default function SettingsPage() {
           {tab === "seo" && (
             <>
               <SectionTitle icon={<Search size={16} />} title="SEO y metadatos" />
-              <Row>
-                <Field label="Meta título (español)">
-                  {inp("meta_title_es")}
-                </Field>
-                <Field label="Meta título (inglés)">
-                  {inp("meta_title_en")}
-                </Field>
-              </Row>
-              <Row>
-                <Field label="Meta descripción (español)" hint="Recomendado: 150–160 caracteres">
-                  {ta("meta_description_es", 3)}
-                </Field>
-                <Field label="Meta descripción (inglés)" hint="Recommended: 150–160 characters">
-                  {ta("meta_description_en", 3)}
-                </Field>
-              </Row>
-              <Row>
-                <Field label="Keywords (español)" hint="Separados por coma">
-                  {inp("meta_keywords_es", "rótulos, impresión, viniles...")}
-                </Field>
-                <Field label="Keywords (inglés)" hint="Separated by comma">
-                  {inp("meta_keywords_en", "signs, printing, vinyl...")}
-                </Field>
-              </Row>
+              <Field
+                label="Meta título"
+                hint={`Aparece en la pestaña del navegador y en Google. Recomendado: hasta 60 caracteres (${(values.meta_title ?? "").length}/60)`}
+              >
+                {inp("meta_title", "Ideas, LLC — Impresión y rotulación en Puerto Rico")}
+              </Field>
+              <Field
+                label="Meta descripción"
+                hint={`Texto que Google muestra bajo el título. Recomendado: 150–160 caracteres (${(values.meta_description ?? "").length}/160)`}
+              >
+                {ta("meta_description", 3, "Describe brevemente qué hace la empresa y dónde está ubicada.")}
+              </Field>
+              <Field label="Keywords" hint="Palabras clave separadas por coma">
+                {inp("meta_keywords", "rótulos, impresión, viniles...")}
+              </Field>
+              <Field
+                label="Imagen para compartir (Open Graph)"
+                hint="Se muestra al compartir el sitio en redes sociales o WhatsApp. Recomendado: 1200×630 px."
+              >
+                {imgField("meta_og_image")}
+              </Field>
             </>
           )}
 
