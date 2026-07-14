@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { ServicesGrid } from "@/components/ServicesGrid";
 import { CtaBand } from "@/components/CtaBand";
@@ -5,6 +6,27 @@ import { LandingRenderer } from "@/components/landing-builder/LandingRenderer";
 import type { LandingBlock } from "@/components/landing-builder/types";
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "Servicios de Impresión y Rotulación en Puerto Rico | Ideas, LLC",
+  description:
+    "Manufactura, instalación y rotulación de gran formato en Puerto Rico. Ingeniería, permisología, perito electricista e impresión digital al por mayor.",
+  keywords: [
+    "servicios de rotulación Puerto Rico",
+    "impresión gran formato",
+    "manufactura de rótulos",
+    "instalación de rótulos",
+    "permisología rotulación",
+    "perito electricista Puerto Rico"
+  ],
+  alternates: { canonical: "/servicios" },
+  openGraph: {
+    title: "Servicios de Impresión y Rotulación en Puerto Rico | Ideas, LLC",
+    description:
+      "Manufactura, instalación y rotulación de gran formato en Puerto Rico. Ingeniería, permisología, perito electricista e impresión digital al por mayor.",
+    url: "https://printingideaspr.com/servicios"
+  }
+};
 
 export default async function ServiciosPage() {
   const [services, blocksRow] = await Promise.all([

@@ -22,9 +22,23 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const product = await prisma.storeProduct.findUnique({ where: { slug } });
   if (!product) return {};
+
+  const title = `${product.title} | Ideas, LLC`;
+  const description =
+    product.description?.replace(/<[^>]+>/g, "").trim().slice(0, 155) ||
+    `Compra ${product.title} en Ideas, LLC — impresión y rotulación de gran formato en Puerto Rico.`;
+
   return {
-    title: `${product.title} | Printing Ideas`,
-    description: product.description?.replace(/<[^>]+>/g, "").slice(0, 155),
+    title,
+    description,
+    keywords: [product.title, product.category, "Puerto Rico", "impresión gran formato"].filter(Boolean),
+    alternates: { canonical: `/tienda/${slug}` },
+    openGraph: {
+      title,
+      description,
+      url: `https://printingideaspr.com/tienda/${slug}`,
+      ...(product.image ? { images: [{ url: product.image, width: 1200, height: 630 }] } : {})
+    }
   };
 }
 
