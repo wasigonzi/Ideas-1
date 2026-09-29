@@ -8,10 +8,12 @@ type MemberItem = { href: string; label: string; logo: string };
 
 export function Footer({
   whatsapp = "19393264007",
+  logoUrl,
   description,
   members,
 }: {
   whatsapp?: string;
+  logoUrl?: string;
   description?: string;
   members?: MemberItem[];
 }) {
@@ -61,7 +63,7 @@ export function Footer({
           <div className="md:col-span-4">
             <div className="relative inline-flex items-center justify-center group">
               <span className="logo-bulb inline-block transition-transform duration-300 group-hover:scale-105">
-                <Logo width={150} height={52} />
+                <Logo src={logoUrl} width={150} height={52} />
               </span>
             </div>
 

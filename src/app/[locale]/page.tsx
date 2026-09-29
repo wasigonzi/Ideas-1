@@ -71,7 +71,7 @@ export default async function HomePage() {
       <Stats config={config} />
       <ClientsLogos config={config} />
       <ServicesGrid services={services} config={config} />
-      <ProjectsShowcase projects={projects} config={config} />
+      <ProjectsShowcase projects={projects} config={config} logoUrl={settingRows.find((row) => row.key === "logo_url")?.value} />
       <CtaBand config={config} />
     </>
   );

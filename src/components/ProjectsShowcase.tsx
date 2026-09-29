@@ -10,7 +10,7 @@ import type { SiteConfig } from "@/lib/site-config";
 import { SITE_CONFIG_DEFAULTS } from "@/lib/site-config";
 import { LOGO_URL } from "./Logo";
 
-export function ProjectsShowcase({ projects, config = SITE_CONFIG_DEFAULTS }: { projects: Project[]; config?: SiteConfig }) {
+export function ProjectsShowcase({ projects, config = SITE_CONFIG_DEFAULTS, logoUrl = LOGO_URL }: { projects: Project[]; config?: SiteConfig; logoUrl?: string }) {
   const [active, setActive] = useState<Project | null>(null);
 
   useEffect(() => {
@@ -135,7 +135,7 @@ export function ProjectsShowcase({ projects, config = SITE_CONFIG_DEFAULTS }: { 
             >
               {/* Logo */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={LOGO_URL} alt="Ideas LLC" width={160} height={44} className="object-contain" style={{ height: 44, width: "auto", display: "block" }} />
+              <img src={logoUrl} alt="Ideas LLC" width={160} height={44} className="object-contain" style={{ height: 44, width: "auto", display: "block" }} />
 
               {/* Image */}
               {active.cover && (

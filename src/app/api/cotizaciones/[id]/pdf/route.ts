@@ -51,6 +51,8 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
   const { id } = await ctx.params;
   const q = await prisma.quote.findUnique({ where: { id } });
   if (!q) return new NextResponse("Not found", { status: 404 });
+  const logoSetting = await prisma.siteSetting.findUnique({ where: { key: "logo_url" } }).catch(() => null);
+  const logoUrl = esc(logoSetting?.value || "https://static.showit.co/1200/DCkf9Lq274roW0gXPzSgJg/shared/ideas_logo-01.png");
 
   const number = quoteNumber(q.id, q.createdAt);
   const amount = parseAmount(q.budget);
@@ -109,7 +111,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
 
 <div class="header">
   <div class="brand">
-    <img src="https://static.showit.co/1200/DCkf9Lq274roW0gXPzSgJg/shared/ideas_logo-01.png" alt="Ideas, LLC">
+    <img src="${logoUrl}" alt="Ideas, LLC">
     <p>Impresión &amp; Rotulación · Puerto Rico</p>
   </div>
   <div class="inv-info">

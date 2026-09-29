@@ -36,6 +36,7 @@ export async function PUT(req: Request) {
   );
 
   revalidateTag("site-config");
+  revalidateTag("home");
   revalidatePath("/", "layout");
   return NextResponse.json({ ok: true });
 }

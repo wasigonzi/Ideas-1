@@ -12,7 +12,7 @@ import { Logo } from "./Logo";
 import { useSession, signOut } from "next-auth/react";
 import { useAuthModal } from "./AuthModal";
 
-export function Navbar({ whatsapp = "19393264007" }: { whatsapp?: string }) {
+export function Navbar({ whatsapp = "19393264007", logoUrl }: { whatsapp?: string; logoUrl?: string }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -133,7 +133,7 @@ export function Navbar({ whatsapp = "19393264007" }: { whatsapp?: string }) {
             aria-label="Ideas, LLC"
           >
 
-            <Logo width={140} height={48} priority className="relative logo-bulb" />
+            <Logo src={logoUrl} width={140} height={48} priority className="relative logo-bulb" />
           </Link>
 
           {/* Nav central pill */}

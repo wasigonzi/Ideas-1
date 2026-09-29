@@ -25,6 +25,7 @@ export default async function LocaleLayout({
       prisma.siteSetting.findMany({
         where: { key: { in: [
           "footer_description",
+          "logo_url",
           "footer_member_1_href", "footer_member_1_label", "footer_member_1_logo",
           "footer_member_2_href", "footer_member_2_label", "footer_member_2_logo",
           "footer_member_3_href", "footer_member_3_label", "footer_member_3_logo",
@@ -43,6 +44,7 @@ export default async function LocaleLayout({
   for (const r of footerRows) fs[r.key] = r.value;
 
   const footerDescription = fs.footer_description || undefined;
+  const logoUrl = fs.logo_url || undefined;
   const footerMembers = [1, 2, 3]
     .map((n) => ({
       href:  fs[`footer_member_${n}_href`]  ?? "",
@@ -55,9 +57,9 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider locale="es" messages={messages}>
       <Providers>
-        <PublicChrome><Navbar whatsapp={whatsapp} /></PublicChrome>
+        <PublicChrome><Navbar whatsapp={whatsapp} logoUrl={logoUrl} /></PublicChrome>
         <main>{children}</main>
-        <PublicChrome><Footer whatsapp={whatsapp} description={footerDescription} members={resolvedMembers} /></PublicChrome>
+        <PublicChrome><Footer whatsapp={whatsapp} logoUrl={logoUrl} description={footerDescription} members={resolvedMembers} /></PublicChrome>
         <PublicChrome><WhatsAppButton whatsapp={whatsapp} /></PublicChrome>
       </Providers>
     </NextIntlClientProvider>

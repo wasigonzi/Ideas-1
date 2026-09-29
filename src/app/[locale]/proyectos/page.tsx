@@ -28,9 +28,10 @@ export const metadata: Metadata = {
 };
 
 export default async function ProyectosPage() {
-  const [projects, blocksRow] = await Promise.all([
+  const [projects, blocksRow, logoRow] = await Promise.all([
     prisma.project.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.siteSetting.findUnique({ where: { key: "pageProyectosJson" } }).catch(() => null),
+    prisma.siteSetting.findUnique({ where: { key: "logo_url" } }).catch(() => null),
   ]);
 
   if (blocksRow?.value) {
@@ -54,7 +55,7 @@ export default async function ProyectosPage() {
           </p>
         </div>
       </section>
-      <ProjectsShowcase projects={projects} />
+      <ProjectsShowcase projects={projects} logoUrl={logoRow?.value || undefined} />
       <CtaBand />
     </>
   );
