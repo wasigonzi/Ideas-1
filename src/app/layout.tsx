@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
+import type { CSSProperties } from "react";
 import { prisma } from "@/lib/prisma";
 
 const SITE_URL = "https://printingideaspr.com";
@@ -11,7 +12,8 @@ const FALLBACK_LOGO = "https://static.showit.co/1200/DCkf9Lq274roW0gXPzSgJg/shar
 const SETTINGS_KEYS = [
   "meta_title", "meta_description", "meta_keywords", "meta_og_image",
   "company_name", "logo_url", "contact_phone", "contact_email", "address",
-  "social_instagram", "social_facebook", "social_linkedin"
+  "social_instagram", "social_facebook", "social_linkedin",
+  "theme_primary", "theme_background", "theme_surface", "theme_accent", "theme_font", "theme_radius"
 ];
 
 async function getSettings(): Promise<Record<string, string>> {
@@ -21,6 +23,44 @@ async function getSettings(): Promise<Record<string, string>> {
   } catch {
     return {};
   }
+}
+
+function getThemeStyles(settings: Record<string, string>): CSSProperties {
+  const color = (key: string, fallback: string) =>
+    /^#[0-9a-f]{6}$/i.test(settings[key] ?? "") ? settings[key] : fallback;
+  const primary = color("theme_primary", "#ffae00");
+  const background = color("theme_background", "#060b14");
+  const surface = color("theme_surface", "#0e1a2c");
+  const accent = color("theme_accent", "#e11d2a");
+  const radiusValue = Number(settings.theme_radius ?? 14);
+  const radius = Number.isFinite(radiusValue) ? Math.max(0, Math.min(24, radiusValue)) : 14;
+  const fonts: Record<string, string> = {
+    modern: 'ui-sans-serif, system-ui, "Inter", "Segoe UI", sans-serif',
+    condensed: '"Adelle Condensed", ui-sans-serif, sans-serif',
+    editorial: 'Georgia, "Times New Roman", serif',
+  };
+  const font = fonts[settings.theme_font] ?? fonts.modern;
+
+  return {
+    "--color-brand-50": `color-mix(in srgb, ${primary} 5%, white)`,
+    "--color-brand-100": `color-mix(in srgb, ${primary} 12%, white)`,
+    "--color-brand-200": `color-mix(in srgb, ${primary} 25%, white)`,
+    "--color-brand-300": `color-mix(in srgb, ${primary} 42%, white)`,
+    "--color-brand-400": `color-mix(in srgb, ${primary} 72%, white)`,
+    "--color-brand-500": primary,
+    "--color-brand-600": `color-mix(in srgb, ${primary} 84%, black)`,
+    "--color-brand-700": `color-mix(in srgb, ${primary} 68%, black)`,
+    "--color-brand-800": `color-mix(in srgb, ${primary} 52%, black)`,
+    "--color-brand-900": `color-mix(in srgb, ${primary} 36%, black)`,
+    "--color-ink-950": background,
+    "--color-ink-900": `color-mix(in srgb, ${background} 82%, white)`,
+    "--color-ink-850": surface,
+    "--color-ink-800": `color-mix(in srgb, ${surface} 88%, white)`,
+    "--color-ink-700": `color-mix(in srgb, ${surface} 70%, white)`,
+    "--color-accent-red": accent,
+    "--font-display": font,
+    "--site-radius": `${radius}px`,
+  } as CSSProperties;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -108,7 +148,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
         <script src="/anti-bis.js" suppressHydrationWarning />
       </head>
-      <body suppressHydrationWarning>
+      <body style={getThemeStyles(settings)} suppressHydrationWarning>
         {children}
       </body>
     </html>

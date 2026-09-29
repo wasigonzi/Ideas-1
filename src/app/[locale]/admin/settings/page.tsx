@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Save, CheckCircle, Globe, Phone, Share2, Search, FileText, Palette, Upload, X, LayoutTemplate } from "lucide-react";
 
 // ─── Default values ───────────────────────────────────────────────────────────
@@ -11,6 +12,12 @@ const DEFAULTS: Record<string, string> = {
   tagline_en: "Printing & Signage · Puerto Rico",
   logo_url: "https://static.showit.co/1200/DCkf9Lq274roW0gXPzSgJg/shared/ideas_logo-01.png",
   favicon_url: "",
+  theme_primary: "#ffae00",
+  theme_background: "#060b14",
+  theme_surface: "#0e1a2c",
+  theme_accent: "#e11d2a",
+  theme_font: "modern",
+  theme_radius: "14",
   // Contact
   contact_email: "",
   contact_phone: "",
@@ -78,12 +85,14 @@ function Row({ children }: { children: React.ReactNode }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function SettingsPage() {
+  const router = useRouter();
   const [values, setValues] = useState<Record<string, string>>(DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [tab, setTab] = useState<Tab>("general");
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     fetch("/api/settings")
@@ -138,14 +147,22 @@ export default function SettingsPage() {
 
   async function save() {
     setSaving(true);
-    await fetch("/api/settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
-    });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    setSaveError("");
+    try {
+      const response = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      if (!response.ok) throw new Error("Settings save failed");
+      setSaved(true);
+      router.refresh();
+      setTimeout(() => setSaved(false), 2500);
+    } catch {
+      setSaveError("No se pudieron guardar los cambios.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   const inp = (key: string, placeholder?: string) => (
@@ -167,6 +184,21 @@ export default function SettingsPage() {
     />
   );
 
+  const colorInp = (key: string, label: string) => (
+    <div className="flex items-center gap-3">
+      <input
+        type="color"
+        aria-label={label}
+        className="h-11 w-14 cursor-pointer rounded-lg border border-white/15 bg-white/5 p-1"
+        value={/^#[0-9a-f]{6}$/i.test(values[key] ?? "") ? values[key] : DEFAULTS[key]}
+        onChange={(e) => set(key, e.target.value)}
+      />
+      <span className="font-mono text-xs uppercase text-white/60">{values[key]}</span>
+    </div>
+  );
+
+  const themeRadius = Math.max(0, Math.min(24, Number(values.theme_radius) || 0));
+
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Header */}
@@ -184,6 +216,7 @@ export default function SettingsPage() {
           {saved ? "Guardado" : saving ? "Guardando..." : "Guardar cambios"}
         </button>
       </div>
+      {saveError && <p role="alert" className="text-sm text-red-400">{saveError}</p>}
 
       {/* Tab bar */}
       <div className="flex gap-1 bg-white/5 rounded-xl p-1 border border-white/10 overflow-x-auto no-scrollbar">
@@ -229,6 +262,62 @@ export default function SettingsPage() {
               <Field label="Favicon" hint="Imagen cuadrada de al menos 32×32 px">
                 {imgField("favicon_url")}
               </Field>
+
+              <div className="border-t border-white/10 pt-5 space-y-4">
+                <SectionTitle icon={<Palette size={16} />} title="Apariencia global" />
+                <Row>
+                  <Field label="Color principal" hint="Botones, enlaces y elementos destacados.">
+                    {colorInp("theme_primary", "Color principal")}
+                  </Field>
+                  <Field label="Fondo de la web">
+                    {colorInp("theme_background", "Fondo de la web")}
+                  </Field>
+                </Row>
+                <Row>
+                  <Field label="Superficie de paneles y campos">
+                    {colorInp("theme_surface", "Superficie")}
+                  </Field>
+                  <Field label="Color de acento">
+                    {colorInp("theme_accent", "Color de acento")}
+                  </Field>
+                </Row>
+                <Row>
+                  <Field label="Tipografía">
+                    <select className="select w-full" value={values.theme_font} onChange={(e) => set("theme_font", e.target.value)}>
+                      <option value="modern">Moderna</option>
+                      <option value="condensed">Adelle Condensed</option>
+                      <option value="editorial">Editorial</option>
+                    </select>
+                  </Field>
+                  <Field label={`Redondeo global: ${themeRadius}px`}>
+                    <input
+                      type="range"
+                      min="0"
+                      max="24"
+                      step="2"
+                      value={themeRadius}
+                      onChange={(e) => set("theme_radius", e.target.value)}
+                      className="w-full accent-[var(--color-brand-500)]"
+                    />
+                  </Field>
+                </Row>
+                <div
+                  className="flex items-center justify-between gap-4 border border-white/10 p-4"
+                  style={{ backgroundColor: values.theme_background, borderRadius: `${themeRadius}px` }}
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-white">Vista previa</p>
+                    <p className="text-xs text-white/60">Así se verá el color principal.</p>
+                  </div>
+                  <span
+                    className="px-4 py-2 text-sm font-bold text-[#0a1422]"
+                    style={{ backgroundColor: values.theme_primary, borderRadius: `${themeRadius}px` }}
+                  >
+                    Botón principal
+                  </span>
+                </div>
+                <p className="text-[11px] text-white/40">Los cambios se aplican a todo el sitio al guardar. Usa fondos oscuros para conservar el contraste actual.</p>
+              </div>
             </>
           )}
 
