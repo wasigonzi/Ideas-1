@@ -1,0 +1,57 @@
+name: Deploy to cPanel
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js (si es proyecto Node)
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+      continue-on-error: true
+
+    - name: Build project
+      run: npm run build
+      continue-on-error: true
+
+    - name: Deploy via FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: srv5.webshineglobal.xyz
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./dist/
+        server-dir: /public_html/
+        dangerous-clean-slate: false
+
+# ============================================
+# INSTRUCCIONES DE CONFIGURACIÓN
+# ============================================
+# 1. Ve a tu repositorio en GitHub
+# 2. Settings > Secrets and variables > Actions
+# 3. Agrega estos secrets:
+#    - FTP_USERNAME: ideasbyb8
+#    - FTP_PASSWORD: (la contraseña del hosting)
+#
+# 4. Crea el archivo: .github/workflows/deploy.yml
+# 5. Pega este contenido
+# 6. Cada push a 'main' hará deploy automático
+#
+# NOTAS:
+# - Si tu proyecto NO usa Node.js, elimina los pasos de Node
+# - Si tu build genera archivos en otra carpeta, cambia 'local-dir'
+# - Para proyectos estáticos (HTML/CSS), cambia local-dir a ./
+# ============================================
