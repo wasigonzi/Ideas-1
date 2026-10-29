@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 
 export default async function ProyectosPage() {
   const [projects, blocksRow, logoRow] = await Promise.all([
-    prisma.project.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.project.findMany({ orderBy: { createdAt: "desc" } }).catch(() => []),
     prisma.siteSetting.findUnique({ where: { key: "pageProyectosJson" } }).catch(() => null),
     prisma.siteSetting.findUnique({ where: { key: "logo_url" } }).catch(() => null),
   ]);

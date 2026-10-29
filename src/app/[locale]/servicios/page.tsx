@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 
 export default async function ServiciosPage() {
   const [services, blocksRow] = await Promise.all([
-    prisma.service.findMany({ where: { active: true }, orderBy: { order: "asc" } }),
+    prisma.service.findMany({ where: { active: true }, orderBy: { order: "asc" } }).catch(() => []),
     prisma.siteSetting.findUnique({ where: { key: "pageServiciosJson" } }).catch(() => null),
   ]);
 

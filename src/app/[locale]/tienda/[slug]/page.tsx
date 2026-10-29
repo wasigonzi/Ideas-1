@@ -11,16 +11,21 @@ function parseJSON<T>(raw?: string | null, fallback: T = [] as unknown as T): T 
 }
 
 export async function generateStaticParams() {
-  const products = await prisma.storeProduct.findMany({
-    where: { active: true },
-    select: { slug: true },
-  });
-  return products.map((p) => ({ slug: p.slug }));
+  try {
+    const products = await prisma.storeProduct.findMany({
+      where: { active: true },
+      select: { slug: true },
+    });
+    return products.map((p) => ({ slug: p.slug }));
+  } catch (error) {
+    console.warn("[tienda/[slug]] Could not fetch store products for static params (DB may not exist yet):", error);
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = await prisma.storeProduct.findUnique({ where: { slug } });
+  const product = await prisma.storeProduct.findUnique({ where: { slug } }).catch(() => null);
   if (!product) return {};
 
   const title = `${product.title} | Ideas, LLC`;
@@ -45,7 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function TiendaProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const [product, templateBlocksRow] = await Promise.all([
-    prisma.storeProduct.findUnique({ where: { slug } }),
+    prisma.storeProduct.findUnique({ where: { slug } }).catch(() => null),
     prisma.siteSetting.findUnique({ where: { key: "pageProductoTemplateJson" } }).catch(() => null),
   ]);
   if (!product || !product.active) notFound();

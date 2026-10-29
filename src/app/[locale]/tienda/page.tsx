@@ -30,7 +30,7 @@ export default async function TiendaPage() {
     prisma.storeProduct.findMany({
       where: { active: true },
       orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-    }),
+    }).catch(() => []),
     prisma.siteSetting.findUnique({ where: { key: "pageTiendaJson" } }).catch(() => null),
   ]);
 
